@@ -15,7 +15,7 @@ here](https://beta.openai.com/account/api-keys).
 ```lua
 -- Packer
 use({
-  "jackmort/jackMort/ChatGPT.nvim",
+  "jackMort/ChatGPT.nvim",
     config = function()
       require("chatgpt").setup({})
     end,
