@@ -44,7 +44,7 @@ M.openChat = function()
   chat_input:map("i", "<C-y>", function()
     local msg = chat:getSelected()
     vim.fn.setreg("+", msg.text)
-    vim.notify("Succesfully copied to yank register!", vim.log.levels.INFO)
+    vim.notify("Successfully copied to yank register!", vim.log.levels.INFO)
   end, { noremap = true })
 
   -- mount chat component

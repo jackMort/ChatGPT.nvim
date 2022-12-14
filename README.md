@@ -10,8 +10,7 @@ With `ChatGPT`, you can ask questions and get answers from GPT-3 in real-time.
 ## Installation
 
 - Make sure you have `curl` installed.
-- Set environment variable called `$OPENAI_API_KEY` which you can [optain
-here](https://beta.openai.com/account/api-keys).
+- Set environment variable called `$OPENAI_API_KEY` which you can [obtain here](https://beta.openai.com/account/api-keys).
 
 ```lua
 -- Packer

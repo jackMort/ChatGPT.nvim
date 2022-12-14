@@ -30,7 +30,7 @@ function Api.completions(prompt, cb)
       on_exit = vim.schedule_wrap(function(j, exit_code)
         if exit_code ~= 0 then
           -- TODO: better error handling
-          vim.notify("An Error Occured, cannot fetch answer ...", vim.log.levels.ERROR)
+          vim.notify("An Error Occurred, cannot fetch answer ...", vim.log.levels.ERROR)
           cb("ERROR: API Error")
         end
 
