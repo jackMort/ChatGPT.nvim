@@ -75,6 +75,7 @@ M.complete = function(config)
 
   -- initialize chat
   chat = Chat:new(chat_window.bufnr, chat_window.winid)
+  chat:welcome()
 end
 
 return M
