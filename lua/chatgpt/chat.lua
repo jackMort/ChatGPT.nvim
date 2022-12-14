@@ -1,4 +1,5 @@
 local Config = require("chatgpt.config")
+local Utils = require("chatgpt.utils")
 
 local Chat = {}
 Chat.__index = Chat
@@ -19,11 +20,16 @@ end
 
 function Chat:welcome()
   local lines = {}
+  local end_line = 0
   for line in string.gmatch(Config.options.welcome_message, "[^\n]+") do
     table.insert(lines, line)
+    end_line = end_line + 1
   end
 
   vim.api.nvim_buf_set_lines(self.bufnr, 0, 0, false, lines)
+  for line_num = 0, end_line do
+    vim.api.nvim_buf_add_highlight(self.bufnr, -1, "Comment", line_num, 0, -1)
+  end
 end
 
 function Chat:isBusy()
@@ -31,6 +37,8 @@ function Chat:isBusy()
 end
 
 function Chat:add(type, text)
+  text = Utils.wrapText(text, Config.options.max_line_length)
+
   local start_line = 0
   if self.selectedIndex > 0 then
     local prev = self.messages[self.selectedIndex]

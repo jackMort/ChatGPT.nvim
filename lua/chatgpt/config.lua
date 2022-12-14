@@ -40,6 +40,7 @@ function M.defaults()
     loading_text = "loading",
     question_sign = "", -- 🙂
     answer_sign = "ﮧ", -- 🤖
+    max_line_length = 120,
     chat_layout = {
       relative = "editor",
       position = "50%",
