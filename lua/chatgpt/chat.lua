@@ -111,7 +111,9 @@ function Chat:renderLastMessage()
   vim.api.nvim_buf_set_lines(self.bufnr, startIdx, -1, false, lines)
 
   if msg.type == QUESTION then
-    vim.api.nvim_buf_add_highlight(self.bufnr, 0, "Comment", msg.start_line, 0, -1)
+    for index, _ in ipairs(lines) do
+      vim.api.nvim_buf_add_highlight(self.bufnr, 0, "Comment", msg.start_line + index - 1, 0, -1)
+    end
   end
 
   if self.selectedIndex > 2 then
