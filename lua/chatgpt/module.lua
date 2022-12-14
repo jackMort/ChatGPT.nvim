@@ -36,24 +36,24 @@ M.complete = function(config)
   }, {
     prompt = "  ",
     on_submit = vim.schedule_wrap(function(value)
-      chat:addQuery(value)
-
+      -- clear input
       vim.api.nvim_buf_set_lines(input.bufnr, 0, 1, false, { "" })
-      chat:renderLastMessage()
+
+      chat:addQuestion(value)
       chat:showProgess()
 
       Api.completions(chat:toString(), function(answer)
         chat:addAnswer(answer)
-        chat:renderLastMessage()
       end)
     end),
   })
 
   layout = Layout(
     {
+      relative = "editor",
       position = "50%",
       size = {
-        width = "90%",
+        width = "80%",
         height = "80%",
       },
     },

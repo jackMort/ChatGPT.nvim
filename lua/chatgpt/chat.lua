@@ -3,7 +3,6 @@ Chat.__index = Chat
 
 -- ASCII-ART credits:
 --  https://www.reddit.com/r/ASCII_Archive/comments/iga1d4/your_robot_friend/
---
 WELCOME_SCREEN = [[
                     _.           ._                    
                _.agjWMb         dMWkpe._               
@@ -37,7 +36,7 @@ WELCOME_SCREEN = [[
                                       ~ Robert Half
 ]]
 
-QUERY = 1
+QUESTION = 1
 ANSWER = 2
 SIGNS = { "", "" }
 
@@ -51,6 +50,15 @@ function Chat:new(bufnr, winid)
   self.timer = nil
 
   return self
+end
+
+function Chat:welcome()
+  local lines = {}
+  for line in string.gmatch(WELCOME_SCREEN, "[^\n]+") do
+    table.insert(lines, line)
+  end
+
+  vim.api.nvim_buf_set_lines(self.bufnr, 0, 0, false, lines)
 end
 
 function Chat:isBusy()
@@ -80,19 +88,11 @@ function Chat:add(type, text)
     end_line = start_line + nr_of_lines - 1,
   })
   self:next()
+  self:renderLastMessage()
 end
 
-function Chat:welcome()
-  local lines = {}
-  for line in string.gmatch(WELCOME_SCREEN, "[^\n]+") do
-    table.insert(lines, line)
-  end
-
-  vim.api.nvim_buf_set_lines(self.bufnr, 0, 0, false, lines)
-end
-
-function Chat:addQuery(text)
-  self:add(QUERY, text)
+function Chat:addQuestion(text)
+  self:add(QUESTION, text)
 end
 
 function Chat:addAnswer(text)
@@ -135,7 +135,7 @@ function Chat:renderLastMessage()
   end
   vim.api.nvim_buf_set_lines(self.bufnr, startIdx, -1, false, lines)
 
-  if msg.type == QUERY then
+  if msg.type == QUESTION then
     vim.api.nvim_buf_add_highlight(self.bufnr, 0, "Comment", msg.start_line, 0, -1)
   end
 
