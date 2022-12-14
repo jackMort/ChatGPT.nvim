@@ -18,7 +18,9 @@ here](https://beta.openai.com/account/api-keys).
 use({
   "jackMort/ChatGPT.nvim",
     config = function()
-      require("chatgpt").setup({})
+      require("chatgpt").setup({
+        -- optional configuration
+      })
     end,
     requires = {
       "MunifTanjim/nui.nvim",
@@ -30,19 +32,61 @@ use({
 ## Configuration
 
 _Not available yet, work in progress_
+`ChatGPT.nvim` comes with the following defaults
 
+```lua
+{
+  welcome_message = WELCOME_MESSAGE, -- set to "" if you don't like the fancy robot
+  loading_text = "loading",
+  question_sign = "", -- you can use emoji if you want e.g. 🙂
+  answer_sign = "ﮧ", -- 🤖
+  chat_layout = {
+    relative = "editor",
+    position = "50%",
+    size = {
+      height = "80%",
+      width = "80%",
+    },
+  },
+  chat_window = {
+    border = {
+      highlight = "FloatBorder",
+      style = "rounded",
+      text = {
+        top = " ChatGPT ",
+      },
+    },
+  },
+  chat_input = {
+    prompt = "  ",
+    border = {
+      highlight = "FloatBorder",
+      style = "rounded",
+      text = {
+        top_align = "center",
+        top = " Prompt ",
+      },
+    },
+    win_options = {
+      winhighlight = "Normal:Normal",
+    },
+  },
+  openai_params = {
+    model = "text-davinci-003",
+    frequency_penalty = 0,
+    presence_penalty = 0,
+    max_tokens = 300,
+    temperature = 0,
+    top_p = 1,
+    n = 1,
+  },
+}
+```
 ## Usage
 
 Plugin exposes `ChatGPT` command which opens interactive window. Available keybindings for that window are:
 - `<C-c>` to close chat window.
 - `<C-y>` to copy/yank last answer.
-
-## TODO
-
-- configuration
-- error handling
-- using visual selected text to feed chat
-- ...
 
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/jackMort)

@@ -7,37 +7,21 @@ local Popup = require("nui.popup")
 local ChatInput = require("chatgpt.input")
 local Chat = require("chatgpt.chat")
 local Api = require("chatgpt.api")
+local Config = require("chatgpt.config")
 
-M.complete = function(config)
-  local chat, input, layout, chat_window
+M.openChat = function()
+  local chat, chat_input, layout, chat_window
 
-  chat_window = Popup({
-    border = {
-      highlight = "FloatBorder",
-      style = "rounded",
-      text = {
-        top = " ChatGPT ",
-      },
-    },
-  })
-
-  input = ChatInput({
-    border = {
-      highlight = "FloatBorder",
-      style = "rounded",
-      text = {
-        top = " Prompt ",
-        top_align = "center",
-      },
-    },
-    win_options = {
-      winhighlight = "Normal:Normal",
-    },
-  }, {
-    prompt = "  ",
+  chat_window = Popup(Config.options.chat_window)
+  chat_input = ChatInput(Config.options.chat_input, {
+    prompt = Config.options.chat_input.prompt,
     on_submit = vim.schedule_wrap(function(value)
+      if chat:isBusy() then
+        vim.notify("I'm busy, please wait a moment...", vim.log.levels.WARN)
+        return
+      end
       -- clear input
-      vim.api.nvim_buf_set_lines(input.bufnr, 0, 1, false, { "" })
+      vim.api.nvim_buf_set_lines(chat_input.bufnr, 0, 1, false, { "" })
 
       chat:addQuestion(value)
       chat:showProgess()
@@ -49,22 +33,15 @@ M.complete = function(config)
   })
 
   layout = Layout(
-    {
-      relative = "editor",
-      position = "50%",
-      size = {
-        width = "80%",
-        height = "80%",
-      },
-    },
+    Config.options.chat_layout,
     Layout.Box({
       Layout.Box(chat_window, { size = "90%" }),
-      Layout.Box(input, { size = 3 }),
+      Layout.Box(chat_input, { size = 3 }),
     }, { dir = "col" })
   )
 
   -- add keymapping
-  input:map("i", "<C-y>", function()
+  chat_input:map("i", "<C-y>", function()
     local msg = chat:getSelected()
     vim.fn.setreg("+", msg.text)
     vim.notify("Succesfully copied to yank register!", vim.log.levels.INFO)

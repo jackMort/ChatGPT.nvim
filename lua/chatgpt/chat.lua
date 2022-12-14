@@ -1,44 +1,9 @@
+local Config = require("chatgpt.config")
+
 local Chat = {}
 Chat.__index = Chat
 
--- ASCII-ART credits:
---  https://www.reddit.com/r/ASCII_Archive/comments/iga1d4/your_robot_friend/
-WELCOME_SCREEN = [[
-                    _.           ._                    
-               _.agjWMb         dMWkpe._               
-              'H8888888b,     ,d8888888H'              
-               V88888888Wad8beW88888888V               
-              ,;88888888888888888888888:.              
-    ,ae.,   _aM8888888888888888888888888Me_   ,.ae.    
-  ,d88888b,d8888888888888888888888888888888b.d88888b.  
- d888888888888888888888888888888888888888888888888888b 
-'V888888888888888888888888888888888888888888888888888V'
-  "V88888888888888888888888888888888888888888888888V"  
-    88888888WMP^YMW88888888888888888WMP^YMW88888888    
-    88888WP'  _,_ "VW888888W8888888V" _,_  'VW88888    
-    888888"  dM8Mb '888888' '888888' d888b  "888888    
-    88888H  :H888H: H88888   88888H :H888H:  H88888    
-    888888b "^YWWP /888888   888888\ YWWP^" d888888    
-    88888888be._.ad8888888._.8888888be._.ad88888888    
-    WW8888888888888888888888888888888888888888888WW    
-     '''"""^^YW8888888W888888888W8888888WY^^"""'''     
-    MWbozxae  8888888/  ._____.  \8888888  aexzodWM    
-    88888888  8MMHHWW;  8888888  :WWHHMM8  88888888    
-    'Y888888b.__       /8888888\       __.d888888Y'    
-     "V888888888MHWkjgd888888888bkpajWHM88888888V"     
-       '^Y88888888888888888888888888888888888P^'       
-          '"^VY8888888888888888888888888YV^"'          
-               '""^^^VY888888888VY^^^""'    
- 
- 
-     If you don't ask the right questions,
-        you don't get the right answers.
-                                      ~ Robert Half
-]]
-
-QUESTION = 1
-ANSWER = 2
-SIGNS = { "", "" }
+QUESTION, ANSWER = 1, 2
 
 function Chat:new(bufnr, winid)
   self = setmetatable({}, Chat)
@@ -54,7 +19,7 @@ end
 
 function Chat:welcome()
   local lines = {}
-  for line in string.gmatch(WELCOME_SCREEN, "[^\n]+") do
+  for line in string.gmatch(Config.options.welcome_message, "[^\n]+") do
     table.insert(lines, line)
   end
 
@@ -116,13 +81,15 @@ function Chat:renderLastMessage()
   local isTimerSet = self.timer ~= nil
   self:stopTimer()
 
+  local signs = { Config.options.question_sign, Config.options.answer_sign }
   local msg = self:getSelected()
+
   local lines = {}
   local i = 0
   for w in string.gmatch(msg.text, "[^\r\n]+") do
     local prefix = "   │ "
     if i == 0 then
-      prefix = " " .. SIGNS[msg.type] .. " │ "
+      prefix = " " .. signs[msg.type] .. " │ "
     end
     table.insert(lines, prefix .. w)
     i = i + 1
@@ -139,7 +106,7 @@ function Chat:renderLastMessage()
     vim.api.nvim_buf_add_highlight(self.bufnr, 0, "Comment", msg.start_line, 0, -1)
   end
 
-  if self.selectedIndex > 1 then
+  if self.selectedIndex > 2 then
     vim.api.nvim_win_set_cursor(self.winid, { msg.end_line - 1, 0 })
   end
 end
@@ -158,7 +125,7 @@ function Chat:showProgess()
         -2,
         -1,
         false,
-        { "   " .. char .. " loading " .. string.rep(".", idx - 1) }
+        { "   " .. char .. " " .. Config.options.loading_text .. " " .. string.rep(".", idx - 1) }
       )
       if idx < 4 then
         idx = idx + 1
