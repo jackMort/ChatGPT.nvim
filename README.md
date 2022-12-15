@@ -30,7 +30,6 @@ use({
 
 ## Configuration
 
-_Not available yet, work in progress_
 `ChatGPT.nvim` comes with the following defaults
 
 ```lua
