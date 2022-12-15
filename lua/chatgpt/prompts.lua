@@ -99,7 +99,7 @@ local finder = function(opts)
               local lines = {}
               for line in string.gmatch(response, "[^\n]+") do
                 local act, _prompt = string.match(line, '"(.*)","(.*)"')
-                if act ~= "act" then
+                if act ~= "act" and act ~= nil then
                   _prompt = string.gsub(_prompt, '""', '"')
                   table.insert(lines, { act = act, prompt = _prompt })
                 end
