@@ -37,7 +37,12 @@ function Chat:isBusy()
 end
 
 function Chat:add(type, text)
-  text = Utils.wrapText(text, Config.options.max_line_length)
+  local width = vim.api.nvim_win_get_width(self.winid) - 10 -- add some space
+  local max_width = Config.options.max_line_length
+  if width > max_width then
+    max_width = width
+  end
+  text = Utils.wrapText(text, width)
 
   local start_line = 0
   if self.selectedIndex > 0 then

@@ -8,8 +8,9 @@ local ChatInput = require("chatgpt.input")
 local Chat = require("chatgpt.chat")
 local Api = require("chatgpt.api")
 local Config = require("chatgpt.config")
+local Prompts = require("chatgpt.prompts")
 
-M.openChat = function()
+local open_chat = function()
   local chat, chat_input, layout, chat_window
 
   chat_window = Popup(Config.options.chat_window)
@@ -52,7 +53,30 @@ M.openChat = function()
 
   -- initialize chat
   chat = Chat:new(chat_window.bufnr, chat_window.winid)
+
+  return chat, chat_input, chat_window
+end
+
+M.openChat = function()
+  local chat, _, _ = open_chat()
   chat:welcome()
+end
+
+M.open_chat_with_awesome_prompt = function()
+  Prompts.selectAwesomePrompt({
+    cb = vim.schedule_wrap(function(act, prompt)
+      local chat, _, chat_window = open_chat()
+      -- TODO: dry
+      chat_window.border:set_text("top", " ChatGPT - Acts as " .. act .. " ", "center")
+
+      chat:addQuestion(prompt)
+      chat:showProgess()
+
+      Api.completions(chat:toString(), function(answer)
+        chat:addAnswer(answer)
+      end)
+    end),
+  })
 end
 
 return M

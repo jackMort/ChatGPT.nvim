@@ -16,4 +16,8 @@ M.openChat = function()
   module.openChat()
 end
 
+M.selectAwesomePrompt = function()
+  module.open_chat_with_awesome_prompt()
+end
+
 return M

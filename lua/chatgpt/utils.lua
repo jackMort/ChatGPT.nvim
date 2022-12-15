@@ -17,6 +17,11 @@ function M.splitLines(text)
 end
 
 function M.wrapText(text, maxLineLength)
+  local lines = M.wrapTextToTable(text, maxLineLength)
+  return table.concat(lines, "\n")
+end
+
+function M.wrapTextToTable(text, maxLineLength)
   local lines = {}
 
   local textByLines = M.splitLines(text)
@@ -37,8 +42,7 @@ function M.wrapText(text, maxLineLength)
       table.insert(lines, line)
     end
   end
-
-  return table.concat(lines, "\n")
+  return lines
 end
 
 return M
