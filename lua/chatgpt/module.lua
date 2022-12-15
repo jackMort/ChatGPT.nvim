@@ -40,7 +40,7 @@ local open_chat = function()
   layout = Layout(
     Config.options.chat_layout,
     Layout.Box({
-      Layout.Box(chat_window, { size = "90%" }),
+      Layout.Box(chat_window, { grow = 1 }),
       Layout.Box(chat_input, { size = 3 }),
     }, { dir = "col" })
   )
