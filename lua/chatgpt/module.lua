@@ -13,6 +13,16 @@ local Prompts = require("chatgpt.prompts")
 local open_chat = function()
   local chat, chat_input, layout, chat_window
 
+  local scroll_chat = function(direction)
+    local speed = vim.api.nvim_win_get_height(chat_window.winid) / 2
+    local input = direction > 0 and [[]] or [[]]
+    local count = math.abs(speed)
+
+    vim.api.nvim_win_call(chat_window.winid, function()
+      vim.cmd([[normal! ]] .. count .. input)
+    end)
+  end
+
   chat_window = Popup(Config.options.chat_window)
   chat_input = ChatInput(Config.options.chat_input, {
     prompt = Config.options.chat_input.prompt,
@@ -52,12 +62,19 @@ local open_chat = function()
     vim.notify("Successfully copied to yank register!", vim.log.levels.INFO)
   end, { noremap = true })
 
+  chat_input:map("i", "<C-d>", function()
+    scroll_chat(1)
+  end, { noremap = true, silent = true })
+
+  chat_input:map("i", "<C-u>", function()
+    scroll_chat(-1)
+  end, { noremap = true, silent = true })
+
   -- mount chat component
   layout:mount()
 
   -- initialize chat
   chat = Chat:new(chat_window.bufnr, chat_window.winid)
-
   return chat, chat_input, chat_window
 end
 

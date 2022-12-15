@@ -187,7 +187,9 @@ end
 
 function Chat:set_lines(start_idx, end_idx, strict_indexing, lines)
   if self:is_buf_exists() then
+    vim.api.nvim_buf_set_option(self.bufnr, "modifiable", true)
     vim.api.nvim_buf_set_lines(self.bufnr, start_idx, end_idx, strict_indexing, lines)
+    vim.api.nvim_buf_set_option(self.bufnr, "modifiable", false)
   end
 end
 

@@ -90,6 +90,8 @@ Plugin exposes"
 
 Available keybindings for that window are:
 - `<C-c>` to close chat window.
+- `<C-u>` scroll up chat window.
+- `<C-d>` scroll down chat window.
 - `<C-y>` to copy/yank last answer.
 
 
