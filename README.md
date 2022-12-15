@@ -83,7 +83,11 @@ use({
 ```
 ## Usage
 
-Plugin exposes `ChatGPT` command which opens interactive window. Available keybindings for that window are:
+Plugin exposes" 
+- `ChatGPT` command which opens interactive window.
+- `ChatGPTActAs` command which opens a prompt selection from [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) to be used with the ChatGPT.
+
+Available keybindings for that window are:
 - `<C-c>` to close chat window.
 - `<C-y>` to copy/yank last answer.
 
