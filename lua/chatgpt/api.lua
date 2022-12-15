@@ -15,7 +15,7 @@ end
 function Api.completions(prompt, cb)
   local params = vim.tbl_extend("keep", { prompt = prompt }, Config.options.openai_params)
 
-  job
+  Api.job = job
     :new({
       command = "curl",
       args = {
@@ -49,6 +49,12 @@ function Api.completions(prompt, cb)
       end),
     })
     :start()
+end
+
+function Api.close()
+  if Api.job then
+    job:shutdown()
+  end
 end
 
 return Api

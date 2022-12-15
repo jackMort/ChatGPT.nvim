@@ -18,6 +18,10 @@ function Chat:new(bufnr, winid)
   return self
 end
 
+function Chat:close()
+  self:stopTimer()
+end
+
 function Chat:welcome()
   local lines = {}
   local end_line = 0
@@ -26,9 +30,9 @@ function Chat:welcome()
     end_line = end_line + 1
   end
 
-  vim.api.nvim_buf_set_lines(self.bufnr, 0, 0, false, lines)
+  self:set_lines(0, 0, false, lines)
   for line_num = 0, end_line do
-    vim.api.nvim_buf_add_highlight(self.bufnr, -1, "Comment", line_num, 0, -1)
+    self:add_highlight("Comment", line_num, 0, -1)
   end
 end
 
@@ -37,7 +41,11 @@ function Chat:isBusy()
 end
 
 function Chat:add(type, text)
-  local width = vim.api.nvim_win_get_width(self.winid) - 10 -- add some space
+  if not self:is_buf_exists() then
+    return
+  end
+
+  local width = self:get_width() - 10 -- add some space
   local max_width = Config.options.max_line_length
   if width > max_width then
     max_width = width
@@ -113,16 +121,16 @@ function Chat:renderLastMessage()
   if isTimerSet then
     startIdx = startIdx - 1
   end
-  vim.api.nvim_buf_set_lines(self.bufnr, startIdx, -1, false, lines)
+  self:set_lines(startIdx, -1, false, lines)
 
   if msg.type == QUESTION then
     for index, _ in ipairs(lines) do
-      vim.api.nvim_buf_add_highlight(self.bufnr, 0, "Comment", msg.start_line + index - 1, 0, -1)
+      self:add_highlight("Comment", msg.start_line + index - 1, 0, -1)
     end
   end
 
   if self.selectedIndex > 2 then
-    vim.api.nvim_win_set_cursor(self.winid, { msg.end_line - 1, 0 })
+    self:set_cursor({ msg.end_line - 1, 0 })
   end
 end
 
@@ -135,8 +143,7 @@ function Chat:showProgess()
     250,
     vim.schedule_wrap(function()
       local char = chars[idx]
-      vim.api.nvim_buf_set_lines(
-        self.bufnr,
+      self:set_lines(
         -2,
         -1,
         false,
@@ -172,6 +179,34 @@ function Chat:count()
     count = count + 1
   end
   return count
+end
+
+function Chat:is_buf_exists()
+  return vim.fn.bufexists(self.bufnr) == 1
+end
+
+function Chat:set_lines(start_idx, end_idx, strict_indexing, lines)
+  if self:is_buf_exists() then
+    vim.api.nvim_buf_set_lines(self.bufnr, start_idx, end_idx, strict_indexing, lines)
+  end
+end
+
+function Chat:add_highlight(hl_group, line, col_start, col_end)
+  if self:is_buf_exists() then
+    vim.api.nvim_buf_add_highlight(self.bufnr, -1, hl_group, line, col_start, col_end)
+  end
+end
+
+function Chat:set_cursor(pos)
+  if self:is_buf_exists() then
+    vim.api.nvim_win_set_cursor(self.winid, pos)
+  end
+end
+
+function Chat:get_width()
+  if self:is_buf_exists() then
+    return vim.api.nvim_win_get_width(self.winid)
+  end
 end
 
 return Chat

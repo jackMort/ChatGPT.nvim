@@ -16,6 +16,10 @@ local open_chat = function()
   chat_window = Popup(Config.options.chat_window)
   chat_input = ChatInput(Config.options.chat_input, {
     prompt = Config.options.chat_input.prompt,
+    on_close = function()
+      chat:close()
+      Api.close()
+    end,
     on_submit = vim.schedule_wrap(function(value)
       if chat:isBusy() then
         vim.notify("I'm busy, please wait a moment...", vim.log.levels.WARN)
