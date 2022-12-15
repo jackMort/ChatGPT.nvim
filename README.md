@@ -24,6 +24,7 @@ use({
     requires = {
       "MunifTanjim/nui.nvim",
       "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim"
     }
 })
 ```
