@@ -1,6 +1,6 @@
 # ChatGPT.nvim [WIP]
 
-![GitHub Workflow Status](https://img.shields.io/github/workflow/status/jackMort/ChatGPT.nvim/default?style=for-the-badge)
+![GitHub Workflow Status](http://img.shields.io/github/actions/workflow/status/jackMort/ChatGPT.nvim/default.yml?branch=main&style=for-the-badge)
 ![Lua](https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua)
 
 `ChatGPT` is a Neovim plugin that allows you to interact with OpenAI's GPT-3 language model.
