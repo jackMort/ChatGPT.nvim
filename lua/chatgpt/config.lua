@@ -59,6 +59,10 @@ function M.defaults()
           top = " ChatGPT ",
         },
       },
+      win_options = {
+        winblend = 10,
+        winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+      },
     },
     chat_input = {
       prompt = "  ",
@@ -69,9 +73,10 @@ function M.defaults()
           top_align = "center",
           top = " Prompt ",
         },
-      },
-      win_options = {
-        winhighlight = "Normal:Normal",
+        win_options = {
+          winblend = 10,
+          winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+        },
       },
     },
     openai_params = {
