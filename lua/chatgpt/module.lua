@@ -56,18 +56,19 @@ local open_chat = function()
   )
 
   -- add keymapping
-  chat_input:map("i", "<C-y>", function()
+  local maps = Config.options.keymaps
+  chat_input:map("i", maps.yank, function()
     local msg = chat:getSelected()
     local register = Config.options.default_register
     vim.fn.setreg(register, msg.text)
     vim.notify("Successfully copied to yank register!", vim.log.levels.INFO)
   end, { noremap = true })
 
-  chat_input:map("i", "<C-d>", function()
+  chat_input:map("i", maps.scroll_down, function()
     scroll_chat(1)
   end, { noremap = true, silent = true })
 
-  chat_input:map("i", "<C-u>", function()
+  chat_input:map("i", maps.scroll_up, function()
     scroll_chat(-1)
   end, { noremap = true, silent = true })
 
