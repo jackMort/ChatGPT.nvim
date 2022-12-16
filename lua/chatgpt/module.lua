@@ -77,9 +77,16 @@ local open_chat = function()
   end, { noremap = true, silent = true })
 
   -- close
-  chat_input:map("i", Config.options.keymaps.close, function()
-    chat_input.input_props.on_close()
-  end, { noremap = true, silent = true })
+  local close_keymaps = Config.options.keymaps.close
+  if type(close_keymaps) ~= "table" then
+    close_keymaps = { close_keymaps }
+  end
+
+  for _, keymap in ipairs(close_keymaps) do
+    chat_input:map("i", keymap, function()
+      chat_input.input_props.on_close()
+    end, { noremap = true, silent = true })
+  end
 
   -- mount chat component
   layout:mount()

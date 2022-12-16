@@ -84,7 +84,7 @@ function M.defaults()
       n = 1,
     },
     keymaps = {
-      close = "<C-c>",
+      close = { "<C-c>", "<Esc>" },
       yank_last = "<C-y>",
       scroll_up = "<C-u>",
       scroll_down = "<C-d>",
