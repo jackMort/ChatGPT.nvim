@@ -40,6 +40,7 @@ use({
   question_sign = "", -- you can use emoji if you want e.g. 🙂
   answer_sign = "ﮧ", -- 🤖
   max_line_length = 120,
+  yank_register = "+",
   chat_layout = {
     relative = "editor",
     position = "50%",

@@ -62,7 +62,7 @@ local open_chat = function()
   -- yank last answer
   chat_input:map("i", Config.options.keymaps.yank_last, function()
     local msg = chat:getSelected()
-    vim.fn.setreg("+", msg.text)
+    vim.fn.setreg(Config.options.yank_register, msg.text)
     vim.notify("Successfully copied to yank register!", vim.log.levels.INFO)
   end, { noremap = true })
 

@@ -41,6 +41,7 @@ function M.defaults()
     question_sign = "", -- 🙂
     answer_sign = "ﮧ", -- 🤖
     max_line_length = 120,
+    yank_register = "+",
     chat_layout = {
       relative = "editor",
       position = "50%",
