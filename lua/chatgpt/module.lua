@@ -86,6 +86,10 @@ local open_chat = function()
 
   -- initialize chat
   chat = Chat:new(chat_window.bufnr, chat_window.winid)
+
+  -- set custom filetype
+  vim.api.nvim_buf_set_option(chat_window.bufnr, "filetype", Config.options.chat_window.filetype)
+
   return chat, chat_input, chat_window
 end
 

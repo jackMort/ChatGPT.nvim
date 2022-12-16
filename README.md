@@ -50,6 +50,7 @@ use({
     },
   },
   chat_window = {
+    filetype = "chatgpt",
     border = {
       highlight = "FloatBorder",
       style = "rounded",
