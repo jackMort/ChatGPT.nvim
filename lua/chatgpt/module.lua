@@ -58,7 +58,8 @@ local open_chat = function()
   -- add keymapping
   chat_input:map("i", "<C-y>", function()
     local msg = chat:getSelected()
-    vim.fn.setreg("+", msg.text)
+    local register = Config.options.default_register
+    vim.fn.setreg(register, msg.text)
     vim.notify("Successfully copied to yank register!", vim.log.levels.INFO)
   end, { noremap = true })
 

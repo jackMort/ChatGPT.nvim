@@ -81,6 +81,7 @@ function M.defaults()
       top_p = 1,
       n = 1,
     },
+    default_register = "+"
   }
   return defaults
 end

@@ -80,6 +80,7 @@ use({
     top_p = 1,
     n = 1,
   },
+  default_register = "+" -- change to populate a different register for copy/yank keybindings
 }
 ```
 ## Usage
