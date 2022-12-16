@@ -29,6 +29,7 @@ local open_chat = function()
     on_close = function()
       chat:close()
       Api.close()
+      layout:unmount()
     end,
     on_submit = vim.schedule_wrap(function(value)
       if chat:isBusy() then
@@ -55,19 +56,29 @@ local open_chat = function()
     }, { dir = "col" })
   )
 
-  -- add keymapping
-  chat_input:map("i", "<C-y>", function()
+  --
+  -- add keymaps
+  --
+  -- yank last answer
+  chat_input:map("i", Config.options.keymaps.yank_last, function()
     local msg = chat:getSelected()
     vim.fn.setreg("+", msg.text)
     vim.notify("Successfully copied to yank register!", vim.log.levels.INFO)
   end, { noremap = true })
 
-  chat_input:map("i", "<C-d>", function()
+  -- scroll down
+  chat_input:map("i", Config.options.keymaps.scroll_down, function()
     scroll_chat(1)
   end, { noremap = true, silent = true })
 
-  chat_input:map("i", "<C-u>", function()
+  -- scroll up
+  chat_input:map("i", Config.options.keymaps.scroll_up, function()
     scroll_chat(-1)
+  end, { noremap = true, silent = true })
+
+  -- close
+  chat_input:map("i", Config.options.keymaps.close, function()
+    chat_input.input_props.on_close()
   end, { noremap = true, silent = true })
 
   -- mount chat component

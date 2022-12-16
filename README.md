@@ -80,6 +80,12 @@ use({
     top_p = 1,
     n = 1,
   },
+  keymaps = {
+    close = "<C-c>",
+    yank_last = "<C-y>",
+    scroll_up = "<C-u>",
+    scroll_down = "<C-d>",
+  },
 }
 ```
 ## Usage
