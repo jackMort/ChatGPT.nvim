@@ -80,7 +80,13 @@ use({
     top_p = 1,
     n = 1,
   },
-  default_register = "+" -- change to populate a different register for copy/yank keybindings
+  default_register = "+", -- change to populate a different register for copy/yank keybindings
+  keymaps = {
+    yank = "<C-y>",
+    scroll_up = "<C-u>",
+    scroll_down = "<C-d>"
+    -- use "<C-c>" to close, cannot be remapped
+  }
 }
 ```
 ## Usage

@@ -81,7 +81,12 @@ function M.defaults()
       top_p = 1,
       n = 1,
     },
-    default_register = "+"
+    default_register = "+",
+    keymaps = {
+      yank = "<C-y>",
+      scroll_up = "<C-u>",
+      scroll_down = "<C-d>"
+    }
   }
   return defaults
 end
