@@ -5,6 +5,7 @@ local Api = {}
 
 -- API URL
 Api.COMPLETIONS_URL = "https://api.openai.com/v1/completions"
+Api.EDITS_URL = "https://api.openai.com/v1/edits"
 
 -- API KEY
 Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -15,6 +16,11 @@ end
 function Api.completions(prompt, cb)
   local params = vim.tbl_extend("keep", { prompt = prompt }, Config.options.openai_params)
   Api.make_call(Api.COMPLETIONS_URL, params, cb)
+end
+
+function Api.edits(input, instruction, cb)
+  local params = vim.tbl_extend("keep", { input = input, instruction = instruction }, Config.options.openai_edit_params)
+  Api.make_call(Api.EDITS_URL, params, cb)
 end
 
 function Api.make_call(url, params, cb)

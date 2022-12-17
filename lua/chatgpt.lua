@@ -20,4 +20,8 @@ M.selectAwesomePrompt = function()
   module.open_chat_with_awesome_prompt()
 end
 
+M.edit_with_instructions = function()
+  module.edit_with_instructions()
+end
+
 return M

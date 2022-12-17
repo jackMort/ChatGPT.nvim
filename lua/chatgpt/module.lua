@@ -9,6 +9,7 @@ local Chat = require("chatgpt.chat")
 local Api = require("chatgpt.api")
 local Config = require("chatgpt.config")
 local Prompts = require("chatgpt.prompts")
+local Edits = require("chatgpt.code_edits")
 
 local open_chat = function()
   local chat, chat_input, layout, chat_window
@@ -121,5 +122,7 @@ M.open_chat_with_awesome_prompt = function()
     end),
   })
 end
+
+M.edit_with_instructions = Edits.edit_with_instructions
 
 return M
