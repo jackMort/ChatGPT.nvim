@@ -42,8 +42,8 @@ local open_chat = function()
       chat:addQuestion(value)
       chat:showProgess()
 
-      Api.completions(chat:toString(), function(answer)
-        chat:addAnswer(answer)
+      Api.completions(chat:toString(), function(answer, total_tokens)
+        chat:addAnswer(answer, total_tokens)
       end)
     end),
   })
@@ -115,8 +115,8 @@ M.open_chat_with_awesome_prompt = function()
       chat:addQuestion(prompt)
       chat:showProgess()
 
-      Api.completions(chat:toString(), function(answer)
-        chat:addAnswer(answer)
+      Api.completions(chat:toString(), function(answer, total_tokens)
+        chat:addAnswer(answer, total_tokens)
       end)
     end),
   })

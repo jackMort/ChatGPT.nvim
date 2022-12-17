@@ -37,13 +37,13 @@ function Api.make_call(url, params, cb)
     :start()
 end
 
-Api.handle_response = vim.schedule_wrap(function(responce, exit_code, cb)
+Api.handle_response = vim.schedule_wrap(function(response, exit_code, cb)
   if exit_code ~= 0 then
     vim.notify("An Error Occurred ...", vim.log.levels.ERROR)
     cb("ERROR: API Error")
   end
 
-  local result = table.concat(responce:result(), "\n")
+  local result = table.concat(response:result(), "\n")
   local json = vim.fn.json_decode(result)
   if json == nil then
     cb("No Response.")
@@ -51,10 +51,11 @@ Api.handle_response = vim.schedule_wrap(function(responce, exit_code, cb)
     cb("// API ERROR: " .. json.error.message)
   else
     local response = json.choices[1].text
+    local total_tokens = json.usage.total_tokens
     if type(response) == "string" and response ~= "" then
-      cb(response)
+      cb(response, total_tokens)
     else
-      cb("...")
+      cb("...", total_tokens)
     end
   end
 end)
