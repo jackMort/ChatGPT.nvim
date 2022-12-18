@@ -41,6 +41,7 @@ use({
   answer_sign = "ﮧ", -- 🤖
   max_line_length = 120,
   yank_register = "+",
+  show_total_token_spend = false,
   chat_layout = {
     relative = "editor",
     position = "50%",
