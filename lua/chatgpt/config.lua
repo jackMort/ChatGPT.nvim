@@ -89,6 +89,12 @@ function M.defaults()
       top_p = 1,
       n = 1,
     },
+    openai_edit_params = {
+      model = "code-davinci-edit-001",
+      temperature = 0,
+      top_p = 1,
+      n = 1,
+    },
     keymaps = {
       close = { "<C-c>", "<Esc>" },
       yank_last = "<C-y>",

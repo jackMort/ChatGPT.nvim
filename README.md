@@ -82,6 +82,12 @@ use({
     top_p = 1,
     n = 1,
   },
+  openai_edit_params = {
+    model = "code-davinci-edit-001",
+    temperature = 0,
+    top_p = 1,
+    n = 1,
+  },
   keymaps = {
     close = "<C-c>",
     yank_last = "<C-y>",
@@ -95,12 +101,14 @@ use({
 Plugin exposes" 
 - `ChatGPT` command which opens interactive window.
 - `ChatGPTActAs` command which opens a prompt selection from [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) to be used with the ChatGPT.
+- `ChatGPTEditWithInstructions` command which opens interactive window to edit selected text or whole window - [demo video](https://www.youtube.com/watch?v=dWe01EV0q3Q).
 
-Available keybindings for that window are:
+Available keybindings are:
 - `<C-c>` to close chat window.
 - `<C-u>` scroll up chat window.
 - `<C-d>` scroll down chat window.
 - `<C-y>` to copy/yank last answer.
+- `<C-i>` [Edit Window] use response as input.
 
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/jackMort)
