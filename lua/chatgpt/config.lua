@@ -52,15 +52,10 @@ function M.defaults()
     },
     settings_window = {
       border = {
-        highlight = "FloatBorder",
         style = "rounded",
         text = {
           top = " Settings ",
         },
-      },
-      win_options = {
-        winblend = 10,
-        winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
       },
     },
     chat_window = {
@@ -72,10 +67,6 @@ function M.defaults()
           top = " ChatGPT ",
         },
       },
-      win_options = {
-        winblend = 10,
-        winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
-      },
     },
     chat_input = {
       prompt = "  ",
@@ -85,10 +76,6 @@ function M.defaults()
         text = {
           top_align = "center",
           top = " Prompt ",
-        },
-        win_options = {
-          winblend = 10,
-          winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
         },
       },
     },
