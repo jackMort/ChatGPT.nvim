@@ -116,15 +116,15 @@ function Chat:renderLastMessage()
     local prefix = "   │ "
     if i == 0 then
       prefix = " " .. signs[msg.type] .. " │ "
+
+      if Config.options.show_total_token_spend and msg.type == ANSWER then
+        prefix = prefix .. string.format("[%d] ", self.total_tokens)
+      end
     end
     table.insert(lines, prefix .. w)
     i = i + 1
   end
   table.insert(lines, "")
-
-  if Config.options.show_total_token_spend then
-    table.insert(lines, "Total tokens spent: " .. self.total_tokens)
-  end
 
   local startIdx = self.selectedIndex == 1 and 0 or -1
   if isTimerSet then
