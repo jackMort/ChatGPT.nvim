@@ -13,13 +13,13 @@ if not Api.OPENAI_API_KEY then
   error("OPENAI_API_KEY environment variable not set")
 end
 
-function Api.completions(prompt, cb)
-  local params = vim.tbl_extend("keep", { prompt = prompt }, Config.options.openai_params)
+function Api.completions(custom_params, cb)
+  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
   Api.make_call(Api.COMPLETIONS_URL, params, cb)
 end
 
-function Api.edits(input, instruction, cb)
-  local params = vim.tbl_extend("keep", { input = input, instruction = instruction }, Config.options.openai_edit_params)
+function Api.edits(custom_params, cb)
+  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
   Api.make_call(Api.EDITS_URL, params, cb)
 end
 

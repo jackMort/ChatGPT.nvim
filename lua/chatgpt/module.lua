@@ -10,6 +10,7 @@ local Api = require("chatgpt.api")
 local Config = require("chatgpt.config")
 local Prompts = require("chatgpt.prompts")
 local Edits = require("chatgpt.code_edits")
+local Settings = require("chatgpt.settings")
 
 local open_chat = function()
   local chat, chat_input, layout, chat_window
@@ -43,18 +44,21 @@ local open_chat = function()
       chat:addQuestion(value)
       chat:showProgess()
 
-      Api.completions(chat:toString(), function(answer)
+      local params = vim.tbl_extend("keep", { prompt = chat:toString() }, Settings.params)
+      Api.completions(params, function(answer)
         chat:addAnswer(answer)
       end)
     end),
   })
 
+  local params = Config.options.openai_params
+  local settings_panel = Settings.get_settings_panel("completions", params)
   layout = Layout(
     Config.options.chat_layout,
     Layout.Box({
       Layout.Box(chat_window, { grow = 1 }),
       Layout.Box(chat_input, { size = 3 }),
-    }, { dir = "col" })
+    }, { dir = "col", grow = 1 })
   )
 
   --
@@ -87,6 +91,56 @@ local open_chat = function()
     chat_input:map("i", keymap, function()
       chat_input.input_props.on_close()
     end, { noremap = true, silent = true })
+  end
+
+  -- toggle settings
+  local settings_open = false
+  for _, popup in ipairs({ settings_panel, chat_input }) do
+    for _, mode in ipairs({ "n", "i" }) do
+      popup:map(mode, "<C-o>", function()
+        if settings_open then
+          layout:update(Layout.Box({
+            Layout.Box(chat_window, { grow = 1 }),
+            Layout.Box(chat_input, { size = 3 }),
+          }, { dir = "col" }))
+          settings_panel:hide()
+          vim.api.nvim_set_current_win(chat_input.winid)
+        else
+          layout:update(Layout.Box({
+            Layout.Box({
+              Layout.Box(chat_window, { grow = 1 }),
+              Layout.Box(chat_input, { size = 3 }),
+            }, { dir = "col", grow = 1 }),
+            Layout.Box(settings_panel, { size = 40 }),
+          }, { dir = "row" }))
+          settings_panel:show()
+          settings_panel:mount()
+
+          vim.api.nvim_set_current_win(settings_panel.winid)
+          vim.api.nvim_buf_set_option(settings_panel.bufnr, "modifiable", false)
+          vim.api.nvim_win_set_option(settings_panel.winid, "cursorline", true)
+        end
+        settings_open = not settings_open
+      end, {})
+    end
+  end
+
+  -- toggle panes
+  local active_panel = chat_input
+  for _, popup in ipairs({ settings_panel, chat_input }) do
+    for _, mode in ipairs({ "n", "i" }) do
+      popup:map(mode, "<Tab>", function()
+        if active_panel == settings_panel then
+          vim.api.nvim_set_current_win(chat_input.winid)
+          active_panel = chat_input
+        else
+          vim.api.nvim_set_current_win(settings_panel.winid)
+          vim.api.nvim_buf_set_option(settings_panel.bufnr, "modifiable", false)
+          vim.api.nvim_win_set_option(settings_panel.winid, "cursorline", true)
+          active_panel = settings_panel
+        end
+      end, {})
+    end
   end
 
   -- mount chat component

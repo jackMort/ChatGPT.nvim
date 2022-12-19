@@ -50,6 +50,20 @@ function M.defaults()
         width = "80%",
       },
     },
+    settings_window = {
+      filetype = "chatgpt",
+      border = {
+        highlight = "FloatBorder",
+        style = "rounded",
+        text = {
+          top = " Settings ",
+        },
+      },
+      win_options = {
+        winblend = 10,
+        winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+      },
+    },
     chat_window = {
       filetype = "chatgpt",
       border = {
@@ -99,6 +113,8 @@ function M.defaults()
       yank_last = "<C-y>",
       scroll_up = "<C-u>",
       scroll_down = "<C-d>",
+      toggle_settings = "<C-o>",
+      cycle_windows = "<Tab>",
     },
   }
   return defaults
