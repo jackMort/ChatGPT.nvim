@@ -77,6 +77,7 @@ function Chat:add(type, text, total_tokens)
     nr_of_lines = nr_of_lines,
     start_line = start_line,
     end_line = start_line + nr_of_lines - 1,
+    tokens = total_tokens,
   })
   self:next()
   self:renderLastMessage()
@@ -118,7 +119,7 @@ function Chat:renderLastMessage()
       prefix = " " .. signs[msg.type] .. " │ "
 
       if Config.options.show_total_token_spend and msg.type == ANSWER then
-        prefix = prefix .. string.format("[%d] ", self.total_tokens)
+        prefix = prefix .. string.format("[%d] ", msg.tokens)
       end
     end
     table.insert(lines, prefix .. w)

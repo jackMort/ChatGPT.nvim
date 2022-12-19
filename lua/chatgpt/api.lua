@@ -56,10 +56,10 @@ Api.handle_response = vim.schedule_wrap(function(response, exit_code, cb)
   elseif json.error then
     cb("// API ERROR: " .. json.error.message)
   else
-    local response = json.choices[1].text
+    local response_text = json.choices[1].text
     local total_tokens = json.usage.total_tokens
-    if type(response) == "string" and response ~= "" then
-      cb(response, total_tokens)
+    if type(response_text) == "string" and response_text ~= "" then
+      cb(response_text, total_tokens)
     else
       cb("...", total_tokens)
     end
