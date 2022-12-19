@@ -14,7 +14,6 @@ function Chat:new(bufnr, winid)
   self.selectedIndex = 0
   self.messages = {}
   self.timer = nil
-  self.total_tokens = 0
 
   return self
 end
@@ -44,10 +43,6 @@ end
 function Chat:add(type, text, total_tokens)
   if not self:is_buf_exists() then
     return
-  end
-
-  if total_tokens ~= nil then
-    self.total_tokens = self.total_tokens + total_tokens
   end
 
   local width = self:get_width() - 10 -- add some space
