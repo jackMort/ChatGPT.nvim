@@ -170,7 +170,8 @@ M.open_chat_with_awesome_prompt = function()
       chat:addQuestion(prompt)
       chat:showProgess()
 
-      Api.completions(chat:toString(), function(answer)
+      local params = vim.tbl_extend("keep", { prompt = chat:toString() }, Settings.params)
+      Api.completions(params, function(answer)
         chat:addAnswer(answer)
       end)
     end),
