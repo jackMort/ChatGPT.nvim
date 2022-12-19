@@ -51,7 +51,6 @@ function M.defaults()
       },
     },
     settings_window = {
-      filetype = "chatgpt",
       border = {
         highlight = "FloatBorder",
         style = "rounded",

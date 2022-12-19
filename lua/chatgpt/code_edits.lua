@@ -83,8 +83,8 @@ M.edit_with_instructions = function()
   end
   -- TODO: if buffer is empty
 
-  local params = Config.options.openai_edit_params
-  local settings_panel = Settings.get_settings_panel("edits", params)
+  local openai_params = Config.options.openai_edit_params
+  local settings_panel = Settings.get_settings_panel("edits", openai_params)
   input_window = Popup(Config.options.chat_window)
   output_window = Popup(Config.options.chat_window)
   instructions_input = ChatInput(Config.options.chat_input, {
@@ -99,7 +99,7 @@ M.edit_with_instructions = function()
 
       local input = table.concat(vim.api.nvim_buf_get_lines(input_window.bufnr, 0, -1, false), "\n")
       local params = vim.tbl_extend("keep", { input = input, instruction = instruction }, Settings.params)
-      Api.edits(input, instruction, function(output_txt)
+      Api.edits(params, function(output_txt)
         hide_progress()
         output = Utils.split_string_by_line(output_txt)
 

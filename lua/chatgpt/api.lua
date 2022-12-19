@@ -19,7 +19,7 @@ function Api.completions(custom_params, cb)
 end
 
 function Api.edits(custom_params, cb)
-  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
+  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_edit_params)
   Api.make_call(Api.EDITS_URL, params, cb)
 end
 
