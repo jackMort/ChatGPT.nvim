@@ -73,6 +73,19 @@ use({
       winhighlight = "Normal:Normal",
     },
   },
+  settings_window = {
+    border = {
+      highlight = "FloatBorder",
+      style = "rounded",
+      text = {
+        top = " Settings ",
+      },
+    },
+    win_options = {
+      winblend = 10,
+      winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+    },
+  },
   openai_params = {
     model = "text-davinci-003",
     frequency_penalty = 0,
@@ -93,6 +106,8 @@ use({
     yank_last = "<C-y>",
     scroll_up = "<C-u>",
     scroll_down = "<C-d>",
+    toggle_settings = "<C-o>",
+    cycle_windows = "<Tab>",
   },
 }
 ```
@@ -109,6 +124,8 @@ Available keybindings are:
 - `<C-d>` scroll down chat window.
 - `<C-y>` to copy/yank last answer.
 - `<C-i>` [Edit Window] use response as input.
+- `<C-o>` Toggle settings window.
+- `<Tab>` Cycle over windows.
 
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/jackMort)
