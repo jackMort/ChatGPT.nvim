@@ -35,7 +35,7 @@ use({
 
 ```lua
 {
-  welcome_message = WELCOME_MESSAGE, -- set to "" if you don't like the fancy robot
+  welcome_message = WELCOME_MESSAGE, -- set to "" if you don't like the fancy godot robot
   loading_text = "loading",
   question_sign = "", -- you can use emoji if you want e.g. 🙂
   answer_sign = "ﮧ", -- 🤖
@@ -47,6 +47,14 @@ use({
     size = {
       height = "80%",
       width = "80%",
+    },
+  },
+  settings_window = {
+    border = {
+      style = "rounded",
+      text = {
+        top = " Settings ",
+      },
     },
   },
   chat_window = {
@@ -69,22 +77,6 @@ use({
         top = " Prompt ",
       },
     },
-    win_options = {
-      winhighlight = "Normal:Normal",
-    },
-  },
-  settings_window = {
-    border = {
-      highlight = "FloatBorder",
-      style = "rounded",
-      text = {
-        top = " Settings ",
-      },
-    },
-    win_options = {
-      winblend = 10,
-      winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
-    },
   },
   openai_params = {
     model = "text-davinci-003",
@@ -102,7 +94,7 @@ use({
     n = 1,
   },
   keymaps = {
-    close = "<C-c>",
+    close = { "<C-c>", "<Esc>" },
     yank_last = "<C-y>",
     scroll_up = "<C-u>",
     scroll_down = "<C-d>",
@@ -113,7 +105,7 @@ use({
 ```
 ## Usage
 
-Plugin exposes" 
+Plugin exposes following commands:
 - `ChatGPT` command which opens interactive window.
 - `ChatGPTActAs` command which opens a prompt selection from [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) to be used with the ChatGPT.
 
