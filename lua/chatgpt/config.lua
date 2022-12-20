@@ -57,6 +57,9 @@ function M.defaults()
           top = " Settings ",
         },
       },
+      win_options = {
+        winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+      },
     },
     chat_window = {
       filetype = "chatgpt",
@@ -66,6 +69,9 @@ function M.defaults()
         text = {
           top = " ChatGPT ",
         },
+      },
+      win_options = {
+        winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
       },
     },
     chat_input = {
@@ -77,6 +83,9 @@ function M.defaults()
           top_align = "center",
           top = " Prompt ",
         },
+      },
+      win_options = {
+        winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
       },
     },
     openai_params = {
