@@ -6,7 +6,7 @@
 `ChatGPT` is a Neovim plugin that allows you to interact with OpenAI's GPT-3 language model.
 With `ChatGPT`, you can ask questions and get answers from GPT-3 in real-time.
 
-![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview-2.png)
+![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview-2.png?raw=true)
 ## Installation
 
 - Make sure you have `curl` installed.
@@ -109,10 +109,10 @@ Plugin exposes following commands:
 - `ChatGPT` command which opens interactive window.
 - `ChatGPTActAs` command which opens a prompt selection from [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) to be used with the ChatGPT.
 
-![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview-3.png)
+![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview-3.png?raw=true)
 - `ChatGPTEditWithInstructions` command which opens interactive window to edit selected text or whole window - [demo video](https://www.youtube.com/watch?v=dWe01EV0q3Q).
 
-![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview.png)
+![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview.png?raw=true)
 
 Available keybindings are:
 - `<C-c>` to close chat window.
