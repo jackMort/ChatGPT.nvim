@@ -1,6 +1,7 @@
 -- main module file
 local module = require("chatgpt.module")
 local config = require("chatgpt.config")
+local signs = require("chatgpt.signs")
 
 local M = {}
 
@@ -12,6 +13,7 @@ M.setup = function(options)
   vim.api.nvim_set_hl(0, "ChatGPTTotalTokensBorder", { fg = "#444444" })
 
   config.setup(options)
+  signs.setup()
 end
 
 --
@@ -28,6 +30,10 @@ end
 
 M.edit_with_instructions = function()
   module.edit_with_instructions()
+end
+
+M.inline_edit = function(opts)
+  module.inline_edit(opts)
 end
 
 return M

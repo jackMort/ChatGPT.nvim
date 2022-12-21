@@ -11,10 +11,33 @@ local Config = require("chatgpt.config")
 local Prompts = require("chatgpt.prompts")
 local Edits = require("chatgpt.code_edits")
 local Settings = require("chatgpt.settings")
--- local InlineEdit = require("chatgpt.flows.inline_edit")
+local InlineEdit = require("chatgpt.flows.inline_edit")
 
+local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
+
+local extmark_id = nil
 local open_chat = function()
   local chat, chat_input, layout, chat_window
+
+  local display_input_suffix = function(suffix)
+    if extmark_id then
+      vim.api.nvim_buf_del_extmark(chat_input.bufnr, namespace_id, extmark_id)
+    end
+
+    if not suffix then
+      return
+    end
+
+    extmark_id = vim.api.nvim_buf_set_extmark(chat_input.bufnr, namespace_id, 0, -1, {
+      virt_text = {
+        { "", "ChatGPTTotalTokensBorder" },
+        { "" .. suffix, "ChatGPTTotalTokens" },
+        { "", "ChatGPTTotalTokensBorder" },
+        { " ", "" },
+      },
+      virt_text_pos = "right_align",
+    })
+  end
 
   local scroll_chat = function(direction)
     local speed = vim.api.nvim_win_get_height(chat_window.winid) / 2
@@ -35,19 +58,22 @@ local open_chat = function()
       layout:unmount()
     end,
     on_submit = vim.schedule_wrap(function(value)
+      -- clear input
+      vim.api.nvim_buf_set_lines(chat_input.bufnr, 0, -1, false, { "" })
+
       if chat:isBusy() then
         vim.notify("I'm busy, please wait a moment...", vim.log.levels.WARN)
         return
       end
-      -- clear input
-      vim.api.nvim_buf_set_lines(chat_input.bufnr, 0, 1, false, { "" })
 
       chat:addQuestion(value)
       chat:showProgess()
 
       local params = vim.tbl_extend("keep", { prompt = chat:toString() }, Settings.params)
-      Api.completions(params, function(answer)
-        chat:addAnswer(answer)
+      Api.completions(params, function(answer, usage)
+        chat:addAnswer(answer, usage)
+        local total_tokens = chat:get_total_tokens()
+        display_input_suffix(total_tokens)
       end)
     end),
   })
@@ -148,7 +174,6 @@ local open_chat = function()
   layout:mount()
 
   -- initialize chat
-  chat = Chat:new(chat_window.bufnr, chat_window.winid)
   chat = Chat:new(chat_window.bufnr, chat_window.winid, display_input_suffix)
 
   -- set custom filetype
@@ -181,6 +206,6 @@ M.open_chat_with_awesome_prompt = function()
 end
 
 M.edit_with_instructions = Edits.edit_with_instructions
--- M.inline_edit = InlineEdit.run
+M.inline_edit = InlineEdit.run
 
 return M
