@@ -37,7 +37,7 @@ local M = {}
 function M.defaults()
   local defaults = {
     welcome_message = WELCOME_MESSAGE,
-    loading_text = "loading",
+    loading_text = "Loading, please wait ...",
     question_sign = "", -- 🙂
     answer_sign = "ﮧ", -- 🤖
     max_line_length = 120,

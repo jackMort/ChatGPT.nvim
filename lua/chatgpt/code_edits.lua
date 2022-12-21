@@ -7,57 +7,50 @@ local ChatInput = require("chatgpt.input")
 local Api = require("chatgpt.api")
 local Config = require("chatgpt.config")
 local Utils = require("chatgpt.utils")
+local Spinner = require("chatgpt.spinner")
 local Settings = require("chatgpt.settings")
 
--- TODO: find the better place
-vim.api.nvim_command("hi chatgpt_input_mark ctermfg=gray guifg=gray cterm=italic")
+local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
-local ns = vim.api.nvim_create_namespace("chatgpt")
+local instructions_input, layout, input_window, output_window, output, timer, filetype, bufnr, extmark_id
 
-local instructions_input, layout, input_window, output_window, output, timer, filetype, bufnr
+local display_input_suffix = function(suffix)
+  if extmark_id then
+    vim.api.nvim_buf_del_extmark(instructions_input.bufnr, namespace_id, extmark_id)
+  end
+
+  if not suffix then
+    return
+  end
+
+  extmark_id = vim.api.nvim_buf_set_extmark(instructions_input.bufnr, namespace_id, 0, -1, {
+    virt_text = {
+      { "", "ChatGPTTotalTokensBorder" },
+      { "" .. suffix, "ChatGPTTotalTokens" },
+      { "", "ChatGPTTotalTokensBorder" },
+      { " ", "" },
+    },
+    virt_text_pos = "right_align",
+  })
+end
+
+local spinner = Spinner:new(function(state)
+  vim.schedule(function()
+    output_window.border:set_text("top", " " .. state .. " ", "center")
+    display_input_suffix(state)
+  end)
+end, {
+  text = Config.options.loading_text,
+})
 
 local show_progress = function()
-  local idx = 1
-  local chars = { "|", "/", "-", "\\" }
-  timer = vim.loop.new_timer()
-  timer:start(
-    0,
-    250,
-    vim.schedule_wrap(function()
-      local char = chars[idx]
-      local line = "[ "
-        .. char
-        .. " "
-        .. Config.options.loading_text
-        .. " "
-        .. string.rep(".", idx - 1)
-        .. string.rep(" ", 4 - idx)
-        .. " ]"
-      output_window.border:set_text("top", line, "center")
-      if idx < 4 then
-        idx = idx + 1
-      else
-        idx = 1
-      end
-    end)
-  )
+  spinner:start()
 end
 
 local hide_progress = function()
-  if timer ~= nil then
-    timer:stop()
-    timer = nil
-    output_window.border:set_text("top", " Result ", "center")
-  end
-end
-
-local set_filetype_mark = function()
-  local mopts = {
-    virt_text = { { " " .. filetype .. " ", "chatgpt_input_mark" } },
-    virt_text_pos = "right_align",
-    hl_mode = "blend",
-  }
-  vim.api.nvim_buf_set_extmark(instructions_input.bufnr, ns, 0, 0, mopts)
+  spinner:stop()
+  display_input_suffix()
+  output_window.border:set_text("top", " Result ", "center")
 end
 
 local setup_and_mount = vim.schedule_wrap(function(lines)
@@ -95,16 +88,18 @@ M.edit_with_instructions = function()
       end
     end,
     on_submit = vim.schedule_wrap(function(instruction)
+      -- clear input
+      vim.api.nvim_buf_set_lines(instructions_input.bufnr, 0, -1, false, { "" })
       show_progress()
 
       local input = table.concat(vim.api.nvim_buf_get_lines(input_window.bufnr, 0, -1, false), "\n")
       local params = vim.tbl_extend("keep", { input = input, instruction = instruction }, Settings.params)
-      Api.edits(params, function(output_txt)
+      Api.edits(params, function(output_txt, usage)
         hide_progress()
         output = Utils.split_string_by_line(output_txt)
 
         vim.api.nvim_buf_set_lines(output_window.bufnr, 0, -1, false, output)
-        -- output_window.border:set_text("bottom", " <C-y> to apply changes | <C-i> Use as input ", "center")
+        display_input_suffix(usage.total_tokens)
       end)
     end),
   })

@@ -1,25 +1,31 @@
 local Config = require("chatgpt.config")
 local Utils = require("chatgpt.utils")
+local Spinner = require("chatgpt.spinner")
 
 local Chat = {}
 Chat.__index = Chat
 
 QUESTION, ANSWER = 1, 2
 
-function Chat:new(bufnr, winid)
+function Chat:new(bufnr, winid, on_loading)
   self = setmetatable({}, Chat)
 
   self.bufnr = bufnr
   self.winid = winid
+  self.on_loading = on_loading
   self.selectedIndex = 0
   self.messages = {}
-  self.timer = nil
-
+  self.spinner = Spinner:new(function(state)
+    vim.schedule(function()
+      self:set_lines(-2, -1, false, { "     " .. state .. " " .. Config.options.loading_text })
+      on_loading(state)
+    end)
+  end)
   return self
 end
 
 function Chat:close()
-  self:stopTimer()
+  self.spinner:stop()
 end
 
 function Chat:welcome()
@@ -32,19 +38,18 @@ function Chat:welcome()
 
   self:set_lines(0, 0, false, lines)
   for line_num = 0, end_line do
-    self:add_highlight("Comment", line_num, 0, -1)
+    self:add_highlight("ChatGPTWelcome", line_num, 0, -1)
   end
 end
 
 function Chat:isBusy()
-  return self.timer ~= nil
+  return self.spinner:is_running()
 end
 
-function Chat:add(type, text)
+function Chat:add(type, text, usage)
   if not self:is_buf_exists() then
     return
   end
-
   local width = self:get_width() - 10 -- add some space
   local max_width = Config.options.max_line_length
   if width > max_width then
@@ -66,6 +71,7 @@ function Chat:add(type, text)
   end
 
   table.insert(self.messages, {
+    usage = usage,
     type = type,
     text = text,
     lines = lines,
@@ -81,8 +87,15 @@ function Chat:addQuestion(text)
   self:add(QUESTION, text)
 end
 
-function Chat:addAnswer(text)
-  self:add(ANSWER, text)
+function Chat:addAnswer(text, usage)
+  self:add(ANSWER, text, usage)
+end
+
+function Chat:get_total_tokens()
+  local answer = self:get_last_answer()
+  if answer ~= nil then
+    return answer.usage.total_tokens
+  end
 end
 
 function Chat:next()
@@ -98,9 +111,17 @@ function Chat:getSelected()
   return self.messages[self.selectedIndex]
 end
 
+function Chat:get_last_answer()
+  for i = #self.messages, 1, -1 do
+    if self.messages[i].type == ANSWER then
+      return self.messages[i]
+    end
+  end
+end
+
 function Chat:renderLastMessage()
-  local isTimerSet = self.timer ~= nil
-  self:stopTimer()
+  local wasSpinnerSet = self.spinner:is_running()
+  self:stopSpinner()
 
   local signs = { Config.options.question_sign, Config.options.answer_sign }
   local msg = self:getSelected()
@@ -118,14 +139,14 @@ function Chat:renderLastMessage()
   table.insert(lines, "")
 
   local startIdx = self.selectedIndex == 1 and 0 or -1
-  if isTimerSet then
+  if wasSpinnerSet then
     startIdx = startIdx - 1
   end
   self:set_lines(startIdx, -1, false, lines)
 
   if msg.type == QUESTION then
     for index, _ in ipairs(lines) do
-      self:add_highlight("Comment", msg.start_line + index - 1, 0, -1)
+      self:add_highlight("ChatGPTQuestion", msg.start_line + index - 1, 0, -1)
     end
   end
 
@@ -135,34 +156,12 @@ function Chat:renderLastMessage()
 end
 
 function Chat:showProgess()
-  local idx = 1
-  local chars = { "|", "/", "-", "\\" }
-  self.timer = vim.loop.new_timer()
-  self.timer:start(
-    0,
-    250,
-    vim.schedule_wrap(function()
-      local char = chars[idx]
-      self:set_lines(
-        -2,
-        -1,
-        false,
-        { "   " .. char .. " " .. Config.options.loading_text .. " " .. string.rep(".", idx - 1) }
-      )
-      if idx < 4 then
-        idx = idx + 1
-      else
-        idx = 1
-      end
-    end)
-  )
+  self.spinner:start()
 end
 
-function Chat:stopTimer()
-  if self.timer ~= nil then
-    self.timer:stop()
-    self.timer = nil
-  end
+function Chat:stopSpinner()
+  self.spinner:stop()
+  self.on_loading()
 end
 
 function Chat:toString()
