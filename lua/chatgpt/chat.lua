@@ -18,7 +18,9 @@ function Chat:new(bufnr, winid, on_loading)
   self.spinner = Spinner:new(function(state)
     vim.schedule(function()
       self:set_lines(-2, -1, false, { "     " .. state .. " " .. Config.options.loading_text })
-      on_loading(state)
+      if on_loading ~= nil then
+        on_loading(state)
+      end
     end)
   end)
   return self
@@ -161,7 +163,9 @@ end
 
 function Chat:stopSpinner()
   self.spinner:stop()
-  self.on_loading()
+  if self.on_loading ~= nil then
+    self.on_loading("")
+  end
 end
 
 function Chat:toString()
