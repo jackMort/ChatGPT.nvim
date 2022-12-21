@@ -12,6 +12,7 @@ local Prompts = require("chatgpt.prompts")
 local Edits = require("chatgpt.code_edits")
 local Settings = require("chatgpt.settings")
 local InlineEdit = require("chatgpt.flows.inline_edit")
+-- local InlineEdit = require("chatgpt.flows.inline_edit")
 
 local open_chat = function()
   local chat, chat_input, layout, chat_window
@@ -181,5 +182,6 @@ end
 
 M.edit_with_instructions = Edits.edit_with_instructions
 M.inline_edit = InlineEdit.run
+-- M.inline_edit = InlineEdit.run
 
 return M
