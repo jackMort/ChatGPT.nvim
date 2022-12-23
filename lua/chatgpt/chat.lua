@@ -71,7 +71,7 @@ function Chat:add(type, text, usage)
   end
 
   table.insert(self.messages, {
-    usage = usage,
+    usage = usage or {},
     type = type,
     text = text,
     lines = lines,

@@ -11,7 +11,7 @@ local Config = require("chatgpt.config")
 local Prompts = require("chatgpt.prompts")
 local Edits = require("chatgpt.code_edits")
 local Settings = require("chatgpt.settings")
-local InlineEdit = require("chatgpt.flows.inline_edit")
+local Actions = require("chatgpt.flows.actions")
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
@@ -206,6 +206,6 @@ M.open_chat_with_awesome_prompt = function()
 end
 
 M.edit_with_instructions = Edits.edit_with_instructions
-M.inline_edit = InlineEdit.run
+M.run_action = Actions.run_action
 
 return M

@@ -1,0 +1,120 @@
+local classes = require("chatgpt.common.classes")
+local Signs = require("chatgpt.signs")
+local Spinner = require("chatgpt.spinner")
+
+local BaseAction = classes.class()
+
+local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
+
+local function get_selection_center(start_row, start_col, end_row, end_col)
+  if start_row < end_row then
+    local diff = math.floor((end_row - start_row) / 2)
+    start_row = start_row + diff
+  end
+  return start_row, start_col
+end
+
+function BaseAction:init(opts)
+  self.opts = opts
+end
+
+function BaseAction:get_bufnr()
+  if not self._bufnr then
+    self._bufnr = vim.api.nvim_get_current_buf()
+  end
+  return self._bufnr
+end
+
+function BaseAction:get_filetype()
+  local bufnr = self:get_bufnr()
+  return vim.api.nvim_buf_get_option(bufnr, "filetype")
+end
+
+function BaseAction:get_visual_selection()
+  local bufnr = self:get_bufnr()
+
+  local start_pos = vim.api.nvim_buf_get_mark(bufnr, "<")
+  local start_row = start_pos[1] - 1
+  local start_col = start_pos[2]
+
+  local end_pos = vim.api.nvim_buf_get_mark(bufnr, ">")
+  local end_row = end_pos[1] - 1
+  local end_col = end_pos[2] + 1
+
+  local start_line_length = vim.api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, true)[1]:len()
+  start_col = math.min(start_col, start_line_length)
+
+  local end_line_length = vim.api.nvim_buf_get_lines(bufnr, end_row, end_row + 1, true)[1]:len()
+  end_col = math.min(end_col, end_line_length)
+
+  return start_row, start_col, end_row, end_col
+end
+
+function BaseAction:get_selected_lines()
+  local bufnr = self:get_bufnr()
+  local start_row, start_col, end_row, end_col = self:get_visual_selection()
+  return vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
+end
+
+function BaseAction:get_selected_text()
+  local lines = self:get_selected_lines()
+  return table.concat(lines, "\n")
+end
+
+function BaseAction:mark_selection_with_signs()
+  local bufnr = self:get_bufnr()
+  local start_row, _, end_row, _ = self:get_visual_selection()
+  Signs.set_for_lines(bufnr, start_row, end_row)
+end
+
+function BaseAction:render_spinner(state)
+  vim.schedule(function()
+    local bufnr = self:get_bufnr()
+    local start_row, start_col, end_row, end_col = self:get_visual_selection()
+
+    vim.schedule(function()
+      if self.extmark_id then
+        vim.api.nvim_buf_del_extmark(bufnr, namespace_id, self.extmark_id)
+      end
+      start_row, start_col = get_selection_center(start_row, start_col, end_row, end_col)
+      self.extmark_id = vim.api.nvim_buf_set_extmark(bufnr, namespace_id, start_row, 0, {
+        virt_text = {
+          { "", "ChatGPTTotalTokensBorder" },
+          { state .. " Processing, please wait ...", "ChatGPTTotalTokens" },
+          { "", "ChatGPTTotalTokensBorder" },
+          { " ", "" },
+        },
+        virt_text_pos = "eol",
+      })
+    end)
+  end)
+end
+
+function BaseAction:set_loading(state)
+  local bufnr = self:get_bufnr()
+  if state then
+    if not self.spinner then
+      self.spinner = Spinner:new(function(state)
+        self:render_spinner(state)
+      end)
+    end
+    self:mark_selection_with_signs()
+    self.spinner:start()
+  else
+    self.spinner:stop()
+    Signs.del(bufnr)
+    if self.extmark_id then
+      vim.api.nvim_buf_del_extmark(bufnr, namespace_id, self.extmark_id)
+    end
+  end
+end
+
+function BaseAction:run()
+  self:set_loading(true)
+end
+
+function BaseAction:on_result(answer, usage)
+  self:set_loading(false)
+end
+
+return BaseAction

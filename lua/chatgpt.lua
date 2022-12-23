@@ -32,8 +32,8 @@ M.edit_with_instructions = function()
   module.edit_with_instructions()
 end
 
-M.inline_edit = function(opts)
-  module.inline_edit(opts)
+M.run_action = function(opts)
+  module.run_action(opts)
 end
 
 return M
