@@ -61,6 +61,17 @@ function M.defaults()
         winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
       },
     },
+    sessions_window = {
+      border = {
+        style = "rounded",
+        text = {
+          top = " Sessions ",
+        },
+      },
+      win_options = {
+        winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+      },
+    },
     chat_window = {
       filetype = "chatgpt",
       border = {
@@ -109,6 +120,7 @@ function M.defaults()
       scroll_up = "<C-u>",
       scroll_down = "<C-d>",
       toggle_settings = "<C-o>",
+      new_session = "<C-n>",
       cycle_windows = "<Tab>",
     },
   }

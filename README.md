@@ -99,6 +99,7 @@ use({
     scroll_up = "<C-u>",
     scroll_down = "<C-d>",
     toggle_settings = "<C-o>",
+    new_session = "<C-n>",
     cycle_windows = "<Tab>",
   },
 }
@@ -119,9 +120,10 @@ Available keybindings are:
 - `<C-u>` scroll up chat window.
 - `<C-d>` scroll down chat window.
 - `<C-y>` to copy/yank last answer.
-- `<C-i>` [Edit Window] use response as input.
 - `<C-o>` Toggle settings window.
+- `<C-n>` Start new session.
 - `<Tab>` Cycle over windows.
+- `<C-i>` [Edit Window] use response as input.
 
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/jackMort)

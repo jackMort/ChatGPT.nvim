@@ -11,6 +11,7 @@ local Config = require("chatgpt.config")
 local Prompts = require("chatgpt.prompts")
 local Edits = require("chatgpt.code_edits")
 local Settings = require("chatgpt.settings")
+local Sessions = require("chatgpt.flows.chat.sessions")
 local Actions = require("chatgpt.flows.actions")
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
@@ -80,6 +81,7 @@ local open_chat = function()
 
   local params = Config.options.openai_params
   local settings_panel = Settings.get_settings_panel("completions", params)
+  local sessions_panel = Sessions.get_panel("completions")
   layout = Layout(
     Config.options.chat_layout,
     Layout.Box({
@@ -124,13 +126,12 @@ local open_chat = function()
   local settings_open = false
   for _, popup in ipairs({ settings_panel, chat_input }) do
     for _, mode in ipairs({ "n", "i" }) do
-      popup:map(mode, "<C-o>", function()
+      popup:map(mode, Config.options.keymaps.toggle_settings, function()
         if settings_open then
           layout:update(Layout.Box({
             Layout.Box(chat_window, { grow = 1 }),
             Layout.Box(chat_input, { size = 3 }),
           }, { dir = "col" }))
-          settings_panel:hide()
           vim.api.nvim_set_current_win(chat_input.winid)
         else
           layout:update(Layout.Box({
@@ -138,16 +139,26 @@ local open_chat = function()
               Layout.Box(chat_window, { grow = 1 }),
               Layout.Box(chat_input, { size = 3 }),
             }, { dir = "col", grow = 1 }),
-            Layout.Box(settings_panel, { size = 40 }),
+            Layout.Box({
+              Layout.Box(settings_panel, { size = "50%" }),
+              Layout.Box(sessions_panel, { size = "50%" }),
+            }, { dir = "col", size = 40 }),
           }, { dir = "row" }))
-          settings_panel:show()
-          settings_panel:mount()
 
           vim.api.nvim_set_current_win(settings_panel.winid)
           vim.api.nvim_buf_set_option(settings_panel.bufnr, "modifiable", false)
           vim.api.nvim_win_set_option(settings_panel.winid, "cursorline", true)
         end
         settings_open = not settings_open
+      end, {})
+    end
+  end
+
+  -- toggle settings
+  for _, popup in ipairs({ settings_panel, chat_input }) do
+    for _, mode in ipairs({ "n", "i" }) do
+      popup:map(mode, Config.options.keymaps.new_session, function()
+        chat:new_session()
       end, {})
     end
   end

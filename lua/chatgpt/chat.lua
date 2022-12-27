@@ -1,6 +1,7 @@
 local Config = require("chatgpt.config")
 local Utils = require("chatgpt.utils")
 local Spinner = require("chatgpt.spinner")
+local Session = require("chatgpt.flows.chat.session")
 
 local Chat = {}
 Chat.__index = Chat
@@ -9,6 +10,8 @@ QUESTION, ANSWER = 1, 2
 
 function Chat:new(bufnr, winid, on_loading)
   self = setmetatable({}, Chat)
+
+  self.session = Session.latest()
 
   self.bufnr = bufnr
   self.winid = winid
@@ -24,22 +27,44 @@ function Chat:new(bufnr, winid, on_loading)
   return self
 end
 
+function Chat:on_show(bufnr, winid)
+  self.bufnr = bufnr
+  self.winid = winid
+end
+
 function Chat:close()
   self.spinner:stop()
 end
 
 function Chat:welcome()
-  local lines = {}
-  local end_line = 0
-  for line in string.gmatch(Config.options.welcome_message, "[^\n]+") do
-    table.insert(lines, line)
-    end_line = end_line + 1
-  end
+  if #self.session.conversation > 0 then
+    for _, item in ipairs(self.session.conversation) do
+      self:_add(item.type, item.text, item.usage)
+    end
+  else
+    local lines = {}
+    local end_line = 0
+    for line in string.gmatch(Config.options.welcome_message, "[^\n]+") do
+      table.insert(lines, line)
+      end_line = end_line + 1
+    end
 
-  self:set_lines(0, 0, false, lines)
-  for line_num = 0, end_line do
-    self:add_highlight("ChatGPTWelcome", line_num, 0, -1)
+    self:set_lines(0, 0, false, lines)
+    for line_num = 0, end_line do
+      self:add_highlight("ChatGPTWelcome", line_num, 0, -1)
+    end
   end
+end
+
+function Chat:new_session()
+  self.session = Session:new()
+  self.session:save()
+
+  self.messages = {}
+  self.selectedIndex = 0
+  self:set_lines(0, -1, false, {})
+  self:set_cursor({ 1, 0 })
+  self:welcome()
 end
 
 function Chat:isBusy()
@@ -47,6 +72,15 @@ function Chat:isBusy()
 end
 
 function Chat:add(type, text, usage)
+  self.session:add_item({
+    type = type,
+    text = text,
+    usage = usage,
+  })
+  self:_add(type, text, usage)
+end
+
+function Chat:_add(type, text, usage)
   if not self:is_buf_exists() then
     return
   end
@@ -120,7 +154,6 @@ function Chat:get_last_answer()
 end
 
 function Chat:renderLastMessage()
-  local wasSpinnerSet = self.spinner:is_running()
   self:stopSpinner()
 
   local signs = { Config.options.question_sign, Config.options.answer_sign }
@@ -137,11 +170,11 @@ function Chat:renderLastMessage()
     i = i + 1
   end
   table.insert(lines, "")
-
-  local startIdx = self.selectedIndex == 1 and 0 or -1
-  if wasSpinnerSet then
-    startIdx = startIdx - 1
+  if msg.type == ANSWER then
+    table.insert(lines, "")
   end
+
+  local startIdx = self.selectedIndex == 1 and 0 or -2
   self:set_lines(startIdx, -1, false, lines)
 
   if msg.type == QUESTION then
