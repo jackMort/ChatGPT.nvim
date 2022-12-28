@@ -22,9 +22,17 @@ end, {
       "fix_bugs",
       "grammar_correction",
       "optimize_code",
+      "explain_code",
       "summarize",
       "translate",
     }
     return match
   end,
+})
+
+vim.api.nvim_create_user_command("ChatGPTRunCustomCodeAction", function(opts)
+  require("chatgpt").run_custom_code_action(opts)
+end, {
+  nargs = "*",
+  range = true,
 })
