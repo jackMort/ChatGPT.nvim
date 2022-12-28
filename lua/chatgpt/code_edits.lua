@@ -73,6 +73,9 @@ M.edit_with_instructions = function()
   local visual_lines, start_row, start_col, end_row, _ = Utils.get_visual_lines(bufnr)
   if not visual_lines then
     visual_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    start_row = 1
+    start_col = 1
+    end_row = 0
   end
   -- TODO: if buffer is empty
 

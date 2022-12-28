@@ -54,7 +54,14 @@ function M.get_end_col(bufnr, row)
 end
 
 function M.paste(bufnr, start_row, start_col, end_row, lines)
-  local end_col = M.get_end_col(bufnr, end_row)
+  local end_col
+  if end_row > 0 then
+    end_col = M.get_end_col(bufnr, end_row)
+  else
+    local line = vim.api.nvim_buf_get_lines(bufnr, -2, -1, true)[1]
+    end_col = #line
+  end
+
   vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col, lines)
 end
 
