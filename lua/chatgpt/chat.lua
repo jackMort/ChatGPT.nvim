@@ -67,6 +67,17 @@ function Chat:new_session()
   self:welcome()
 end
 
+function Chat:set_session(session)
+  vim.pretty_print(session)
+  self.session = session
+
+  self.messages = {}
+  self.selectedIndex = 0
+  self:set_lines(0, -1, false, {})
+  self:set_cursor({ 1, 0 })
+  self:welcome()
+end
+
 function Chat:isBusy()
   return self.spinner:is_running()
 end

@@ -22,6 +22,10 @@ function Session:init(opts)
   end
 end
 
+function Session:delete()
+  return Path:new(self.filename):rm()
+end
+
 function Session:to_export()
   return {
     name = self.name,

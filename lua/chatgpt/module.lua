@@ -81,7 +81,9 @@ local open_chat = function()
 
   local params = Config.options.openai_params
   local settings_panel = Settings.get_settings_panel("completions", params)
-  local sessions_panel = Sessions.get_panel("completions")
+  local sessions_panel = Sessions.get_panel(function(session)
+    chat:set_session(session)
+  end)
   layout = Layout(
     Config.options.chat_layout,
     Layout.Box({
@@ -140,8 +142,8 @@ local open_chat = function()
               Layout.Box(chat_input, { size = 3 }),
             }, { dir = "col", grow = 1 }),
             Layout.Box({
-              Layout.Box(settings_panel, { size = "50%" }),
-              Layout.Box(sessions_panel, { size = "50%" }),
+              Layout.Box(settings_panel, { size = "30%" }),
+              Layout.Box(sessions_panel, { grow = 1 }),
             }, { dir = "col", size = 40 }),
           }, { dir = "row" }))
 
@@ -159,22 +161,24 @@ local open_chat = function()
     for _, mode in ipairs({ "n", "i" }) do
       popup:map(mode, Config.options.keymaps.new_session, function()
         chat:new_session()
+        Sessions:refresh()
       end, {})
     end
   end
 
-  -- toggle panes
+  -- cycle panes
   local active_panel = chat_input
-  for _, popup in ipairs({ settings_panel, chat_input }) do
+  for _, popup in ipairs({ settings_panel, sessions_panel, chat_input }) do
     for _, mode in ipairs({ "n", "i" }) do
       popup:map(mode, "<Tab>", function()
         if active_panel == settings_panel then
+          vim.api.nvim_set_current_win(sessions_panel.winid)
+          active_panel = sessions_panel
+        elseif active_panel == sessions_panel then
           vim.api.nvim_set_current_win(chat_input.winid)
           active_panel = chat_input
         else
           vim.api.nvim_set_current_win(settings_panel.winid)
-          vim.api.nvim_buf_set_option(settings_panel.bufnr, "modifiable", false)
-          vim.api.nvim_win_set_option(settings_panel.winid, "cursorline", true)
           active_panel = settings_panel
         end
       end, {})
