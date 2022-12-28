@@ -2,6 +2,7 @@ local Config = require("chatgpt.config")
 local Utils = require("chatgpt.utils")
 local Spinner = require("chatgpt.spinner")
 local Session = require("chatgpt.flows.chat.session")
+local Tokens = require("chatgpt.flows.chat.tokens")
 
 local Chat = {}
 Chat.__index = Chat
@@ -192,6 +193,19 @@ function Chat:renderLastMessage()
     for index, _ in ipairs(lines) do
       self:add_highlight("ChatGPTQuestion", msg.start_line + index - 1, 0, -1)
     end
+  else
+    local extmark_id = vim.api.nvim_buf_set_extmark(self.bufnr, Config.namespace_id, msg.end_line, -1, {
+      virt_text = {
+        { "", "ChatGPTTotalTokensBorder" },
+        {
+          "TOKENS: " .. msg.usage.total_tokens .. " / PRICE: $" .. Tokens.usage_in_dollars(msg.usage.total_tokens),
+          "ChatGPTTotalTokens",
+        },
+        { "", "ChatGPTTotalTokensBorder" },
+        { " ", "" },
+      },
+      virt_text_pos = "right_align",
+    })
   end
 
   if self.selectedIndex > 2 then

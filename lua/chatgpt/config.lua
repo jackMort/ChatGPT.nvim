@@ -129,6 +129,8 @@ end
 
 M.options = {}
 
+M.namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
+
 function M.setup(options)
   options = options or {}
   M.options = vim.tbl_deep_extend("force", {}, M.defaults(), options)
