@@ -58,6 +58,8 @@ function Chat:welcome()
 end
 
 function Chat:new_session()
+  vim.api.nvim_buf_clear_namespace(self.bufnr, Config.namespace_id, 0, -1)
+
   self.session = Session:new()
   self.session:save()
 
@@ -69,7 +71,8 @@ function Chat:new_session()
 end
 
 function Chat:set_session(session)
-  vim.pretty_print(session)
+  vim.api.nvim_buf_clear_namespace(self.bufnr, Config.namespace_id, 0, -1)
+
   self.session = session
 
   self.messages = {}
@@ -194,18 +197,21 @@ function Chat:renderLastMessage()
       self:add_highlight("ChatGPTQuestion", msg.start_line + index - 1, 0, -1)
     end
   else
-    local extmark_id = vim.api.nvim_buf_set_extmark(self.bufnr, Config.namespace_id, msg.end_line, -1, {
-      virt_text = {
-        { "", "ChatGPTTotalTokensBorder" },
-        {
-          "TOKENS: " .. msg.usage.total_tokens .. " / PRICE: $" .. Tokens.usage_in_dollars(msg.usage.total_tokens),
-          "ChatGPTTotalTokens",
+    local total_tokens = msg.usage.total_tokens
+    if total_tokens ~= nil then
+      vim.api.nvim_buf_set_extmark(self.bufnr, Config.namespace_id, msg.end_line, -1, {
+        virt_text = {
+          { "", "ChatGPTTotalTokensBorder" },
+          {
+            "TOKENS: " .. msg.usage.total_tokens .. " / PRICE: $" .. Tokens.usage_in_dollars(msg.usage.total_tokens),
+            "ChatGPTTotalTokens",
+          },
+          { "", "ChatGPTTotalTokensBorder" },
+          { " ", "" },
         },
-        { "", "ChatGPTTotalTokensBorder" },
-        { " ", "" },
-      },
-      virt_text_pos = "right_align",
-    })
+        virt_text_pos = "right_align",
+      })
+    end
   end
 
   if self.selectedIndex > 2 then
