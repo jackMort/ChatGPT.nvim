@@ -5,7 +5,7 @@ local scan = require("plenary.scandir")
 local Session = classes.class()
 
 local function parse_date_time(str)
-  local year, month, day, hour, min, sec = string.match(str, "(%d+)-(%d+)-(%d+)_(%d+):(%d+):(%d+)")
+  local year, month, day, hour, min, sec = string.match(str, "(%d+)-(%d+)-(%d+)_(%d+)" .. (package.config:sub(1,1) == "/" and ":(%d+):(%d+)" or "_(%d+)_(%d+)"))
   return os.time({ year = year, month = month, day = day, hour = hour, min = min, sec = sec })
 end
 
@@ -15,7 +15,7 @@ function Session:init(opts)
   if self.filename then
     self:load()
   else
-    self.name = opts.name or os.date("%Y-%m-%d_%H:%M:%S")
+    self.name = opts.name or os.date("%Y-%m-%d_%H" .. (package.config:sub(1,1) == "/" and ":%M:%S" or "_%M_%S"))
     self.filename = Session.get_dir():joinpath(self.name .. ".json"):absolute()
     self.conversation = {}
     self.settings = {}
