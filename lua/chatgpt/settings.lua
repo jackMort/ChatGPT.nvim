@@ -42,7 +42,7 @@ local function write_virtual_text(bufnr, ns, line, chunks, mode)
 end
 
 M.read_config = function()
-  local file = io.open(os.getenv("HOME") .. "/" .. ".chatgpt-" .. M.type .. "-params.json", "rb")
+  local file = io.open(vim.fn.expand("~") .. "/" .. ".chatgpt-" .. M.type .. "-params.json", "rb")
   if not file then
     return nil
   end
@@ -54,7 +54,7 @@ M.read_config = function()
 end
 
 M.write_config = function(config)
-  local file, err = io.open(os.getenv("HOME") .. "/" .. ".chatgpt-" .. M.type .. "-params.json", "w")
+  local file, err = io.open(vim.fn.expand("~") .. "/" .. ".chatgpt-" .. M.type .. "-params.json", "w")
   if file ~= nil then
     local json_string = vim.json.encode(config)
     file:write(json_string)
