@@ -19,8 +19,10 @@ local read_actions_from_file = function(filename)
     vim.notify("Cannot read action file: " .. filename, vim.log.levels.ERROR)
     return nil
   end
+
   local json_string = file:read("*a")
   file:close()
+
   return vim.json.decode(json_string)
 end
 
