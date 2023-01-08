@@ -135,10 +135,14 @@ function Chat:addAnswer(text, usage)
 end
 
 function Chat:get_total_tokens()
-  local answer = self:get_last_answer()
-  if answer ~= nil then
-    return answer.usage.total_tokens
+  local total_tokens = 0
+  for i = 1, #self.messages, 1 do
+    local tokens = self.messages[i].usage.total_tokens
+    if tokens ~= nil then
+      total_tokens = total_tokens + tokens
+    end
   end
+  return total_tokens
 end
 
 function Chat:next()
