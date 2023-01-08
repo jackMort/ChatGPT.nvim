@@ -43,15 +43,9 @@ function Chat:welcome()
       self:_add(item.type, item.text, item.usage)
     end
   else
-    local lines = {}
-    local end_line = 0
-    for line in string.gmatch(Config.options.welcome_message, "[^\n]+") do
-      table.insert(lines, line)
-      end_line = end_line + 1
-    end
-
+    local lines = Utils.split_string_by_line(Config.options.welcome_message)
     self:set_lines(0, 0, false, lines)
-    for line_num = 0, end_line do
+    for line_num = 0, #lines do
       self:add_highlight("ChatGPTWelcome", line_num, 0, -1)
     end
   end

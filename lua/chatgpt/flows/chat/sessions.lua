@@ -4,6 +4,8 @@ M.vts = {}
 local Popup = require("nui.popup")
 local Config = require("chatgpt.config")
 local Session = require("chatgpt.flows.chat.session")
+local Utils = require("chatgpt.utils")
+local InputWidget = require("chatgpt.common.input_widget")
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
@@ -18,6 +20,20 @@ M.set_session = function()
   local session = Session.new({ filename = selected.filename })
   M.render_list()
   M.set_session_cb(session)
+end
+
+M.rename_session = function()
+  M.active_line = M.current_line
+  local selected = M.sessions[M.current_line]
+  local session = Session.new({ filename = selected.filename })
+  local input_widget = InputWidget("New Name:", function(value)
+    if value ~= nil and value ~= "" then
+      session:rename(value)
+      M.sessions = Session.list_sessions()
+      M.render_list()
+    end
+  end)
+  input_widget:mount()
 end
 
 M.delete_session = function()
@@ -42,8 +58,9 @@ M.render_list = function()
   for i, session in pairs(M.sessions) do
     local icon = i == M.active_line and "  " or "  "
     local cls = i == M.active_line and "ErrorMsg" or "Comment"
+    local name = Utils.trimText(session.name, 30)
     local vt = {
-      { (M.current_line == i and "" or " ") .. icon .. session.name, cls },
+      { (M.current_line == i and "" or " ") .. icon .. name, cls },
     }
     table.insert(details, vt)
   end
@@ -81,20 +98,25 @@ M.get_panel = function(set_session_cb)
   M.set_session_cb = set_session_cb
 
   M.panel = Popup(Config.options.sessions_window)
+
   M.panel:map("n", "<space>", function()
     M.set_session()
   end, { noremap = true })
 
-  M.render_list()
+  M.panel:map("n", "r", function()
+    M.rename_session()
+  end, { noremap = true })
+
+  M.panel:map("n", "d", function()
+    M.delete_session()
+  end, { noremap = true, silent = true })
 
   vim.api.nvim_create_autocmd("CursorMoved", {
     buffer = M.panel.bufnr,
     callback = M.set_current_line,
   })
 
-  M.panel:map("n", "d", function()
-    M.delete_session()
-  end, { noremap = true, silent = true })
+  M.render_list()
 
   return M.panel
 end

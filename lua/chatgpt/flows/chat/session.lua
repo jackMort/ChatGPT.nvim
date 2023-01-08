@@ -1,12 +1,35 @@
 local classes = require("chatgpt.common.classes")
+local InputWidget = require("chatgpt.common.input_widget")
 local Path = require("plenary.path")
 local scan = require("plenary.scandir")
 
 local Session = classes.class()
 
+local function get_current_date()
+  return os.date("%Y-%m-%d_%H:%M:%S")
+end
+
+local function get_default_filename()
+  return os.time()
+end
+
 local function parse_date_time(str)
   local year, month, day, hour, min, sec = string.match(str, "(%d+)-(%d+)-(%d+)_(%d+):(%d+):(%d+)")
   return os.time({ year = year, month = month, day = day, hour = hour, min = min, sec = sec })
+end
+
+local function read_session_file(filename)
+  local file = io.open(filename, "rb")
+  if not file then
+    vim.notify("Cannot read session file", vim.log.levels.ERROR)
+    return nil
+  end
+
+  local jsonString = file:read("*a")
+  file:close()
+
+  local data = vim.json.decode(jsonString)
+  return data.name, data.updated_at
 end
 
 function Session:init(opts)
@@ -15,11 +38,18 @@ function Session:init(opts)
   if self.filename then
     self:load()
   else
-    self.name = opts.name or os.date("%Y-%m-%d_%H:%M:%S")
-    self.filename = Session.get_dir():joinpath(self.name .. ".json"):absolute()
+    local dt = get_current_date()
+    self.name = opts.name or dt
+    self.updated_at = dt
+    self.filename = Session.get_dir():joinpath(get_default_filename() .. ".json"):absolute()
     self.conversation = {}
     self.settings = {}
   end
+end
+
+function Session:rename(name)
+  self.name = name
+  self:save()
 end
 
 function Session:delete()
@@ -29,13 +59,18 @@ end
 function Session:to_export()
   return {
     name = self.name,
+    updated_at = self.updated_at,
     settings = self.settings,
     conversation = self.conversation,
   }
 end
 
 function Session:add_item(item)
+  if self.updated_at == self.name and item.type == 1 then
+    self.name = item.text
+  end
   table.insert(self.conversation, item)
+  self.updated_at = get_current_date()
   self:save()
 end
 
@@ -86,12 +121,15 @@ function Session.list_sessions()
   local sessions = {}
 
   for _, filename in pairs(files) do
-    local ts = parse_date_time(filename)
-    local name = os.date("%c", ts)
+    local name, updated_at = read_session_file(filename)
+    if updated_at == nil then
+      updated_at = filename
+    end
+
     table.insert(sessions, {
       filename = filename,
       name = name,
-      ts = ts,
+      ts = parse_date_time(updated_at),
     })
   end
 

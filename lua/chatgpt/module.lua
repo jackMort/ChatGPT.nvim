@@ -12,6 +12,7 @@ local Prompts = require("chatgpt.prompts")
 local Edits = require("chatgpt.code_edits")
 local Settings = require("chatgpt.settings")
 local Sessions = require("chatgpt.flows.chat.sessions")
+local Session = require("chatgpt.flows.chat.session")
 local Actions = require("chatgpt.flows.actions")
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
@@ -205,6 +206,10 @@ end
 M.open_chat_with_awesome_prompt = function()
   Prompts.selectAwesomePrompt({
     cb = vim.schedule_wrap(function(act, prompt)
+      -- create new named session
+      local session = Session.new({ name = act })
+      session:save()
+
       local chat, _, chat_window = open_chat()
       -- TODO: dry
       chat_window.border:set_text("top", " ChatGPT - Acts as " .. act .. " ", "center")

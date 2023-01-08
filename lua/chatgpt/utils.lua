@@ -24,6 +24,14 @@ function M.wrapText(text, maxLineLength)
   return table.concat(lines, "\n")
 end
 
+function M.trimText(text, maxLength)
+  if #text > maxLength then
+    return string.sub(text, 1, maxLength - 3) .. "..."
+  else
+    return text
+  end
+end
+
 function M.wrapTextToTable(text, maxLineLength)
   local lines = {}
 
