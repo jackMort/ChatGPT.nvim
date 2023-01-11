@@ -8,7 +8,9 @@ end, {})
 
 vim.api.nvim_create_user_command("ChatGPTEditWithInstructions", function()
   require("chatgpt").edit_with_instructions()
-end, {})
+end, {
+  range = true,
+})
 
 vim.api.nvim_create_user_command("ChatGPTRun", function(opts)
   require("chatgpt").run_action(opts)
