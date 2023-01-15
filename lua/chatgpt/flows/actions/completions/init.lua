@@ -4,13 +4,34 @@ local Api = require("chatgpt.api")
 local Utils = require("chatgpt.utils")
 local Config = require("chatgpt.config")
 
+
+-- curl code to insert code between prompt and suffix
+-- curl https://api.openai.com/v1/completions \
+--   -H "Content-Type: application/json" \
+--   -H "Authorization: Bearer $OPENAI_API_KEY" \
+--   -d '{
+--   "model": "text-davinci-003",
+--   "prompt": "Insert a roxygen skeleton to document this R function:\n\n",
+--   "suffix": " code ",
+--   "temperature": 0.7,
+--   "max_tokens": 565,
+--   "top_p": 1,
+--   "frequency_penalty": 0,
+--   "presence_penalty": 0
+-- }'
+
+
 local CompletionAction = classes.class(BaseAction)
 
 local STRATEGY_REPLACE = "replace"
+local STRATEGY_APPEND = "append"
+local STRATEGY_PREPEND = "prepend"
 local STRATEGY_DISPLAY = "display"
 local strategies = {
   STRATEGY_REPLACE,
   STRATEGY_DISPLAY,
+  STRATEGY_APPEND,
+  STRATEGY_PREPEND,
 }
 
 function CompletionAction:init(opts)
@@ -35,7 +56,15 @@ function CompletionAction:render_template()
 end
 
 function CompletionAction:get_params()
-  return vim.tbl_extend("force", Config.options.openai_params, self.params, { prompt = self:render_template() })
+  local additional_params = { }
+  local p_rendered = self:render_template()
+  local p1, s1 = string.match( p_rendered, "(.*)%[insert%](.*)" )
+  if( s1 ~= nil ) then
+    additional_params ['suffix']= s1
+    p_rendered = p1
+  end
+  additional_params ['prompt']= p_rendered
+  return vim.tbl_extend("force", Config.options.openai_params, self.params, additional_params)
 end
 
 function CompletionAction:run()
@@ -54,10 +83,15 @@ function CompletionAction:on_result(answer, usage)
     self:set_loading(false)
 
     local bufnr = self:get_bufnr()
-    local lines = Utils.split_string_by_line(answer)
+    if self.strategy == STRATEGY_PREPEND then
+      answer = answer .. "\n" .. self:get_selected_text()
+    elseif self.strategy == STRATEGY_APPEND then
+      answer = self:get_selected_text() .. "\n" .. answer
+    end
+     local lines = Utils.split_string_by_line(answer)
     local start_row, start_col, end_row, end_col = self:get_visual_selection()
 
-    if self.strategy == STRATEGY_REPLACE then
+    if self.strategy ~= STRATEGY_DISPLAY then
       vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
     else
       local Popup = require("nui.popup")

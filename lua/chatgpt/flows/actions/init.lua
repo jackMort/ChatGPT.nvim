@@ -5,11 +5,16 @@ local EditAction = require("chatgpt.flows.actions.edits")
 local Config = require("chatgpt.config")
 
 ROXYGEN_ACTION = [[
-The following is a computer program:
+Insert a roxygen skeleton to document this R function:
+
 ```{{filetype}}
+[insert]
+
 {{input}}
+
 ```
 ]]
+
 
 GRAMMAR_CORRECTION = [[
 Correct this to standard English:
@@ -119,13 +124,14 @@ I have the following code:
 function M.run_action(opts)
   local ACTIONS = {
     roxygen_edit = {
-      class = EditAction,
+      class = CompletionAction,
       opts = {
         template = ROXYGEN_ACTION,
+        strategy="prepend",
         params = {
-          model = "code-davinci-edit-001",
+          model = "text-davinci-003",
           temperature = 0.5,
-          instruction="Insert a roxygen skeleton to document this function",
+          max_tokens = 1024,
         },
       },
     },
