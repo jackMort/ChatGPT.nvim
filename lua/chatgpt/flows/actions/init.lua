@@ -234,7 +234,6 @@ function M.run_action(opts)
 
   local key = opts.fargs[1]
   local item = ACTIONS[key]
-  require('chatgpt.log').info( key, item)
 
 
   --
