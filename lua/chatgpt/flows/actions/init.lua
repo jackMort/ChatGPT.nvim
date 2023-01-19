@@ -1,7 +1,20 @@
 local M = {}
 
 local CompletionAction = require("chatgpt.flows.actions.completions")
+local EditAction = require("chatgpt.flows.actions.edits")
 local Config = require("chatgpt.config")
+
+ROXYGEN_ACTION = [[
+Insert a roxygen skeleton to document this R function:
+
+```{{filetype}}
+[insert]
+
+{{input}}
+
+```
+]]
+
 
 GRAMMAR_CORRECTION = [[
 Correct this to standard English:
@@ -24,7 +37,7 @@ WRITE_DOCSTRING = [[
 # An elaborate, high quality docstring for the above function:
 # Writing a good docstring
 
-This is an example of writing a really good docstring that follows a best practice for the given language. Attention is paid to detailing things like 
+This is an example of writing a really good docstring that follows a best practice for the given language. Attention is paid to detailing things like
 * parameter and return types (if applicable)
 * any errors that might be raised or returned, depending on the language
 
@@ -110,6 +123,18 @@ I have the following code:
 
 function M.run_action(opts)
   local ACTIONS = {
+    roxygen_edit = {
+      class = CompletionAction,
+      opts = {
+        template = ROXYGEN_ACTION,
+        strategy="prepend",
+        params = {
+          model = "text-davinci-003",
+          temperature = 0.5,
+          max_tokens = 1024,
+        },
+      },
+    },
     grammar_correction = {
       class = CompletionAction,
       opts = {
@@ -119,7 +144,7 @@ function M.run_action(opts)
         },
       },
     },
-    translate = {
+     translate = {
       class = CompletionAction,
       opts = {
         template = TRANSLATE,
@@ -209,6 +234,7 @@ function M.run_action(opts)
 
   local key = opts.fargs[1]
   local item = ACTIONS[key]
+
 
   --
   -- parse args
