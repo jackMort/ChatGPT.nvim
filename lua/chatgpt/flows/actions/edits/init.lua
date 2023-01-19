@@ -4,7 +4,6 @@ local Api = require("chatgpt.api")
 local Utils = require("chatgpt.utils")
 local Config = require("chatgpt.config")
 
-
 -- curl https://api.openai.com/v1/edits \
 --   -H "Content-Type: application/json" \
 --   -H "Authorization: Bearer $OPENAI_API_KEY" \
@@ -16,15 +15,10 @@ local Config = require("chatgpt.config")
 --   "top_p": 1
 -- }'
 
-
 local EditAction = classes.class(BaseAction)
 
 local STRATEGY_REPLACE = "replace"
 local STRATEGY_DISPLAY = "display"
-local strategies = {
-  STRATEGY_REPLACE,
-  STRATEGY_DISPLAY,
-}
 
 function EditAction:init(opts)
   self.super:init(opts)
@@ -42,16 +36,13 @@ function EditAction:render_template()
   data = vim.tbl_extend("force", {}, data, self.variables)
   local result = self.template
   for key, value in pairs(data) do
-    require('chatgpt.log').info("key:", key, "value:", value)
     result = result:gsub("{{" .. key .. "}}", value)
   end
   return result
 end
 
 function EditAction:get_params()
-
   return vim.tbl_extend("force", Config.options.openai_edit_params, self.params, { input = self:render_template() })
-
 end
 
 function EditAction:run()

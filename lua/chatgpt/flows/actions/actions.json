@@ -1,0 +1,122 @@
+{
+  "grammar_correction": {
+    "type": "completion",
+    "opts": {
+      "template": "Correct this to standard English:\n\n{{input}}",
+      "params": {
+        "model": "text-davinci-003"
+      }
+    }
+  },
+  "translate": {
+    "type": "completion",
+    "opts": {
+      "template": "Translate this into {{lang}}:\n\n{{input}}",
+      "params": {
+        "model": "text-davinci-003",
+        "temperature": 0.3
+      }
+    },
+    "args": {
+      "lang": {
+        "type": "string",
+        "optional": "true",
+        "default": "english"
+      }
+    }
+  },
+  "keywords": {
+    "type": "completion",
+    "opts": {
+      "template": "Convert into emoji.\n\n",
+      "params": {
+        "model": "text-davinci-003",
+        "temperature": 0.5,
+        "frequency_penalty": 0.8
+      }
+    }
+  },
+  "docstring": {
+    "type": "completion",
+    "opts": {
+      "template": "# An elaborate, high quality docstring for the above function:\n# Writing a good docstring\n\nThis is an example of writing a really good docstring that follows a best practice for the given language. Attention is paid to detailing things like\n* parameter and return types (if applicable)\n* any errors that might be raised or returned, depending on the language\n\nI received the following code:\n\n```{{filetype}}\n{{input}}\n```\n\nThe code with a really good docstring added is below:\n\n```{{filetype}}",
+      "params": {
+        "model": "code-davinci-002",
+        "stop": [
+          "```"
+        ]
+      }
+    }
+  },
+  "add_tests": {
+    "type": "completion",
+    "opts": {
+      "strategy": "append",
+      "template": "Implement tests for the following code.\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nTests:\n```{{filetype}}",
+      "params": {
+        "model": "code-davinci-002",
+        "stop": [
+          "```"
+        ]
+      }
+    }
+  },
+  "optimize_code": {
+    "type": "completion",
+    "opts": {
+      "template": "Optimize the following code.\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nOptimized version:\n```{{filetype}}",
+      "params": {
+        "model": "code-davinci-002",
+        "stop": [
+          "```"
+        ]
+      }
+    }
+  },
+  "summarize": {
+    "type": "completion",
+    "opts": {
+      "template": "Summarize the following text.\n\nText:\n\"\"\"\n{{input}}\n\"\"\"\n\nSummary:",
+      "params": {
+        "model": "text-davinci-003"
+      }
+    }
+  },
+  "fix_bugs": {
+    "type": "completion",
+    "opts": {
+      "template": "Fix bugs in the below code\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nFixed code:\n```{{filetype}}",
+      "params": {
+        "model": "code-davinci-002",
+        "stop": [
+          "```"
+        ]
+      }
+    }
+  },
+  "explain_code": {
+    "type": "completion",
+    "opts": {
+      "strategy": "display",
+      "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nHere's what the above code is doing:\n```",
+      "params": {
+        "model": "code-davinci-002",
+        "stop": [
+          "```"
+        ]
+      }
+    }
+  },
+  "roxygen_edit": {
+    "type": "completion",
+    "opts": {
+      "template": "Insert a roxygen skeleton to document this R function:\n\n```{{filetype}}\n[insert]\n\n{{input}}\n\n```",
+      "strategy": "prepend",
+      "params": {
+        "model": "text-davinci-003",
+        "temperature": 0.5,
+        "max_tokens": 1024
+      }
+    }
+  }
+}

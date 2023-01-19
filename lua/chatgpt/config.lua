@@ -123,6 +123,7 @@ function M.defaults()
       new_session = "<C-n>",
       cycle_windows = "<Tab>",
     },
+    actions_paths = {},
   }
   return defaults
 end

@@ -16,17 +16,16 @@ end, {
   nargs = "*",
   range = true,
   complete = function(arg, cmd_line)
-    local match = {
-      "add_tests",
-      "docstring",
-      "fix_bugs",
-      "grammar_correction",
-      "optimize_code",
-      "explain_code",
-      "summarize",
-      "translate",
-    }
-    return match
+    local ActionFlow = require("chatgpt.flows.actions")
+    local action_definitions = ActionFlow.read_actions()
+
+    local actions = {}
+    for key, _ in pairs(action_definitions) do
+      table.insert(actions, key)
+    end
+    table.sort(actions)
+
+    return actions
   end,
 })
 

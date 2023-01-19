@@ -4,7 +4,6 @@ local Api = require("chatgpt.api")
 local Utils = require("chatgpt.utils")
 local Config = require("chatgpt.config")
 
-
 -- curl code to insert code between prompt and suffix
 -- curl https://api.openai.com/v1/completions \
 --   -H "Content-Type: application/json" \
@@ -20,19 +19,12 @@ local Config = require("chatgpt.config")
 --   "presence_penalty": 0
 -- }'
 
-
 local CompletionAction = classes.class(BaseAction)
 
 local STRATEGY_REPLACE = "replace"
 local STRATEGY_APPEND = "append"
 local STRATEGY_PREPEND = "prepend"
 local STRATEGY_DISPLAY = "display"
-local strategies = {
-  STRATEGY_REPLACE,
-  STRATEGY_DISPLAY,
-  STRATEGY_APPEND,
-  STRATEGY_PREPEND,
-}
 
 function CompletionAction:init(opts)
   self.super:init(opts)
@@ -56,14 +48,14 @@ function CompletionAction:render_template()
 end
 
 function CompletionAction:get_params()
-  local additional_params = { }
+  local additional_params = {}
   local p_rendered = self:render_template()
-  local p1, s1 = string.match( p_rendered, "(.*)%[insert%](.*)" )
-  if( s1 ~= nil ) then
-    additional_params ['suffix']= s1
+  local p1, s1 = string.match(p_rendered, "(.*)%[insert%](.*)")
+  if s1 ~= nil then
+    additional_params["suffix"] = s1
     p_rendered = p1
   end
-  additional_params ['prompt']= p_rendered
+  additional_params["prompt"] = p_rendered
   return vim.tbl_extend("force", Config.options.openai_params, self.params, additional_params)
 end
 
@@ -88,7 +80,7 @@ function CompletionAction:on_result(answer, usage)
     elseif self.strategy == STRATEGY_APPEND then
       answer = self:get_selected_text() .. "\n" .. answer
     end
-     local lines = Utils.split_string_by_line(answer)
+    local lines = Utils.split_string_by_line(answer)
     local start_row, start_col, end_row, end_col = self:get_visual_selection()
 
     if self.strategy ~= STRATEGY_DISPLAY then

@@ -1,240 +1,58 @@
 local M = {}
 
-local CompletionAction = require("chatgpt.flows.actions.completions")
-local EditAction = require("chatgpt.flows.actions.edits")
-local Config = require("chatgpt.config")
-
-ROXYGEN_ACTION = [[
-Insert a roxygen skeleton to document this R function:
-
-```{{filetype}}
-[insert]
-
-{{input}}
-
-```
-]]
-
-
-GRAMMAR_CORRECTION = [[
-Correct this to standard English:
-
-{{input}}
-]]
-
-TRANSLATE = [[
-Translate this into {{lang}}:
-
-{{input}}
-]]
-
-KEYWORDS = [[
-Convert into emoji.
-
-]]
-
-WRITE_DOCSTRING = [[
-# An elaborate, high quality docstring for the above function:
-# Writing a good docstring
-
-This is an example of writing a really good docstring that follows a best practice for the given language. Attention is paid to detailing things like
-* parameter and return types (if applicable)
-* any errors that might be raised or returned, depending on the language
-
-I received the following code:
-
-```{{filetype}}
-{{input}}
-```
-
-The code with a really good docstring added is below:
-
-```{{filetype}}
-]]
-
-SUMMARIZE_TEXT = [[
-Summarize the following text.
-
-Text:
-"""
-{{input}}
-"""
-
-Summary:
-]]
-
-ADD_TESTS = [[
-Implement tests for the following code.
-
-Code:
-```{{filetype}}
-{{input}}
-```
-
-Tests:
-```{{filetype}}
-]]
-
-OPTIMIZE_CODE = [[
-Optimize the following code.
-
-Code:
-```{{filetype}}
-{{input}}
-```
-
-Optimized version:
-```{{filetype}}
-]]
-
-FIX_BUGS = [[
-Fix bugs in the below code
-
-Code:
-```{{filetype}}
-{{input}}
-```
-
-Fixed code:
-```{{filetype}}
-]]
-
-EXPLAIN_CODE = [[
-Explain the following code:
-
-Code:
-```{{filetype}}
-{{input}}
-```
-
-Here's what the above code is doing:
-```
-]]
-
 CUSTOM_CODE_ACTION = [[
 I have the following code:
 ```{{filetype}}
 {{input}}
 ```
-
 {{instruction}}:
 ```
 ]]
 
+local CompletionAction = require("chatgpt.flows.actions.completions")
+local EditAction = require("chatgpt.flows.actions.edits")
+local Config = require("chatgpt.config")
+
+local classes_by_type = {
+  completion = CompletionAction,
+  edit = EditAction,
+}
+
+local read_actions_from_file = function(filename)
+  local file = io.open(filename, "rb")
+  if not file then
+    vim.notify("Cannot read action file: " .. filename, vim.log.levels.ERROR)
+    return nil
+  end
+
+  local json_string = file:read("*a")
+  file:close()
+
+  return vim.json.decode(json_string)
+end
+
+function M.read_actions()
+  local actions = {}
+
+  -- add default actions
+  local paths = Config.options.actions_paths
+  local default_actions_path = debug.getinfo(1, "S").source:sub(2):match("(.*/)") .. "actions.json"
+  table.insert(paths, default_actions_path)
+
+  for _, filename in ipairs(paths) do
+    local data = read_actions_from_file(filename)
+    for action_name, action_definition in pairs(data) do
+      actions[action_name] = action_definition
+    end
+  end
+  return actions
+end
+
 function M.run_action(opts)
-  local ACTIONS = {
-    roxygen_edit = {
-      class = CompletionAction,
-      opts = {
-        template = ROXYGEN_ACTION,
-        strategy="prepend",
-        params = {
-          model = "text-davinci-003",
-          temperature = 0.5,
-          max_tokens = 1024,
-        },
-      },
-    },
-    grammar_correction = {
-      class = CompletionAction,
-      opts = {
-        template = GRAMMAR_CORRECTION,
-        params = {
-          model = "text-davinci-003",
-        },
-      },
-    },
-     translate = {
-      class = CompletionAction,
-      opts = {
-        template = TRANSLATE,
-        params = {
-          model = "text-davinci-003",
-          temperature = 0.3,
-        },
-      },
-      args = {
-        lang = { type = "string", optional = "true", default = "english" },
-      },
-    },
-    keywords = {
-      class = CompletionAction,
-      opts = {
-        template = KEYWORDS,
-        params = {
-          model = "text-davinci-003",
-          temperature = 0.5,
-          frequency_penalty = 0.8,
-        },
-      },
-    },
-    docstring = {
-      class = CompletionAction,
-      opts = {
-        template = WRITE_DOCSTRING,
-        params = {
-          model = "code-davinci-002",
-          stop = { "```" },
-        },
-      },
-    },
-    add_tests = {
-      class = CompletionAction,
-      opts = {
-        strategy = "append",
-        template = ADD_TESTS,
-        params = {
-          model = "code-davinci-002",
-          stop = { "```" },
-        },
-      },
-    },
-    optimize_code = {
-      class = CompletionAction,
-      opts = {
-        template = OPTIMIZE_CODE,
-        params = {
-          model = "code-davinci-002",
-          stop = { "```" },
-        },
-      },
-    },
-    summarize = {
-      class = CompletionAction,
-      opts = {
-        template = SUMMARIZE_TEXT,
-        params = {
-          model = "text-davinci-003",
-        },
-      },
-    },
-    fix_bugs = {
-      class = CompletionAction,
-      opts = {
-        template = FIX_BUGS,
-        params = {
-          model = "code-davinci-002",
-          stop = { "```" },
-        },
-      },
-    },
+  local ACTIONS = M.read_actions()
 
-    explain_code = {
-      class = CompletionAction,
-      opts = {
-        strategy = "display",
-        template = EXPLAIN_CODE,
-        params = {
-          model = "code-davinci-002",
-          stop = { "```" },
-        },
-      },
-    },
-  }
-
-  local key = opts.fargs[1]
-  local item = ACTIONS[key]
-
+  local action_name = opts.fargs[1]
+  local item = ACTIONS[action_name]
 
   --
   -- parse args
@@ -251,7 +69,8 @@ function M.run_action(opts)
   end
 
   opts = vim.tbl_extend("force", {}, opts, item.opts)
-  local action = item.class.new(opts)
+  local class = classes_by_type[item.type]
+  local action = class.new(opts)
   action:run()
 end
 
