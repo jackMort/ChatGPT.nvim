@@ -11,6 +11,7 @@ M.setup = function(options)
   vim.api.nvim_set_hl(0, "ChatGPTWelcome", { fg = "#9399b2", italic = true, bold = false })
   vim.api.nvim_set_hl(0, "ChatGPTTotalTokens", { fg = "#ffffff", bg = "#444444" })
   vim.api.nvim_set_hl(0, "ChatGPTTotalTokensBorder", { fg = "#444444" })
+  vim.api.nvim_set_hl(0, "ChatGPTCompletion", { fg = "#9399b2", italic = true, bold = false })
 
   config.setup(options)
   signs.setup()
@@ -35,8 +36,11 @@ end
 M.run_action = function(opts)
   module.run_action(opts)
 end
+
 M.run_custom_code_action = function(opts)
   module.run_custom_code_action(opts)
 end
+
+M.complete_code = module.complete_code
 
 return M

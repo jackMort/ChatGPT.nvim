@@ -15,7 +15,7 @@ vim.api.nvim_create_user_command("ChatGPTRun", function(opts)
 end, {
   nargs = "*",
   range = true,
-  complete = function(arg, cmd_line)
+  complete = function()
     local ActionFlow = require("chatgpt.flows.actions")
     local action_definitions = ActionFlow.read_actions()
 
@@ -35,3 +35,7 @@ end, {
   nargs = "*",
   range = true,
 })
+
+vim.api.nvim_create_user_command("ChatGPTCompleteCode", function(opts)
+  require("chatgpt").complete_code(opts)
+end, {})
