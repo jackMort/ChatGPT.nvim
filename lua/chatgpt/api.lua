@@ -5,6 +5,7 @@ local Api = {}
 
 -- API URL
 Api.COMPLETIONS_URL = "https://api.openai.com/v1/completions"
+Api.CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions"
 Api.EDITS_URL = "https://api.openai.com/v1/edits"
 
 -- API KEY
@@ -16,6 +17,11 @@ end
 function Api.completions(custom_params, cb)
   local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
   Api.make_call(Api.COMPLETIONS_URL, params, cb)
+end
+
+function Api.chat_completions(custom_params, cb)
+  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
+  Api.make_call(Api.CHAT_COMPLETIONS_URL, params, cb)
 end
 
 function Api.edits(custom_params, cb)
@@ -56,11 +62,21 @@ Api.handle_response = vim.schedule_wrap(function(response, exit_code, cb)
   elseif json.error then
     cb("// API ERROR: " .. json.error.message)
   else
-    local response_text = json.choices[1].text
-    if type(response_text) == "string" and response_text ~= "" then
-      cb(response_text, json.usage)
+    local message = json.choices[1].message
+    if message ~= nil then
+      local response_text = json.choices[1].message.content
+      if type(response_text) == "string" and response_text ~= "" then
+        cb(response_text, json.usage)
+      else
+        cb("...")
+      end
     else
-      cb("...")
+      local response_text = json.choices[1].text
+      if type(response_text) == "string" and response_text ~= "" then
+        cb(response_text, json.usage)
+      else
+        cb("...")
+      end
     end
   end
 end)

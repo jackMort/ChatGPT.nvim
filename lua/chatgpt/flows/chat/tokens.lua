@@ -6,7 +6,7 @@ local Tokens = {}
   @return {number} cost_per_token
 ]]
 local cost_per_token = {
-  davinci = 0.00002,
+  davinci = 0.000002,
 }
 
 --- Calculate the number of tokens in a given text.

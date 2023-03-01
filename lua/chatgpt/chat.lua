@@ -7,7 +7,7 @@ local Tokens = require("chatgpt.flows.chat.tokens")
 local Chat = {}
 Chat.__index = Chat
 
-QUESTION, ANSWER = 1, 2
+QUESTION, ANSWER, SYSTEM = 1, 2, 3
 
 function Chat:new(bufnr, winid, on_loading)
   self = setmetatable({}, Chat)
@@ -130,6 +130,10 @@ function Chat:addQuestion(text)
   self:add(QUESTION, text)
 end
 
+function Chat:addSystem(text)
+  self:add(SYSTEM, text)
+end
+
 function Chat:addAnswer(text, usage)
   self:add(ANSWER, text, usage)
 end
@@ -169,7 +173,7 @@ end
 function Chat:renderLastMessage()
   self:stopSpinner()
 
-  local signs = { Config.options.question_sign, Config.options.answer_sign }
+  local signs = { Config.options.question_sign, Config.options.answer_sign, Config.options.question_sign }
   local msg = self:getSelected()
 
   local lines = {}
@@ -232,6 +236,20 @@ function Chat:toString()
     str = str .. msg.text .. "\n"
   end
   return str
+end
+
+function Chat:toMessages()
+  local messages = {}
+  for _, msg in pairs(self.messages) do
+    local role = "user"
+    if msg.type == SYSTEM then
+      role = "system"
+    elseif msg.type == ANSWER then
+      role = "assistant"
+    end
+    table.insert(messages, { role = role, content = msg.text })
+  end
+  return messages
 end
 
 function Chat:count()
