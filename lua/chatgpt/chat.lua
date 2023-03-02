@@ -201,7 +201,7 @@ function Chat:renderLastMessage()
   else
     local total_tokens = msg.usage.total_tokens
     if total_tokens ~= nil then
-      vim.api.nvim_buf_set_extmark(self.bufnr, Config.namespace_id, msg.end_line, -1, {
+      vim.api.nvim_buf_set_extmark(self.bufnr, Config.namespace_id, msg.end_line + 1, -1, {
         virt_text = {
           { "", "ChatGPTTotalTokensBorder" },
           {
