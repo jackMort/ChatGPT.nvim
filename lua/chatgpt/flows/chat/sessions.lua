@@ -99,15 +99,15 @@ M.get_panel = function(set_session_cb)
 
   M.panel = Popup(Config.options.sessions_window)
 
-  M.panel:map("n", "<space>", function()
+  M.panel:map("n", Config.options.keymaps.select_session, function()
     M.set_session()
   end, { noremap = true })
 
-  M.panel:map("n", "r", function()
+  M.panel:map("n", Config.options.keymaps.rename_session, function()
     M.rename_session()
   end, { noremap = true })
 
-  M.panel:map("n", "d", function()
+  M.panel:map("n", Config.options.keymaps.delete_session, function()
     M.delete_session()
   end, { noremap = true, silent = true })
 
