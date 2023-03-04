@@ -122,6 +122,9 @@ function M.defaults()
       toggle_settings = "<C-o>",
       new_session = "<C-n>",
       cycle_windows = "<Tab>",
+      select_session = "<Space>",
+      rename_session = "r",
+      delete_session = "d",
     },
     actions_paths = {},
   }
