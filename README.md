@@ -1,4 +1,4 @@
-# ChatGPT.nvim [WIP]
+# ChatGPT.nvim
 
 ![GitHub Workflow Status](http://img.shields.io/github/actions/workflow/status/jackMort/ChatGPT.nvim/default.yml?branch=main&style=for-the-badge)
 ![Lua](https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua)
@@ -79,7 +79,7 @@ use({
     },
   },
   openai_params = {
-    model = "text-davinci-003",
+    model = "gpt-3.5-turbo",
     frequency_penalty = 0,
     presence_penalty = 0,
     max_tokens = 300,
