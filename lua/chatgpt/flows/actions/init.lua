@@ -9,6 +9,15 @@ I have the following code:
 ```
 ]]
 
+CUSTOM_TEXT_ACTION = [[
+I have the following text:
+```{{filetype}}
+{{input}}
+```
+{{instruction}}:
+```
+]]
+
 local CompletionAction = require("chatgpt.flows.actions.completions")
 local EditAction = require("chatgpt.flows.actions.edits")
 local Config = require("chatgpt.config")
@@ -99,6 +108,56 @@ function M.run_custom_code_action(opts)
         template = CUSTOM_CODE_ACTION,
         params = {
           model = "code-davinci-002",
+          stop = { "```" },
+        },
+        variables = {
+          instruction = value,
+        },
+      })
+      local action = CompletionAction.new(opts)
+      action:run()
+    end,
+  })
+
+  local close_keymaps = Config.options.keymaps.close
+  if type(close_keymaps) ~= "table" then
+    close_keymaps = { close_keymaps }
+  end
+
+  for _, keymap in ipairs(close_keymaps) do
+    input:map("i", keymap, function()
+      input.input_props.on_close()
+    end, { noremap = true, silent = true })
+  end
+
+  input:mount()
+end
+
+function M.run_custom_text_action(opts)
+  local Input = require("nui.input")
+
+  local input = Input({
+    position = "50%",
+    size = {
+      width = 60,
+    },
+    border = {
+      style = "rounded",
+      text = {
+        top = " Custom Text Action ",
+        top_align = "center",
+      },
+    },
+    win_options = {
+      winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+    },
+  }, {
+    prompt = Config.options.chat_input.prompt,
+    on_submit = function(value)
+      opts = vim.tbl_extend("force", {}, opts, {
+        template = CUSTOM_TEXT_ACTION,
+        params = {
+          model = "text-davinci-002",
           stop = { "```" },
         },
         variables = {
