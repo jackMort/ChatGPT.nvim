@@ -19,9 +19,11 @@ local CodeCompletions = require("chatgpt.flows.code_completions")
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
+local prompt_lines = 1
 local extmark_id = nil
 local open_chat = function()
   local chat, chat_input, layout, chat_window
+  local settings_open = false
 
   local display_input_suffix = function(suffix)
     if extmark_id then
@@ -57,6 +59,12 @@ local open_chat = function()
     end)
   end
 
+  local params = Config.options.openai_params
+  local settings_panel = Settings.get_settings_panel("chat_completions", params)
+  local sessions_panel = Sessions.get_panel(function(session)
+    chat:set_session(session)
+    display_total_tokens()
+  end)
   chat_window = Popup(Config.options.chat_window)
   chat_input = ChatInput(Config.options.chat_input, {
     prompt = Config.options.chat_input.prompt,
@@ -65,6 +73,29 @@ local open_chat = function()
       Api.close()
       layout:unmount()
     end,
+    on_change = vim.schedule_wrap(function(lines)
+      if prompt_lines ~= #lines then
+        prompt_lines = #lines
+        if settings_open then
+          layout:update(Layout.Box({
+            Layout.Box(chat_window, { grow = 1 }),
+            Layout.Box(chat_input, { size = 2 + prompt_lines }),
+          }, { dir = "col" }))
+          vim.api.nvim_set_current_win(chat_input.winid)
+        else
+          layout:update(Layout.Box({
+            Layout.Box({
+              Layout.Box(chat_window, { grow = 1 }),
+              Layout.Box(chat_input, { size = 2 + prompt_lines }),
+            }, { dir = "col", grow = 1 }),
+            Layout.Box({
+              Layout.Box(settings_panel, { size = "30%" }),
+              Layout.Box(sessions_panel, { grow = 1 }),
+            }, { dir = "col", size = 40 }),
+          }, { dir = "row" }))
+        end
+      end
+    end),
     on_submit = vim.schedule_wrap(function(value)
       -- clear input
       vim.api.nvim_buf_set_lines(chat_input.bufnr, 0, -1, false, { "" })
@@ -85,12 +116,6 @@ local open_chat = function()
     end),
   })
 
-  local params = Config.options.openai_params
-  local settings_panel = Settings.get_settings_panel("chat_completions", params)
-  local sessions_panel = Sessions.get_panel(function(session)
-    chat:set_session(session)
-    display_total_tokens()
-  end)
   layout = Layout(
     Config.options.chat_layout,
     Layout.Box({
@@ -132,21 +157,20 @@ local open_chat = function()
   end
 
   -- toggle settings
-  local settings_open = false
   for _, popup in ipairs({ settings_panel, chat_input }) do
     for _, mode in ipairs({ "n", "i" }) do
       popup:map(mode, Config.options.keymaps.toggle_settings, function()
         if settings_open then
           layout:update(Layout.Box({
             Layout.Box(chat_window, { grow = 1 }),
-            Layout.Box(chat_input, { size = 3 }),
+            Layout.Box(chat_input, { size = 2 + prompt_lines }),
           }, { dir = "col" }))
           vim.api.nvim_set_current_win(chat_input.winid)
         else
           layout:update(Layout.Box({
             Layout.Box({
               Layout.Box(chat_window, { grow = 1 }),
-              Layout.Box(chat_input, { size = 3 }),
+              Layout.Box(chat_input, { size = 2 + prompt_lines }),
             }, { dir = "col", grow = 1 }),
             Layout.Box({
               Layout.Box(settings_panel, { size = "30%" }),
