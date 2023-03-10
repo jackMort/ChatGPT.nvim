@@ -35,7 +35,7 @@ use({
 
 ```lua
 {
-  welcome_message = WELCOME_MESSAGE, -- set to "" if you don't like the fancy godot robot
+  welcome_message = WELCOME_MESSAGE,
   loading_text = "loading",
   question_sign = "", -- you can use emoji if you want e.g. 🙂
   answer_sign = "ﮧ", -- 🤖
@@ -94,7 +94,8 @@ use({
     n = 1,
   },
   keymaps = {
-    close = { "<C-c>", "<Esc>" },
+    close = { "<C-c>" },
+    submot = "<C-Enter>",
     yank_last = "<C-y>",
     scroll_up = "<C-u>",
     scroll_down = "<C-d>",
@@ -120,6 +121,7 @@ Plugin exposes following commands:
 ![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview.png?raw=true)
 
 Available keybindings are:
+- `<C-Enter>` to submit.
 - `<C-c>` to close chat window.
 - `<C-u>` scroll up chat window.
 - `<C-d>` scroll down chat window.
