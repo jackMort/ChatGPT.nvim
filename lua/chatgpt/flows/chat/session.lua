@@ -123,7 +123,7 @@ function Session.list_sessions()
   for _, filename in pairs(files) do
     local name, updated_at = read_session_file(filename)
     if updated_at == nil then
-      updated_at = filename
+      updated_at = get_current_date()
     end
 
     table.insert(sessions, {
