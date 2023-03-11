@@ -76,7 +76,7 @@ local open_chat = function()
     on_change = vim.schedule_wrap(function(lines)
       if prompt_lines ~= #lines then
         prompt_lines = #lines
-        if settings_open then
+        if not settings_open then
           layout:update(Layout.Box({
             Layout.Box(chat_window, { grow = 1 }),
             Layout.Box(chat_input, { size = 2 + prompt_lines }),
@@ -154,6 +154,10 @@ local open_chat = function()
     chat_input:map("i", keymap, function()
       chat_input.input_props.on_close()
     end, { noremap = true, silent = true })
+
+    chat_input:map("n", keymap, function()
+      chat_input.input_props.on_close()
+    end, { noremap = true, silent = true })
   end
 
   -- toggle settings
@@ -202,7 +206,7 @@ local open_chat = function()
   local active_panel = chat_input
   for _, popup in ipairs({ settings_panel, sessions_panel, chat_input }) do
     for _, mode in ipairs({ "n", "i" }) do
-      popup:map(mode, "<Tab>", function()
+      popup:map(mode, Config.options.keymaps.cycle_windows, function()
         if active_panel == settings_panel then
           vim.api.nvim_set_current_win(sessions_panel.winid)
           active_panel = sessions_panel

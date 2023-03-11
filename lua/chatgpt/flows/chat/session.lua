@@ -99,6 +99,7 @@ function Session:load()
 
   local data = vim.json.decode(jsonString)
   self.name = data.name
+  self.updated_at = data.updated_at or get_current_date()
   self.settings = data.settings
   self.conversation = data.conversation
 end
@@ -123,7 +124,7 @@ function Session.list_sessions()
   for _, filename in pairs(files) do
     local name, updated_at = read_session_file(filename)
     if updated_at == nil then
-      updated_at = get_current_date()
+      updated_at = filename
     end
 
     table.insert(sessions, {
