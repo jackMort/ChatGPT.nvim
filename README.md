@@ -95,7 +95,7 @@ use({
   },
   keymaps = {
     close = { "<C-c>" },
-    submot = "<C-Enter>",
+    submit = "<C-Enter>",
     yank_last = "<C-y>",
     scroll_up = "<C-u>",
     scroll_down = "<C-d>",
