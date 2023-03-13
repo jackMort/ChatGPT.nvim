@@ -124,6 +124,12 @@ local open_chat = function()
     }, { dir = "col", grow = 1 })
   )
 
+  local keys = function(key, fn)
+    for _, mode in ipairs({ "n", "i" }) do
+      chat_input:map(mode, key, fn)
+    end
+  end
+
   --
   -- add keymaps
   --
@@ -133,6 +139,17 @@ local open_chat = function()
     vim.fn.setreg(Config.options.yank_register, msg.text)
     vim.notify("Successfully copied to yank register!", vim.log.levels.INFO)
   end, { noremap = true })
+
+  -- yank last code
+  keys(Config.options.keymaps.yank_last_code, function()
+    local code = chat:getSelectedCode()
+    if code ~= nil then
+      vim.fn.setreg(Config.options.yank_register, code)
+      vim.notify("Successfully copied code to yank register!", vim.log.levels.INFO)
+    else
+      vim.notify("No code to yank!", vim.log.levels.WARN)
+    end
+  end)
 
   -- scroll down
   chat_input:map("i", Config.options.keymaps.scroll_down, function()

@@ -162,6 +162,15 @@ function Chat:getSelected()
   return self.messages[self.selectedIndex]
 end
 
+function Chat:getSelectedCode()
+  local msg = self:getSelected()
+  local text = msg.text
+
+  local _, endIdx = string.find(text, "```\n")
+  local startIdx2, _ = string.find(text, "\n```", endIdx)
+  return string.sub(text, endIdx + 1, startIdx2)
+end
+
 function Chat:get_last_answer()
   for i = #self.messages, 1, -1 do
     if self.messages[i].type == ANSWER then
