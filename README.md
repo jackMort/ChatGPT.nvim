@@ -97,6 +97,7 @@ use({
     close = { "<C-c>" },
     submit = "<C-Enter>",
     yank_last = "<C-y>",
+    yank_last_code = "<C-k>",
     scroll_up = "<C-u>",
     scroll_down = "<C-d>",
     toggle_settings = "<C-o>",
@@ -126,6 +127,7 @@ Available keybindings are:
 - `<C-u>` scroll up chat window.
 - `<C-d>` scroll down chat window.
 - `<C-y>` to copy/yank last answer.
+- `<C-k>` to copy/yank code from last answer.
 - `<C-o>` Toggle settings window.
 - `<C-n>` Start new session.
 - `<Tab>` Cycle over windows.
