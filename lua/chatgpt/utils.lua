@@ -1,6 +1,5 @@
 local M = {}
 
-local MAX_COL = 2147483647
 local ESC_FEEDKEY = vim.api.nvim_replace_termcodes("<ESC>", true, false, true)
 
 function M.split(text)
@@ -13,7 +12,7 @@ end
 
 function M.split_string_by_line(text)
   local lines = {}
-  for line in text:gmatch("([^\n]*)\n?") do
+  for line in (text..'\n'):gmatch("(.-)\n") do
     table.insert(lines, line)
   end
   return lines
@@ -56,64 +55,43 @@ function M.wrapTextToTable(text, maxLineLength)
   return lines
 end
 
-function M.get_end_col(bufnr, row)
-  local line = vim.api.nvim_buf_get_lines(bufnr, row - 1, row, true)[1]
-  return #line
-end
-
-function M.paste(bufnr, start_row, start_col, end_row, lines)
-  local end_col
-  if end_row > 0 then
-    end_col = M.get_end_col(bufnr, end_row)
-  else
-    local line = vim.api.nvim_buf_get_lines(bufnr, -2, -1, true)[1]
-    end_col = #line
-  end
-
-  vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col, lines)
-end
-
 function M.get_visual_lines(bufnr)
-  local start_row, start_col, end_row, end_col = M.get_visual_start_end()
-  if start_row == end_row and start_col == end_col then
-    return nil
-  end
-
-  local visual_lines = M.get_lines(bufnr, start_row, start_col, end_row, end_col)
-  return visual_lines, start_row, start_col, end_row, end_col
-end
-
--- credentials https://github.com/jameshiew/nvim-magic/
-function M.get_visual_start_end()
   vim.api.nvim_feedkeys(ESC_FEEDKEY, "n", true)
   vim.api.nvim_feedkeys("gv", "x", false)
   vim.api.nvim_feedkeys(ESC_FEEDKEY, "n", true)
 
-  local _, start_row, start_col, _ = unpack(vim.fn.getpos("'<"))
-  local _, end_row, end_col, _ = unpack(vim.fn.getpos("'>"))
+  local start_row, start_col = unpack(vim.api.nvim_buf_get_mark(bufnr, '<'))
+  local end_row, end_col = unpack(vim.api.nvim_buf_get_mark(bufnr, '>'))
+  local lines = vim.api.nvim_buf_get_lines(bufnr, start_row - 1, end_row, false)
 
-  -- handle selections made in visual line mode (see :help getpos)
-  if end_col == MAX_COL then
-    end_col = M.get_end_col(0, end_row)
+  -- get whole buffer if there is no current/previous visual selection
+  if start_row == 0 then
+      lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+      start_row = 1
+      start_col = 0
+      end_row = #lines
+      end_col = #lines[#lines]
   end
 
-  return start_row, start_col, end_row, end_col
+  -- use 1-based indexing and handle selections made in visual line mode (see :help getpos)
+  start_col = start_col + 1
+  end_col = math.min(end_col, #lines[#lines]-1)+1
+
+  -- shorten first/last line according to start_col/end_col
+  lines[#lines] = lines[#lines]:sub(1, end_col)
+  lines[1] = lines[1]:sub(start_col)
+
+  return lines, start_row, start_col, end_row, end_col
 end
 
--- gets full and partial lines between start and end
-function M.get_lines(bufnr, start_row, start_col, end_row, end_col)
-  if start_row == end_row and start_col == end_col then
-    return {}
-  end
+function M.count_newlines_at_end(str)
+    local start, stop = str:find("\n*$")
+    return (stop - start + 1) or 0
+end
 
-  local lines = vim.api.nvim_buf_get_lines(bufnr, start_row - 1, end_row, false)
-  lines[1] = lines[1]:sub(start_col, -1)
-  if #lines == 1 then -- visual selection all in the same line
-    lines[1] = lines[1]:sub(1, end_col - start_col + 1)
-  else
-    lines[#lines] = lines[#lines]:sub(1, end_col)
-  end
-  return lines
+function M.replace_newlines_at_end(str, num)
+    local res = str:gsub("\n*$", string.rep("\n", num), 1)
+    return res
 end
 
 return M
