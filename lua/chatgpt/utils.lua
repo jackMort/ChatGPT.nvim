@@ -12,7 +12,7 @@ end
 
 function M.split_string_by_line(text)
   local lines = {}
-  for line in (text..'\n'):gmatch("(.-)\n") do
+  for line in (text .. "\n"):gmatch("(.-)\n") do
     table.insert(lines, line)
   end
   return lines
@@ -60,22 +60,22 @@ function M.get_visual_lines(bufnr)
   vim.api.nvim_feedkeys("gv", "x", false)
   vim.api.nvim_feedkeys(ESC_FEEDKEY, "n", true)
 
-  local start_row, start_col = unpack(vim.api.nvim_buf_get_mark(bufnr, '<'))
-  local end_row, end_col = unpack(vim.api.nvim_buf_get_mark(bufnr, '>'))
+  local start_row, start_col = unpack(vim.api.nvim_buf_get_mark(bufnr, "<"))
+  local end_row, end_col = unpack(vim.api.nvim_buf_get_mark(bufnr, ">"))
   local lines = vim.api.nvim_buf_get_lines(bufnr, start_row - 1, end_row, false)
 
   -- get whole buffer if there is no current/previous visual selection
   if start_row == 0 then
-      lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-      start_row = 1
-      start_col = 0
-      end_row = #lines
-      end_col = #lines[#lines]
+    lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+    start_row = 1
+    start_col = 0
+    end_row = #lines
+    end_col = #lines[#lines]
   end
 
   -- use 1-based indexing and handle selections made in visual line mode (see :help getpos)
   start_col = start_col + 1
-  end_col = math.min(end_col, #lines[#lines]-1)+1
+  end_col = math.min(end_col, #lines[#lines] - 1) + 1
 
   -- shorten first/last line according to start_col/end_col
   lines[#lines] = lines[#lines]:sub(1, end_col)
@@ -85,13 +85,13 @@ function M.get_visual_lines(bufnr)
 end
 
 function M.count_newlines_at_end(str)
-    local start, stop = str:find("\n*$")
-    return (stop - start + 1) or 0
+  local start, stop = str:find("\n*$")
+  return (stop - start + 1) or 0
 end
 
 function M.replace_newlines_at_end(str, num)
-    local res = str:gsub("\n*$", string.rep("\n", num), 1)
-    return res
+  local res = str:gsub("\n*$", string.rep("\n", num), 1)
+  return res
 end
 
 return M

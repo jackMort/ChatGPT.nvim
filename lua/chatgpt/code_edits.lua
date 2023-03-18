@@ -114,7 +114,7 @@ M.edit_with_instructions = function()
 
   instructions_input:map("i", Config.options.keymaps.yank_last, function()
     instructions_input.input_props.on_close()
-    vim.api.nvim_buf_set_text(bufnr, start_row-1, start_col-1, end_row-1, end_col, output)
+    vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col, output)
     vim.notify("Successfully applied the change!", vim.log.levels.INFO)
   end, { noremap = true })
 
