@@ -230,7 +230,7 @@ local open_chat = function()
         elseif active_panel == sessions_panel then
           vim.api.nvim_set_current_win(chat_input.winid)
           active_panel = chat_input
-        else
+        elseif settings_panel == true then
           vim.api.nvim_set_current_win(settings_panel.winid)
           active_panel = settings_panel
         end
