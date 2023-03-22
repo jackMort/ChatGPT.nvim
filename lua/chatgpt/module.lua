@@ -16,6 +16,7 @@ local Session = require("chatgpt.flows.chat.session")
 local Actions = require("chatgpt.flows.actions")
 local Tokens = require("chatgpt.flows.chat.tokens")
 local CodeCompletions = require("chatgpt.flows.code_completions")
+local Utils = require("chatgpt.utils")
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
@@ -202,6 +203,7 @@ local open_chat = function()
           vim.api.nvim_set_current_win(settings_panel.winid)
           vim.api.nvim_buf_set_option(settings_panel.bufnr, "modifiable", false)
           vim.api.nvim_win_set_option(settings_panel.winid, "cursorline", true)
+          Utils.change_mode_to_normal()
         end
         settings_open = not settings_open
       end, {})

@@ -94,4 +94,8 @@ function M.replace_newlines_at_end(str, num)
   return res
 end
 
+function M.change_mode_to_normal()
+        vim.api.nvim_feedkeys(ESC_FEEDKEY, 'n', false)
+end
+
 return M
