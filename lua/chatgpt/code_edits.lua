@@ -56,7 +56,7 @@ end
 local setup_and_mount = vim.schedule_wrap(function(lines)
   layout:mount()
   -- set input
-  vim.api.nvim_buf_set_lines(input_window.bufnr, 0, 0, false, lines)
+  vim.api.nvim_buf_set_lines(input_window.bufnr, 0, -1, false, lines)
 
   -- set input and output settings
   for _, window in ipairs({ input_window, output_window }) do
@@ -70,15 +70,7 @@ M.edit_with_instructions = function()
   bufnr = vim.api.nvim_win_get_buf(winnr)
   filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
 
-  local visual_lines, start_row, start_col, end_row, _ = Utils.get_visual_lines(bufnr)
-  if not visual_lines then
-    visual_lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
-    start_row = 1
-    start_col = 1
-    end_row = 0
-  end
-  -- TODO: if buffer is empty
-
+  local visual_lines, start_row, start_col, end_row, end_col = Utils.get_visual_lines(bufnr)
   local openai_params = Config.options.openai_edit_params
   local settings_panel = Settings.get_settings_panel("edits", openai_params)
   input_window = Popup(Config.options.chat_window)
@@ -99,7 +91,9 @@ M.edit_with_instructions = function()
       local params = vim.tbl_extend("keep", { input = input, instruction = instruction }, Settings.params)
       Api.edits(params, function(output_txt, usage)
         hide_progress()
-        output = Utils.split_string_by_line(output_txt)
+        local nlcount = Utils.count_newlines_at_end(input)
+        local output_txt_nlfixed = Utils.replace_newlines_at_end(output_txt, nlcount)
+        output = Utils.split_string_by_line(output_txt_nlfixed)
 
         vim.api.nvim_buf_set_lines(output_window.bufnr, 0, -1, false, output)
         display_input_suffix(usage.total_tokens)
@@ -120,7 +114,7 @@ M.edit_with_instructions = function()
 
   instructions_input:map("i", Config.options.keymaps.yank_last, function()
     instructions_input.input_props.on_close()
-    Utils.paste(bufnr, start_row, start_col, end_row, output)
+    vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col, output)
     vim.notify("Successfully applied the change!", vim.log.levels.INFO)
   end, { noremap = true })
 

@@ -61,9 +61,11 @@ function EditAction:on_result(answer, usage)
     self:set_loading(false)
 
     local bufnr = self:get_bufnr()
-    local lines = Utils.split_string_by_line(answer)
-    local start_row, start_col, end_row, end_col = self:get_visual_selection()
-    vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
+    local visual_lines, start_row, start_col, end_row, end_col = Utils.get_visual_lines(bufnr)
+    local nlcount = Utils.count_newlines_at_end(table.concat(visual_lines, "\n"))
+    local answer_nlfixed = Utils.replace_newlines_at_end(answer, nlcount)
+    local lines = Utils.split_string_by_line(answer_nlfixed)
+    vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col, lines)
   end)
 end
 
