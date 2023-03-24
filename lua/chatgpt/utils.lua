@@ -95,11 +95,11 @@ function M.replace_newlines_at_end(str, num)
 end
 
 function M.change_mode_to_normal()
-        vim.api.nvim_feedkeys(ESC_FEEDKEY, 'n', false)
+  vim.api.nvim_feedkeys(ESC_FEEDKEY, 'n', false)
 end
 
 function M.change_mode_to_insert()
-        vim.api.nvim_command('startinsert')
+  vim.api.nvim_command('startinsert')
 end
 
 return M
