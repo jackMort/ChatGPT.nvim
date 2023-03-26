@@ -15,17 +15,17 @@ if not Api.OPENAI_API_KEY then
 end
 
 function Api.completions(custom_params, cb)
-  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
+  local params = vim.tbl_extend("force", custom_params, Config.options.openai_params)
   Api.make_call(Api.COMPLETIONS_URL, params, cb)
 end
 
 function Api.chat_completions(custom_params, cb)
-  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
+  local params = vim.tbl_extend("force", custom_params, Config.options.openai_params)
   Api.make_call(Api.CHAT_COMPLETIONS_URL, params, cb)
 end
 
 function Api.edits(custom_params, cb)
-  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_edit_params)
+  local params = vim.tbl_extend("force", custom_params, Config.options.openai_edit_params)
   Api.make_call(Api.EDITS_URL, params, cb)
 end
 
