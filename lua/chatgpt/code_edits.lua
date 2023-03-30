@@ -171,21 +171,23 @@ M.edit_with_instructions = function()
   for _, popup in ipairs({ settings_panel, instructions_input }) do
     for _, mode in ipairs({ "n", "i" }) do
       popup:map(mode, Config.options.keymaps.cycle_windows, function()
-        if active_panel == settings_panel then
-          vim.api.nvim_set_current_win(instructions_input.winid)
-          active_panel = instructions_input
-        else
-          vim.api.nvim_set_current_win(settings_panel.winid)
-          vim.api.nvim_buf_set_option(settings_panel.bufnr, "modifiable", false)
-          vim.api.nvim_win_set_option(settings_panel.winid, "cursorline", true)
-          active_panel = settings_panel
-        end
+        if settings_open then
+          if active_panel == settings_panel then
+            vim.api.nvim_set_current_win(instructions_input.winid)
+            active_panel = instructions_input
+          else
+            vim.api.nvim_set_current_win(settings_panel.winid)
+            vim.api.nvim_buf_set_option(settings_panel.bufnr, "modifiable", false)
+            vim.api.nvim_win_set_option(settings_panel.winid, "cursorline", true)
+            active_panel = settings_panel
+          end
 
-        -- TODO
-        -- set input and output settings
-        for _, window in ipairs({ input_window, output_window }) do
-          vim.api.nvim_buf_set_option(window.bufnr, "filetype", filetype)
-          vim.api.nvim_win_set_option(window.winid, "number", true)
+          -- TODO
+          -- set input and output settings
+          for _, window in ipairs({ input_window, output_window }) do
+            vim.api.nvim_buf_set_option(window.bufnr, "filetype", filetype)
+            vim.api.nvim_win_set_option(window.winid, "number", true)
+          end
         end
       end, {})
     end
