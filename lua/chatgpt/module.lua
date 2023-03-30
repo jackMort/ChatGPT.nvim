@@ -224,15 +224,17 @@ local open_chat = function()
   for _, popup in ipairs({ settings_panel, sessions_panel, chat_input }) do
     for _, mode in ipairs({ "n", "i" }) do
       popup:map(mode, Config.options.keymaps.cycle_windows, function()
-        if active_panel == settings_panel then
-          vim.api.nvim_set_current_win(sessions_panel.winid)
-          active_panel = sessions_panel
-        elseif active_panel == sessions_panel then
-          vim.api.nvim_set_current_win(chat_input.winid)
-          active_panel = chat_input
-        else
-          vim.api.nvim_set_current_win(settings_panel.winid)
-          active_panel = settings_panel
+        if settings_open then
+            if active_panel == settings_panel then
+              vim.api.nvim_set_current_win(sessions_panel.winid)
+              active_panel = sessions_panel
+            elseif active_panel == sessions_panel then
+              vim.api.nvim_set_current_win(chat_input.winid)
+              active_panel = chat_input
+            else
+              vim.api.nvim_set_current_win(settings_panel.winid)
+              active_panel = settings_panel
+            end
         end
       end, {})
     end
