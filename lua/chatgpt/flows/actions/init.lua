@@ -9,11 +9,13 @@ I have the following code:
 ```
 ]]
 
+local ChatAction = require("chatgpt.flows.actions.chat")
 local CompletionAction = require("chatgpt.flows.actions.completions")
 local EditAction = require("chatgpt.flows.actions.edits")
 local Config = require("chatgpt.config")
 
 local classes_by_type = {
+  chat = ChatAction,
   completion = CompletionAction,
   edit = EditAction,
 }
@@ -54,7 +56,6 @@ function M.run_action(opts)
   local action_name = opts.fargs[1]
   local item = ACTIONS[action_name]
 
-  --
   -- parse args
   --
   if item.args then
