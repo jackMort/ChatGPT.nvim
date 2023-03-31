@@ -16,6 +16,7 @@ local Session = require("chatgpt.flows.chat.session")
 local Actions = require("chatgpt.flows.actions")
 local Tokens = require("chatgpt.flows.chat.tokens")
 local CodeCompletions = require("chatgpt.flows.code_completions")
+local Utils = require("chatgpt.utils")
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
@@ -24,6 +25,7 @@ local extmark_id = nil
 local open_chat = function()
   local chat, chat_input, layout, chat_window
   local settings_open = false
+  local active_panel = chat_input
 
   local display_input_suffix = function(suffix)
     if extmark_id then
@@ -202,6 +204,8 @@ local open_chat = function()
           vim.api.nvim_set_current_win(settings_panel.winid)
           vim.api.nvim_buf_set_option(settings_panel.bufnr, "modifiable", false)
           vim.api.nvim_win_set_option(settings_panel.winid, "cursorline", true)
+          Utils.change_mode_to_normal()
+          active_panel = settings_panel
         end
         settings_open = not settings_open
       end, {})
@@ -220,21 +224,29 @@ local open_chat = function()
   end
 
   -- cycle panes
-  local active_panel = chat_input
-  for _, popup in ipairs({ settings_panel, sessions_panel, chat_input }) do
+  for _, popup in ipairs({ settings_panel, sessions_panel, chat_input, chat_window }) do
     for _, mode in ipairs({ "n", "i" }) do
       popup:map(mode, Config.options.keymaps.cycle_windows, function()
-        if settings_open then
-          if active_panel == settings_panel then
-            vim.api.nvim_set_current_win(sessions_panel.winid)
-            active_panel = sessions_panel
-          elseif active_panel == sessions_panel then
-            vim.api.nvim_set_current_win(chat_input.winid)
-            active_panel = chat_input
-          else
-            vim.api.nvim_set_current_win(settings_panel.winid)
-            active_panel = settings_panel
-          end
+        if active_panel == settings_panel then
+          vim.api.nvim_set_current_win(sessions_panel.winid)
+          active_panel = sessions_panel
+          Utils.change_mode_to_normal()
+        elseif active_panel == sessions_panel then
+          vim.api.nvim_set_current_win(chat_input.winid)
+          active_panel = chat_input
+          Utils.change_mode_to_insert()
+        elseif active_panel == chat_input then
+          vim.api.nvim_set_current_win(chat_window.winid)
+          active_panel = chat_window
+          Utils.change_mode_to_normal()
+        elseif active_panel == chat_window and settings_open == true then
+          vim.api.nvim_set_current_win(settings_panel.winid)
+          active_panel = settings_panel
+          Utils.change_mode_to_normal()
+        else
+          vim.api.nvim_set_current_win(chat_input.winid)
+          active_panel = chat_input
+          Utils.change_mode_to_insert()
         end
       end, {})
     end
