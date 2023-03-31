@@ -1,3 +1,19 @@
+-- ChatAction that can be used for actions of type "chat" in actions.json
+--
+-- This enables the use of gpt-3.5-turbo in user defined actions,
+-- as this model only defines the chat endpoint and has no completions endpoint
+--
+-- Example action for your local actions.json:
+--
+--   "turbo-summary": {
+--     "type": "chat",
+--     "opts": {
+--       "template": "Summarize the following text.\n\nText:\n\"\"\"\n{{input}}\n\"\"\"\n\nSummary:",
+--       "params": {
+--         "model": "gpt-3.5-turbo"
+--       }
+--     }
+--   }
 local classes = require("chatgpt.common.classes")
 local BaseAction = require("chatgpt.flows.actions.base")
 local Api = require("chatgpt.api")
@@ -40,7 +56,12 @@ function ChatAction:get_params()
     additional_params["suffix"] = s1
     p_rendered = p1
   end
-  additional_params["prompt"] = p_rendered
+  local messages = {}
+  local message = {}
+  message.role = "user"
+  message.content = p_rendered
+  table.insert(messages, message)
+  additional_params["messages"] = messages
   return vim.tbl_extend("force", Config.options.openai_params, self.params, additional_params)
 end
 
@@ -49,7 +70,7 @@ function ChatAction:run()
     self:set_loading(true)
 
     local params = self:get_params()
-    Api.chat(params, function(answer, usage)
+    Api.chat_completions(params, function(answer, usage)
       self:on_result(answer, usage)
     end)
   end)
