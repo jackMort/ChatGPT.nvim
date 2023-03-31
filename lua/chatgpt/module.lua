@@ -56,9 +56,11 @@ local open_chat = function()
     local input = direction > 0 and [[]] or [[]]
     local count = math.abs(speed)
 
+    vim.api.nvim_buf_set_option(chat_window.bufnr, "modifiable", true)
     vim.api.nvim_win_call(chat_window.winid, function()
       vim.cmd([[normal! ]] .. count .. input)
     end)
+    vim.api.nvim_buf_set_option(chat_window.bufnr, "modifiable", false)
   end
 
   local params = Config.options.openai_params
