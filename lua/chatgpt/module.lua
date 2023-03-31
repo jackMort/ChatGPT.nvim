@@ -54,13 +54,11 @@ local open_chat = function()
   local scroll_chat = function(direction)
     local speed = vim.api.nvim_win_get_height(chat_window.winid) / 2
     local input = direction > 0 and [[]] or [[]]
-    local count = math.abs(speed)
+    local count = math.floor(speed)
 
-    vim.api.nvim_buf_set_option(chat_window.bufnr, "modifiable", true)
     vim.api.nvim_win_call(chat_window.winid, function()
       vim.cmd([[normal! ]] .. count .. input)
     end)
-    vim.api.nvim_buf_set_option(chat_window.bufnr, "modifiable", false)
   end
 
   local params = Config.options.openai_params
