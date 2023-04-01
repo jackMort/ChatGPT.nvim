@@ -84,13 +84,20 @@ function ChatAction:on_result(answer, usage)
     if self.strategy == STRATEGY_PREPEND then
       answer = answer .. "\n" .. self:get_selected_text()
     elseif self.strategy == STRATEGY_APPEND then
-      answer = self:get_selected_text() .. "\n" .. answer
+      answer = self:get_selected_text() .. "\n\n" .. answer .. "\n"
     end
     local lines = Utils.split_string_by_line(answer)
     local start_row, start_col, end_row, end_col = self:get_visual_selection()
 
+
     if self.strategy ~= STRATEGY_DISPLAY then
       vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
+
+      -- set the cursor onto the answer
+      if self.strategy == STRATEGY_APPEND then
+        local target_line = end_row + 3
+        vim.api.nvim_win_set_cursor(0, {target_line, 0})
+      end
     else
       local Popup = require("nui.popup")
 
