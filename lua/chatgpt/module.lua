@@ -22,6 +22,7 @@ local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
 local prompt_lines = 1
 local extmark_id = nil
+local virt_text_len = 0
 local open_chat = function()
   local chat, chat_input, layout, chat_window
   local settings_open = false
@@ -36,6 +37,7 @@ local open_chat = function()
       return
     end
 
+    virt_text_len = #("" .. suffix) + 3
     extmark_id = vim.api.nvim_buf_set_extmark(chat_input.bufnr, namespace_id, 0, -1, {
       virt_text = {
         { "", "ChatGPTTotalTokensBorder" },
@@ -76,6 +78,16 @@ local open_chat = function()
       layout:unmount()
     end,
     on_change = vim.schedule_wrap(function(lines)
+      local max_length = Utils.max_line_length(lines)
+      local win_width = vim.api.nvim_win_get_width(chat_input.winid)
+      if max_length + virt_text_len > win_width - 3 then
+        if extmark_id ~= nil then
+          vim.api.nvim_buf_del_extmark(chat_input.bufnr, namespace_id, extmark_id)
+          extmark_id = nil
+        end
+      elseif extmark_id == nil then
+        display_total_tokens()
+      end
       if prompt_lines ~= #lines then
         prompt_lines = #lines
         if not settings_open then
