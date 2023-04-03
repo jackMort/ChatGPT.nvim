@@ -11,7 +11,7 @@ function M.setup()
   vim.cmd([[sign define chatgpt_chat_middle_block text=│ texthl=Constant]])
   vim.cmd([[sign define chatgpt_chat_end_block text=└ texthl=Constant]])
 
-  vim.cmd("sign define chatgpt_question_sign text=" .. Config.options.question_sign .." texthl=ChatGPTQustion")
+  vim.cmd("sign define chatgpt_question_sign text=" .. Config.options.question_sign .. " texthl=ChatGPTQustion")
 end
 
 function M.set(name, bufnr, line)
