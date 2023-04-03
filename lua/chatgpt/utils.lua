@@ -18,6 +18,17 @@ function M.split_string_by_line(text)
   return lines
 end
 
+function M.max_line_length(lines)
+  local max_length = 0
+  for _, line in ipairs(lines) do
+    local str_length = string.len(line)
+    if str_length > max_length then
+      max_length = str_length
+    end
+  end
+  return max_length
+end
+
 function M.wrapText(text, maxLineLength)
   local lines = M.wrapTextToTable(text, maxLineLength)
   return table.concat(lines, "\n")
