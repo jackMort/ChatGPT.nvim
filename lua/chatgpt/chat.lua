@@ -1,4 +1,5 @@
 local Config = require("chatgpt.config")
+local Signs = require("chatgpt.signs")
 local Utils = require("chatgpt.utils")
 local Spinner = require("chatgpt.spinner")
 local Session = require("chatgpt.flows.chat.session")
@@ -186,14 +187,8 @@ function Chat:renderLastMessage()
   local msg = self:getSelected()
 
   local lines = {}
-  local i = 0
   for w in string.gmatch(msg.text, "[^\r\n]+") do
-    local prefix = "   │ "
-    if i == 0 then
-      prefix = " " .. signs[msg.type] .. " │ "
-    end
-    table.insert(lines, prefix .. w)
-    i = i + 1
+    table.insert(lines, w)
   end
   table.insert(lines, "")
   if msg.type == ANSWER then
@@ -207,10 +202,12 @@ function Chat:renderLastMessage()
     for index, _ in ipairs(lines) do
       self:add_highlight("ChatGPTQuestion", msg.start_line + index - 1, 0, -1)
     end
+
+    pcall(vim.fn.sign_place, 0, "chatgpt_ns", "chatgpt_question_sign", self.bufnr, { lnum = msg.start_line + 1 })
   else
     local total_tokens = msg.usage.total_tokens
     if total_tokens ~= nil then
-      vim.api.nvim_buf_set_extmark(self.bufnr, Config.namespace_id, msg.end_line + 1, -1, {
+      vim.api.nvim_buf_set_extmark(self.bufnr, Config.namespace_id, msg.end_line + 1, 0, {
         virt_text = {
           { "", "ChatGPTTotalTokensBorder" },
           {
@@ -223,6 +220,8 @@ function Chat:renderLastMessage()
         virt_text_pos = "right_align",
       })
     end
+
+    Signs.set_for_lines(self.bufnr, msg.start_line, msg.end_line, "chat")
   end
 
   if self.selectedIndex > 2 then

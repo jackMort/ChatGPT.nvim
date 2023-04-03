@@ -64,7 +64,7 @@ end
 function BaseAction:mark_selection_with_signs()
   local bufnr = self:get_bufnr()
   local start_row, _, end_row, _ = self:get_visual_selection()
-  Signs.set_for_lines(bufnr, start_row, end_row)
+  Signs.set_for_lines(bufnr, start_row, end_row, "action")
 end
 
 function BaseAction:render_spinner(state)
