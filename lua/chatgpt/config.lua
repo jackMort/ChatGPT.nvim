@@ -103,6 +103,7 @@ function M.defaults()
       delete_session = "d",
     },
     actions_paths = {},
+    predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
   }
   return defaults
 end
