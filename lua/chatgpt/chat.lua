@@ -22,7 +22,7 @@ function Chat:new(bufnr, winid, on_loading)
   self.messages = {}
   self.spinner = Spinner:new(function(state)
     vim.schedule(function()
-      self:set_lines(-2, -1, false, { "     " .. state .. " " .. Config.options.loading_text })
+      self:set_lines(-2, -1, false, { state .. " " .. Config.options.loading_text })
       on_loading(state)
     end)
   end)
