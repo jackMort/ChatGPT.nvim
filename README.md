@@ -17,9 +17,7 @@ With `ChatGPT`, you can ask questions and get answers from GPT-3 in real-time.
 use({
   "jackMort/ChatGPT.nvim",
     config = function()
-      require("chatgpt").setup({
-        -- optional configuration
-      })
+      require("chatgpt").setup()
     end,
     requires = {
       "MunifTanjim/nui.nvim",
@@ -27,11 +25,25 @@ use({
       "nvim-telescope/telescope.nvim"
     }
 })
+
+-- Lazy
+{
+  "jackMort/ChatGPT.nvim",
+    event = "VeryLazy",
+    config = function()
+      require("chatgpt").setup()
+    end,
+    dependencies = {
+      "MunifTanjim/nui.nvim",
+      "nvim-lua/plenary.nvim",
+      "nvim-telescope/telescope.nvim"
+    }
+}
 ```
 
 ## Configuration
 
-`ChatGPT.nvim` comes with the following defaults
+`ChatGPT.nvim` comes with the following defaults, you can override them by passing config as setup param
 
 ```lua
 {
