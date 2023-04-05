@@ -124,9 +124,6 @@ end
 --
 
 local M = {}
-
-M.URL = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv"
-
 function M.selectAwesomePrompt(opts)
   opts = opts or {}
   pickers
@@ -139,7 +136,7 @@ function M.selectAwesomePrompt(opts)
       prompt_prefix = Config.options.chat_input.prompt,
       selection_caret = Config.options.answer_sign .. " ",
       prompt_title = "Prompt",
-      finder = finder({ url = M.URL }),
+      finder = finder({ url = Config.options.predefined_chat_gpt_prompts }),
       sorter = conf.generic_sorter(opts),
       previewer = display_content_wrapped.new({}),
       attach_mappings = function(prompt_bufnr)

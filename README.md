@@ -120,6 +120,7 @@ use({
     rename_session = "r",
     delete_session = "d",
   },
+  predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
 }
 ```
 ## Usage
