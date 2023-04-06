@@ -15,6 +15,7 @@ local Sessions = require("chatgpt.flows.chat.sessions")
 local Session = require("chatgpt.flows.chat.session")
 local Actions = require("chatgpt.flows.actions")
 local Tokens = require("chatgpt.flows.chat.tokens")
+local CodeCompletions = require("chatgpt.flows.code_completions")
 local Utils = require("chatgpt.utils")
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
@@ -307,5 +308,6 @@ end
 M.edit_with_instructions = Edits.edit_with_instructions
 M.run_action = Actions.run_action
 -- M.run_custom_code_action = Actions.run_custom_code_action
+M.complete_code = CodeCompletions.complete
 
 return M
