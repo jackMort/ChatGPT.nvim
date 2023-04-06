@@ -26,6 +26,7 @@ local STRATEGY_REPLACE = "replace"
 local STRATEGY_APPEND = "append"
 local STRATEGY_PREPEND = "prepend"
 local STRATEGY_DISPLAY = "display"
+local STRATEGY_DIFF = "diff"
 
 function ChatAction:init(opts)
   self.super:init(opts)
@@ -89,15 +90,7 @@ function ChatAction:on_result(answer, usage)
     local lines = Utils.split_string_by_line(answer)
     local start_row, start_col, end_row, end_col = self:get_visual_selection()
 
-    if self.strategy ~= STRATEGY_DISPLAY then
-      vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
-
-      -- set the cursor onto the answer
-      if self.strategy == STRATEGY_APPEND then
-        local target_line = end_row + 3
-        vim.api.nvim_win_set_cursor(0, { target_line, 0 })
-      end
-    else
+    if self.strategy == STRATEGY_APPEND then
       local Popup = require("nui.popup")
 
       local popup = Popup({
@@ -131,6 +124,42 @@ function ChatAction:on_result(answer, usage)
       })
       vim.api.nvim_buf_set_lines(popup.bufnr, 0, 1, false, lines)
       popup:mount()
+    elseif self.strategy == STRATEGY_DIFF then
+      -- create a new buffer for the answer
+      local newbufnr = vim.api.nvim_create_buf(false, true)
+      -- set filetype to the same as the original buffer
+      vim.api.nvim_buf_set_option(newbufnr, "filetype", self:get_filetype())
+      -- give a name to the new buffer
+      vim.api.nvim_buf_set_name(newbufnr, "ChatGPT answer " .. vim.api.nvim_buf_get_name(bufnr))
+      -- copy the old buffer into the new buffer
+      vim.api.nvim_buf_set_lines(newbufnr, 0, -1, false, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
+      -- replace the answer in the new buffer
+      vim.api.nvim_buf_set_text(newbufnr, start_row, start_col, end_row, end_col, lines)
+      -- create a new tab with the new buffer and the old buffer side by side, then diff
+      -- them
+      vim.api.nvim_command("tabnew | buffer " .. bufnr .. "| vsplit | buffer " .. newbufnr .. " | windo diffthis")
+      -- set a tab-scoped variable to handle special commands
+      vim.t.chatgpt_diff = { newbufnr, bufnr }
+      -- map q to close the tab if t:chatgpt_diff is set
+      vim.api.nvim_buf_set_keymap(
+        0,
+        "n",
+        "q",
+        "<cmd>lua if vim.t.chatgpt_diff ~= nil then require'chatgpt.utils'.keep_or_restore("
+          .. bufnr
+          .. ","
+          .. newbufnr
+          .. ") end <CR>",
+        { noremap = true, silent = true }
+      )
+    else
+      vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
+
+      -- set the cursor onto the answer
+      if self.strategy == STRATEGY_APPEND then
+        local target_line = end_row + 3
+        vim.api.nvim_win_set_cursor(0, { target_line, 0 })
+      end
     end
   end)
 end

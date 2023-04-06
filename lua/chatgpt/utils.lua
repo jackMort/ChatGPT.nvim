@@ -113,4 +113,28 @@ function M.change_mode_to_insert()
   vim.api.nvim_command("startinsert")
 end
 
+function M.keep_or_restore(bufnr, newbufnr)
+  -- if the tab is closed, a dialog is shown to the user
+  local choice = vim.fn.input("Restore original text or keep the answer? (r/k) ")
+  -- strip spaces from choice
+  choice = choice:gsub("%s+", "")
+  -- if choice not in {'k', 'r'}, prit a message
+  while choice ~= "k" and choice ~= "r" do
+    choice = vim.fn.input("Invalid choice. Restore original text or keep the answer? (r/k) ")
+    choice = choice:gsub("%s+", "")
+  end
+  -- if the user chooses to keep the answer, the new buffer is copied into the
+  -- old and then deleted
+  if choice == "k" then
+    -- copy the new buffer into the old buffer
+    vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.api.nvim_buf_get_lines(newbufnr, 0, -1, false))
+  end
+  -- delete the new buffer
+  vim.api.nvim_command("bwipeout " .. newbufnr)
+  -- delete the tab
+  if vim.t.chatgpt_diff ~= nil then
+    vim.api.nvim_command("tabclose")
+  end
+end
+
 return M
