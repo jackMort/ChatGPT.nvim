@@ -38,6 +38,7 @@ function M.defaults()
       },
       keymaps = {
         close = { "<C-c>" },
+        close_normal = { "<Esc>" },
         yank_last = "<C-y>",
         yank_last_code = "<C-k>",
         scroll_up = "<C-u>",
