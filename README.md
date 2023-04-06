@@ -182,6 +182,25 @@ All the above actions are using `gpt-3.5-turbo` model.
 
 It is possible to define custom actions with a JSON file. See [`actions.json`](blob/main/lua/chatgpt/flows/actions/actions.json) for an example. The path of custom actions can be set in the config (see `actions_paths` field in the cofig example above).
 
+An example of custom action may look like this: (`#` marks comments)
+```python
+{
+  "action_name": {
+    "type": "chat", # or "completion" or "edit"
+    "opts": {
+      "template": "A template using possible variable: {{lang}} (language being used), {{filetype}} (neovim filetype), {{input}} (the selected text)",
+      "strategy": "replace", # or "display" or "append"
+      "params": { # parameters according to the official OpenAI API
+        "model": "gpt-3.5-turbo", # or any other model supported by `"type"` in the OpenAI API, use the playground for reference
+        "stop": [
+          "```" # a string used to stop the model
+        ]
+      }
+    }
+  }
+}
+```
+
 #### `ChatGPTRunCustomCodeAction`
 TODO
 
