@@ -17,7 +17,6 @@ M.setup = function(options)
   signs.setup()
 end
 
-
 --
 -- public methods for the plugin
 --
