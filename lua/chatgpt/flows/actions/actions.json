@@ -1,4 +1,17 @@
 {
+  "complete_code": {
+    "type": "chat",
+    "opts": {
+      "template": "Complete the following code written in {{lang}} by pasting the existing code and continuing it.\n\nExisting code:\n```{{filetype}}\n{{input}}\n```\n\n```{{filetype}}\n",
+      "strategy": "replace",
+      "params": {
+        "model": "gpt-3.5-turbo",
+        "stop": [
+          "```"
+        ]
+      }
+    }
+  },
   "grammar_correction": {
     "type": "chat",
     "opts": {

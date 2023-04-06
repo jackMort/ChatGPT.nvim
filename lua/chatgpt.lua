@@ -41,6 +41,5 @@ M.run_custom_code_action = function(opts)
   module.run_custom_code_action(opts)
 end
 
-M.complete_code = module.complete_code
 
 return M

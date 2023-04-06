@@ -36,6 +36,3 @@ end, {
   range = true,
 })
 
-vim.api.nvim_create_user_command("ChatGPTCompleteCode", function(opts)
-  require("chatgpt").complete_code(opts)
-end, {})
