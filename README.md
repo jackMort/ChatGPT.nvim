@@ -180,6 +180,8 @@ wk.register({
 
 All the above actions are using `gpt-3.5-turbo` model.
 
+It is possible to define custom actions with a JSON file. See [`actions.json`](blob/main/lua/chatgpt/flows/actions/actions.json) for an example. The path of custom actions can be set in the config (see `actions_paths` field in the cofig example above).
+
 #### `ChatGPTRunCustomCodeAction`
 TODO
 
