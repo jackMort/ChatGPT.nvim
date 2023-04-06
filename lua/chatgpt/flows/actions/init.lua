@@ -21,6 +21,8 @@ local classes_by_type = {
 }
 
 local read_actions_from_file = function(filename)
+  local home = os.getenv("HOME")
+  filename = filename:gsub("~", home)
   local file = io.open(filename, "rb")
   if not file then
     vim.notify("Cannot read action file: " .. filename, vim.log.levels.ERROR)
@@ -43,8 +45,10 @@ function M.read_actions()
 
   for _, filename in ipairs(paths) do
     local data = read_actions_from_file(filename)
-    for action_name, action_definition in pairs(data) do
-      actions[action_name] = action_definition
+    if data then
+      for action_name, action_definition in pairs(data) do
+        actions[action_name] = action_definition
+      end
     end
   end
   return actions
