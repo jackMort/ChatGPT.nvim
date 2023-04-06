@@ -121,16 +121,27 @@ use({
     delete_session = "d",
   },
   predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
+  actions_paths = {"~/.config/nvim/custom_actions.json"}
 }
 ```
 ## Usage
 
 Plugin exposes following commands:
-- `ChatGPT` command which opens interactive window.
-- `ChatGPTActAs` command which opens a prompt selection from [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) to be used with the ChatGPT.
+
+#### `ChatGPT`
+`ChatGPT` command which opens interactive window using the `gpt-3.5-turbo`
+model.
+(also known as `ChatGPT`)
+
+#### `ChatGPTActAs`
+`ChatGPTActAs` command which opens a prompt selection from [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) to be used with the `gpt-3.5-turbo` model.
 
 ![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview-3.png?raw=true)
-- `ChatGPTEditWithInstructions` command which opens interactive window to edit selected text or whole window - [demo video](https://www.youtube.com/watch?v=dWe01EV0q3Q).
+
+#### `ChatGPTEditWithInstructions`
+`ChatGPTEditWithInstructions` command which opens interactive window to edit selected text or whole window using the `code-davinci-edit-002` model (GPT 3.5 fine-tuned for coding).
+
+- [demo video](https://www.youtube.com/watch?v=dWe01EV0q3Q).
 
 ![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview.png?raw=true)
 
@@ -146,5 +157,23 @@ Available keybindings are:
 - `<Tab>` Cycle over windows.
 - `<C-i>` [Edit Window] use response as input.
 
+#### `ChatGPTRun`
+
+`ChatGPTRun [action]` command which runs specific actions -- see [`actions.json`](blob/main/lua/chatgpt/flows/actions/actions.json) file for a detailed list. Available actions are:
+  1. `grammar_correction`
+  2. `translate`
+  3. `keywords`
+  4. `docstring`
+  5. `add_tests`
+  6. `optimize_code`
+  7. `summarize`
+  8. `fix_bugs`
+  9. `explain_code`
+  10. `roxygen_edit`
+
+All the above actions are using `gpt-3.5-turbo` model.
+
+#### `ChatGPTRunCustomCodeAction`
+TODO
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/jackMort)
