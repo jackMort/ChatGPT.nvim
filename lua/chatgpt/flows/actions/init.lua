@@ -115,18 +115,18 @@ end
 --     end,
 --   })
 
-  local close_keymaps = Config.options.keymaps.close
-  if type(close_keymaps) ~= "table" then
-    close_keymaps = { close_keymaps }
-  end
+--   local close_keymaps = Config.options.keymaps.close
+--   if type(close_keymaps) ~= "table" then
+--     close_keymaps = { close_keymaps }
+--   end
 
-  for _, keymap in ipairs(close_keymaps) do
-    input:map("i", keymap, function()
-      input.input_props.on_close()
-    end, { noremap = true, silent = true })
-  end
+--   for _, keymap in ipairs(close_keymaps) do
+--     input:map("i", keymap, function()
+--       input.input_props.on_close()
+--     end, { noremap = true, silent = true })
+--   end
 
-  input:mount()
-end
+--   input:mount()
+-- end
 
 return M
