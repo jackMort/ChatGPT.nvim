@@ -307,7 +307,6 @@ end
 
 M.edit_with_instructions = Edits.edit_with_instructions
 M.run_action = Actions.run_action
-M.run_custom_code_action = Actions.run_custom_code_action
 M.complete_code = CodeCompletions.complete
 
 return M

@@ -121,20 +121,92 @@ use({
     delete_session = "d",
   },
   predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
+  actions_paths = {"~/.config/nvim/custom_actions.json"}
 }
 ```
 ## Usage
 
 Plugin exposes following commands:
-- `ChatGPT` command which opens interactive window.
-- `ChatGPTActAs` command which opens a prompt selection from [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) to be used with the ChatGPT.
+
+#### `ChatGPT`
+`ChatGPT` command which opens interactive window using the `gpt-3.5-turbo`
+model.
+(also known as `ChatGPT`)
+
+#### `ChatGPTActAs`
+`ChatGPTActAs` command which opens a prompt selection from [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) to be used with the `gpt-3.5-turbo` model.
 
 ![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview-3.png?raw=true)
-- `ChatGPTEditWithInstructions` command which opens interactive window to edit selected text or whole window - [demo video](https://www.youtube.com/watch?v=dWe01EV0q3Q).
+
+#### `ChatGPTEditWithInstructions`
+`ChatGPTEditWithInstructions` command which opens interactive window to edit selected text or whole window using the `code-davinci-edit-002` model (GPT 3.5 fine-tuned for coding).
+
+You can map it usig the Lua API, e.g. using `which-key.nvim`:
+```lua
+local chatgpt = require("chatgpt")
+wk.register({
+    p = {
+        name = "ChatGPT",
+        e = {
+            function()
+                chatgpt.edit_with_instructions()
+            end,
+            "Edit with instructions",
+        },
+    },
+}, {
+    prefix = "<leader>",
+    mode = "v",
+})
+```
+
+- [demo video](https://www.youtube.com/watch?v=dWe01EV0q3Q).
 
 ![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview.png?raw=true)
 
-Available keybindings are:
+#### `ChatGPTRun`
+
+`ChatGPTRun [action]` command which runs specific actions -- see [`actions.json`](blob/main/lua/chatgpt/flows/actions/actions.json) file for a detailed list. Available actions are:
+  1. `grammar_correction`
+  2. `translate`
+  3. `keywords`
+  4. `docstring`
+  5. `add_tests`
+  6. `optimize_code`
+  7. `summarize`
+  8. `fix_bugs`
+  9. `explain_code`
+  10. `roxygen_edit`
+
+All the above actions are using `gpt-3.5-turbo` model.
+
+It is possible to define custom actions with a JSON file. See [`actions.json`](blob/main/lua/chatgpt/flows/actions/actions.json) for an example. The path of custom actions can be set in the config (see `actions_paths` field in the cofig example above).
+
+An example of custom action may look like this: (`#` marks comments)
+```python
+{
+  "action_name": {
+    "type": "chat", # or "completion" or "edit"
+    "opts": {
+      "template": "A template using possible variable: {{lang}} (language being used), {{filetype}} (neovim filetype), {{input}} (the selected text)",
+      "strategy": "replace", # or "display" or "append"
+      "params": { # parameters according to the official OpenAI API
+        "model": "gpt-3.5-turbo", # or any other model supported by `"type"` in the OpenAI API, use the playground for reference
+        "stop": [
+          "```" # a string used to stop the model
+        ]
+      }
+    }
+  }
+}
+```
+
+#### `ChatGPTRunCustomCodeAction`
+TODO
+
+### Interactive popup
+When using `ChatGPT` and `ChatGPTEditWithInstructions`, the following
+keybindings are available:
 - `<C-Enter>` to submit.
 - `<C-c>` to close chat window.
 - `<C-u>` scroll up chat window.
@@ -146,5 +218,7 @@ Available keybindings are:
 - `<Tab>` Cycle over windows.
 - `<C-i>` [Edit Window] use response as input.
 
+When the setting window is opened (with `<C-o>`), settigs can be modified by
+pressing `Enter` on the related config. Settings are saved across sections
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/jackMort)
