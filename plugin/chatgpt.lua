@@ -29,10 +29,9 @@ end, {
   end,
 })
 
-vim.api.nvim_create_user_command("ChatGPTRunCustomCodeAction", function(opts)
-  require("chatgpt").run_custom_code_action(opts)
-end, {
-  nargs = "*",
-  range = true,
-})
-
+-- vim.api.nvim_create_user_command("ChatGPTRunCustomCodeAction", function(opts)
+--   require("chatgpt").run_custom_code_action(opts)
+-- end, {
+--   nargs = "*",
+--   range = true,
+-- })

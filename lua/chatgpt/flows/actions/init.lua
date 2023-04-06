@@ -1,13 +1,13 @@
 local M = {}
 
-CUSTOM_CODE_ACTION = [[
-I have the following code:
-```{{filetype}}
-{{input}}
-```
-{{instruction}}:
-```
-]]
+-- CUSTOM_CODE_ACTION = [[
+-- I have the following code:
+-- ```{{filetype}}
+-- {{input}}
+-- ```
+-- {{instruction}}:
+-- ```
+-- ]]
 
 local ChatAction = require("chatgpt.flows.actions.chat")
 local CompletionAction = require("chatgpt.flows.actions.completions")
@@ -79,41 +79,41 @@ function M.run_action(opts)
   action:run()
 end
 
-function M.run_custom_code_action(opts)
-  local Input = require("nui.input")
+-- function M.run_custom_code_action(opts)
+--   local Input = require("nui.input")
 
-  local input = Input({
-    position = "50%",
-    size = {
-      width = 60,
-    },
-    border = {
-      style = "rounded",
-      text = {
-        top = " Custom Code Action ",
-        top_align = "center",
-      },
-    },
-    win_options = {
-      winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
-    },
-  }, {
-    prompt = Config.options.chat_input.prompt,
-    on_submit = function(value)
-      opts = vim.tbl_extend("force", {}, opts, {
-        template = CUSTOM_CODE_ACTION,
-        params = {
-          model = "code-davinci-002",
-          stop = { "```" },
-        },
-        variables = {
-          instruction = value,
-        },
-      })
-      local action = CompletionAction.new(opts)
-      action:run()
-    end,
-  })
+--   local input = Input({
+--     position = "50%",
+--     size = {
+--       width = 60,
+--     },
+--     border = {
+--       style = "rounded",
+--       text = {
+--         top = " Custom Code Action ",
+--         top_align = "center",
+--       },
+--     },
+--     win_options = {
+--       winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+--     },
+--   }, {
+--     prompt = Config.options.chat_input.prompt,
+--     on_submit = function(value)
+--       opts = vim.tbl_extend("force", {}, opts, {
+--         template = CUSTOM_CODE_ACTION,
+--         params = {
+--           model = "code-davinci-002",
+--           stop = { "```" },
+--         },
+--         variables = {
+--           instruction = value,
+--         },
+--       })
+--       local action = CompletionAction.new(opts)
+--       action:run()
+--     end,
+--   })
 
   local close_keymaps = Config.options.keymaps.close
   if type(close_keymaps) ~= "table" then

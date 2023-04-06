@@ -17,6 +17,7 @@ M.setup = function(options)
   signs.setup()
 end
 
+
 --
 -- public methods for the plugin
 --
@@ -37,9 +38,8 @@ M.run_action = function(opts)
   module.run_action(opts)
 end
 
-M.run_custom_code_action = function(opts)
-  module.run_custom_code_action(opts)
-end
-
+-- M.run_custom_code_action = function(opts)
+--   module.run_custom_code_action(opts)
+-- end
 
 return M
