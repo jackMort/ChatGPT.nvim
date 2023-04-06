@@ -145,18 +145,6 @@ model.
 
 ![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview.png?raw=true)
 
-Available keybindings are:
-- `<C-Enter>` to submit.
-- `<C-c>` to close chat window.
-- `<C-u>` scroll up chat window.
-- `<C-d>` scroll down chat window.
-- `<C-y>` to copy/yank last answer.
-- `<C-k>` to copy/yank code from last answer.
-- `<C-o>` Toggle settings window.
-- `<C-n>` Start new session.
-- `<Tab>` Cycle over windows.
-- `<C-i>` [Edit Window] use response as input.
-
 #### `ChatGPTRun`
 
 `ChatGPTRun [action]` command which runs specific actions -- see [`actions.json`](blob/main/lua/chatgpt/flows/actions/actions.json) file for a detailed list. Available actions are:
@@ -175,5 +163,22 @@ All the above actions are using `gpt-3.5-turbo` model.
 
 #### `ChatGPTRunCustomCodeAction`
 TODO
+
+### Interactive popup
+When using `ChatGPT` and `ChatGPTEditWithInstructions`, the following
+keybindings are available:
+- `<C-Enter>` to submit.
+- `<C-c>` to close chat window.
+- `<C-u>` scroll up chat window.
+- `<C-d>` scroll down chat window.
+- `<C-y>` to copy/yank last answer.
+- `<C-k>` to copy/yank code from last answer.
+- `<C-o>` Toggle settings window.
+- `<C-n>` Start new session.
+- `<Tab>` Cycle over windows.
+- `<C-i>` [Edit Window] use response as input.
+
+When the setting window is opened (with `<C-o>`), settigs can be modified by
+pressing `Enter` on the related config. Settings are saved across sections
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/jackMort)
