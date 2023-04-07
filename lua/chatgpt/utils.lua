@@ -112,3 +112,5 @@ end
 function M.change_mode_to_insert()
   vim.api.nvim_command("startinsert")
 end
+
+return M
