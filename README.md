@@ -51,12 +51,18 @@ use({
   edit_with_instructions = {
     diff = false,
     keymaps = {
-      yank_last = "<C-y>",
-      toggle_diff = "<C-f>",
+      accept = "<C-y>",
+      toggle_diff = "<C-d>",
       toggle_settings = "<C-o>",
       cycle_windows = "<Tab>",
       use_output_as_input = "<C-i>",
     },
+  },
+  diff_tab = {
+    keymaps = {
+      quit = "<C-c>",
+      accept = "<C-y>",
+    }
   },
   chat = {
     welcome_message = WELCOME_MESSAGE,
@@ -153,7 +159,6 @@ use({
   },
   actions_paths = {},
   predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
-  }
 }
 ```
 ## Usage
@@ -221,7 +226,7 @@ An example of custom action may look like this: (`#` marks comments)
     "type": "chat", # or "completion" or "edit"
     "opts": {
       "template": "A template using possible variable: {{lang}} (language being used), {{filetype}} (neovim filetype), {{input}} (the selected text)",
-      "strategy": "replace", # or "display" or "append"
+      "strategy": "replace", # or "display" or "append" or "diff"
       "params": { # parameters according to the official OpenAI API
         "model": "gpt-3.5-turbo", # or any other model supported by `"type"` in the OpenAI API, use the playground for reference
         "stop": [
@@ -232,6 +237,11 @@ An example of custom action may look like this: (`#` marks comments)
   }
 }
 ```
+The `diff` strategy consists in a special tab where the original and generated files are
+diffed. In that tab, you can use all the standard neovim commands, including the diff
+mode commands (e.g. `dp`, `dg`, etc.). You can press `<C-c>` in normal mode to quit the tab and `<C-y>` to accept all the changes. Once the tab is closed, the merged changes will be retained.
+
+For now, `diff` strategy is implemented for `chat` type only.
 
 ### Interactive popup
 When using `ChatGPT` and `ChatGPTEditWithInstructions`, the following
@@ -246,7 +256,8 @@ keybindings are available:
 - `<C-k>` [Chat] to copy/yank code from last answer.
 - `<C-n>` [Chat] Start new session.
 - `<C-i>` [Edit Window] use response as input.
-- `<C-d>` [Edit Window] view the diff between left and right panes
+- `<C-d>` [Edit Window] view the diff between left and right panes and use diff-mode
+  commands
 
 When the setting window is opened (with `<C-o>`), settigs can be modified by
 pressing `Enter` on the related config. Settings are saved across sections
