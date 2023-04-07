@@ -90,7 +90,7 @@ function ChatAction:on_result(answer, usage)
     local lines = Utils.split_string_by_line(answer)
     local start_row, start_col, end_row, end_col = self:get_visual_selection()
 
-    if self.strategy == STRATEGY_APPEND then
+    if self.strategy == STRATEGY_DISPLAY then
       local Popup = require("nui.popup")
 
       local popup = Popup({
@@ -125,6 +125,7 @@ function ChatAction:on_result(answer, usage)
       vim.api.nvim_buf_set_lines(popup.bufnr, 0, 1, false, lines)
       popup:mount()
     elseif self.strategy == STRATEGY_DIFF then
+      local winnr = vim.api.nvim_get_current_win()
       -- create a new buffer for the answer
       local newbufnr = vim.api.nvim_create_buf(false, true)
       -- set filetype to the same as the original buffer
@@ -137,7 +138,7 @@ function ChatAction:on_result(answer, usage)
       vim.api.nvim_buf_set_text(newbufnr, start_row, start_col, end_row, end_col, lines)
       -- create a new tab with the new buffer and the old buffer side by side, then diff
       -- them
-      vim.api.nvim_command("tabnew | buffer " .. bufnr .. "| vsplit | buffer " .. newbufnr .. " | windo diffthis")
+      vim.api.nvim_command("tabnew | buffer " .. bufnr .. "| vsplit | buffer " .. newbufnr .. " | windo diffthis | windo set wrap")
       -- set a tab-scoped variable to handle special commands
       vim.t.chatgpt_diff = { newbufnr, bufnr }
       -- map quit if t:chatgpt_diff is set
@@ -149,6 +150,10 @@ function ChatAction:on_result(answer, usage)
           .. bufnr
           .. ","
           .. newbufnr
+          .. ","
+          .. start_row
+          .. ","
+          .. start_col .. "," .. winnr
           .. ",false) end <CR>",
         { noremap = true, silent = true }
       )
@@ -161,6 +166,10 @@ function ChatAction:on_result(answer, usage)
           .. bufnr
           .. ","
           .. newbufnr
+          .. ","
+          .. start_row
+          .. ","
+          .. start_col .. "," .. winnr
           .. ",true) end <CR>",
         { noremap = true, silent = true }
       )

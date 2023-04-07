@@ -113,7 +113,7 @@ function M.change_mode_to_insert()
   vim.api.nvim_command("startinsert")
 end
 
-function M.close_diff_tab(bufnr, newbufnr, keep)
+function M.close_diff_tab(bufnr, newbufnr, start_row, start_col, winnr, keep)
   if keep then
     -- copy the new buffer into the old buffer
     vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.api.nvim_buf_get_lines(newbufnr, 0, -1, false))
@@ -124,6 +124,10 @@ function M.close_diff_tab(bufnr, newbufnr, keep)
   if vim.t.chatgpt_diff ~= nil then
     vim.api.nvim_command("tabclose")
   end
+  -- put cursor at the start of the selection
+  vim.api.nvim_set_current_win(winnr)
+  vim.api.nvim_set_current_buf(bufnr)
+  vim.api.nvim_win_set_cursor(winnr, {start_row, start_col})
 end
 
 return M
