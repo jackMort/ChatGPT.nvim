@@ -15,7 +15,7 @@ function M.defaults()
       diff = false,
       keymaps = {
         yank_last = "<C-y>",
-        toggle_diff = "<C-f>",
+        toggle_diff = "<C-d>",
         toggle_settings = "<C-o>",
         cycle_windows = "<Tab>",
         use_output_as_input = "<C-i>",

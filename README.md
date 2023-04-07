@@ -47,13 +47,49 @@ use({
 
 ```lua
 {
-  welcome_message = WELCOME_MESSAGE,
-  loading_text = "loading",
-  question_sign = "", -- you can use emoji if you want e.g. 🙂
-  answer_sign = "ﮧ", -- 🤖
-  max_line_length = 120,
   yank_register = "+",
-  chat_layout = {
+  edit_with_instructions = {
+    diff = false,
+    keymaps = {
+      yank_last = "<C-y>",
+      toggle_diff = "<C-f>",
+      toggle_settings = "<C-o>",
+      cycle_windows = "<Tab>",
+      use_output_as_input = "<C-i>",
+    },
+  },
+  chat = {
+    welcome_message = WELCOME_MESSAGE,
+    loading_text = "Loading, please wait ...",
+    question_sign = "", -- 🙂
+    answer_sign = "ﮧ", -- 🤖
+    max_line_length = 120,
+    sessions_window = {
+      border = {
+        style = "rounded",
+        text = {
+          top = " Sessions ",
+        },
+      },
+      win_options = {
+        winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+      },
+    },
+    keymaps = {
+      close = { "<C-c>" },
+      yank_last = "<C-y>",
+      yank_last_code = "<C-k>",
+      scroll_up = "<C-u>",
+      scroll_down = "<C-d>",
+      toggle_settings = "<C-o>",
+      new_session = "<C-n>",
+      cycle_windows = "<Tab>",
+      select_session = "<Space>",
+      rename_session = "r",
+      delete_session = "d",
+    },
+  },
+  popup_layout = {
     relative = "editor",
     position = "50%",
     size = {
@@ -61,15 +97,7 @@ use({
       width = "80%",
     },
   },
-  settings_window = {
-    border = {
-      style = "rounded",
-      text = {
-        top = " Settings ",
-      },
-    },
-  },
-  chat_window = {
+  popup_window = {
     filetype = "chatgpt",
     border = {
       highlight = "FloatBorder",
@@ -78,8 +106,11 @@ use({
         top = " ChatGPT ",
       },
     },
+    win_options = {
+      winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+    },
   },
-  chat_input = {
+  popup_input = {
     prompt = "  ",
     border = {
       highlight = "FloatBorder",
@@ -88,6 +119,21 @@ use({
         top_align = "center",
         top = " Prompt ",
       },
+    },
+    win_options = {
+      winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+    },
+    submit = "<C-Enter>",
+  },
+  settings_window = {
+    border = {
+      style = "rounded",
+      text = {
+        top = " Settings ",
+      },
+    },
+    win_options = {
+      winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
     },
   },
   openai_params = {
@@ -105,23 +151,9 @@ use({
     top_p = 1,
     n = 1,
   },
-  keymaps = {
-    close = { "<C-c>" },
-    submit = "<C-Enter>",
-    yank_last = "<C-y>",
-    yank_last_code = "<C-k>",
-    scroll_up = "<C-u>",
-    scroll_down = "<C-d>",
-    toggle_settings = "<C-o>",
-    new_session = "<C-n>",
-    cycle_windows = "<Tab>",
-    -- in the Sessions pane
-    select_session = "<Space>",
-    rename_session = "r",
-    delete_session = "d",
-  },
+  actions_paths = {},
   predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
-  actions_paths = {"~/.config/nvim/custom_actions.json"}
+  }
 }
 ```
 ## Usage
@@ -201,22 +233,20 @@ An example of custom action may look like this: (`#` marks comments)
 }
 ```
 
-#### `ChatGPTRunCustomCodeAction`
-TODO
-
 ### Interactive popup
 When using `ChatGPT` and `ChatGPTEditWithInstructions`, the following
 keybindings are available:
-- `<C-Enter>` to submit.
-- `<C-c>` to close chat window.
-- `<C-u>` scroll up chat window.
-- `<C-d>` scroll down chat window.
-- `<C-y>` to copy/yank last answer.
-- `<C-k>` to copy/yank code from last answer.
-- `<C-o>` Toggle settings window.
-- `<C-n>` Start new session.
-- `<Tab>` Cycle over windows.
+- `<C-Enter>` [Both] to submit.
+- `<C-y>` [Both] to copy/yank last answer.
+- `<C-o>` [Both] Toggle settings window.
+- `<Tab>` [Both] Cycle over windows.
+- `<C-c>` [Chat] to close chat window.
+- `<C-u>` [Chat] scroll up chat window.
+- `<C-d>` [Chat] scroll down chat window.
+- `<C-k>` [Chat] to copy/yank code from last answer.
+- `<C-n>` [Chat] Start new session.
 - `<C-i>` [Edit Window] use response as input.
+- `<C-d>` [Edit Window] view the diff between left and right panes
 
 When the setting window is opened (with `<C-o>`), settigs can be modified by
 pressing `Enter` on the related config. Settings are saved across sections
