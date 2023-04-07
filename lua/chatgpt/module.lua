@@ -69,9 +69,9 @@ local open_chat = function()
     chat:set_session(session)
     display_total_tokens()
   end)
-  chat_window = Popup(Config.options.chat_window)
-  chat_input = ChatInput(Config.options.chat_input, {
-    prompt = Config.options.chat_input.prompt,
+  chat_window = Popup(Config.options.popup_window)
+  chat_input = ChatInput(Config.options.popup_input, {
+    prompt = Config.options.popup_input.prompt,
     on_close = function()
       chat:close()
       Api.close()
@@ -131,7 +131,7 @@ local open_chat = function()
   })
 
   layout = Layout(
-    Config.options.chat_layout,
+    Config.options.popup_layout,
     Layout.Box({
       Layout.Box(chat_window, { grow = 1 }),
       Layout.Box(chat_input, { size = 3 }),
@@ -148,14 +148,14 @@ local open_chat = function()
   -- add keymaps
   --
   -- yank last answer
-  chat_input:map("i", Config.options.keymaps.yank_last, function()
+  chat_input:map("i", Config.options.chat.keymaps.yank_last, function()
     local msg = chat:getSelected()
     vim.fn.setreg(Config.options.yank_register, msg.text)
     vim.notify("Successfully copied to yank register!", vim.log.levels.INFO)
   end, { noremap = true })
 
   -- yank last code
-  keys(Config.options.keymaps.yank_last_code, function()
+  keys(Config.options.chat.keymaps.yank_last_code, function()
     local code = chat:getSelectedCode()
     if code ~= nil then
       vim.fn.setreg(Config.options.yank_register, code)
@@ -166,17 +166,17 @@ local open_chat = function()
   end)
 
   -- scroll down
-  chat_input:map("i", Config.options.keymaps.scroll_down, function()
+  chat_input:map("i", Config.options.chat.keymaps.scroll_down, function()
     scroll_chat(1)
   end, { noremap = true, silent = true })
 
   -- scroll up
-  chat_input:map("i", Config.options.keymaps.scroll_up, function()
+  chat_input:map("i", Config.options.chat.keymaps.scroll_up, function()
     scroll_chat(-1)
   end, { noremap = true, silent = true })
 
   -- close
-  local close_keymaps = Config.options.keymaps.close
+  local close_keymaps = Config.options.chat.keymaps.close
   if type(close_keymaps) ~= "table" then
     close_keymaps = { close_keymaps }
   end
@@ -194,7 +194,7 @@ local open_chat = function()
   -- toggle settings
   for _, popup in ipairs({ settings_panel, chat_input }) do
     for _, mode in ipairs({ "n", "i" }) do
-      popup:map(mode, Config.options.keymaps.toggle_settings, function()
+      popup:map(mode, Config.options.chat.keymaps.toggle_settings, function()
         if settings_open then
           layout:update(Layout.Box({
             Layout.Box(chat_window, { grow = 1 }),
@@ -227,7 +227,7 @@ local open_chat = function()
   -- toggle settings
   for _, popup in ipairs({ settings_panel, chat_input }) do
     for _, mode in ipairs({ "n", "i" }) do
-      popup:map(mode, Config.options.keymaps.new_session, function()
+      popup:map(mode, Config.options.chat.keymaps.new_session, function()
         chat:new_session()
         Sessions:refresh()
         display_total_tokens()
@@ -238,7 +238,7 @@ local open_chat = function()
   -- cycle panes
   for _, popup in ipairs({ settings_panel, sessions_panel, chat_input, chat_window }) do
     for _, mode in ipairs({ "n", "i" }) do
-      popup:map(mode, Config.options.keymaps.cycle_windows, function()
+      popup:map(mode, Config.options.chat.keymaps.cycle_windows, function()
         if active_panel == settings_panel then
           vim.api.nvim_set_current_win(sessions_panel.winid)
           active_panel = sessions_panel
@@ -271,7 +271,7 @@ local open_chat = function()
   chat = Chat:new(chat_window.bufnr, chat_window.winid, display_input_suffix)
 
   -- set custom filetype
-  vim.api.nvim_buf_set_option(chat_window.bufnr, "filetype", Config.options.chat_window.filetype)
+  vim.api.nvim_buf_set_option(chat_window.bufnr, "filetype", Config.options.popup_window.filetype)
 
   return chat, chat_input, chat_window, display_total_tokens
 end

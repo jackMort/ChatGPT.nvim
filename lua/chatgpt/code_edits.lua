@@ -73,10 +73,10 @@ M.edit_with_instructions = function()
   local visual_lines, start_row, start_col, end_row, end_col = Utils.get_visual_lines(bufnr)
   local openai_params = Config.options.openai_edit_params
   local settings_panel = Settings.get_settings_panel("edits", openai_params)
-  input_window = Popup(Config.options.chat_window)
-  output_window = Popup(Config.options.chat_window)
-  instructions_input = ChatInput(Config.options.chat_input, {
-    prompt = Config.options.chat_input.prompt,
+  input_window = Popup(Config.options.popup_window)
+  output_window = Popup(Config.options.popup_window)
+  instructions_input = ChatInput(Config.options.popup_input, {
+    prompt = Config.options.popup_input.prompt,
     on_close = function()
       if timer ~= nil then
         timer:stop()
@@ -102,7 +102,7 @@ M.edit_with_instructions = function()
   })
 
   layout = Layout(
-    Config.options.chat_layout,
+    Config.options.popup_layout,
     Layout.Box({
       Layout.Box({
         Layout.Box(input_window, { grow = 1 }),
@@ -113,14 +113,14 @@ M.edit_with_instructions = function()
   )
 
   -- yank output window
-  instructions_input:map("i", Config.options.keymaps.yank_last, function()
+  instructions_input:map("i", Config.options.edit_with_instructions.keymaps.yank_last, function()
     instructions_input.input_props.on_close()
     vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col, output)
     vim.notify("Successfully applied the change!", vim.log.levels.INFO)
   end, { noremap = true })
 
   -- use output as input
-  instructions_input:map("i", Config.options.use_output_as_input, function()
+  instructions_input:map("i", Config.options.edit_with_instructions.use_output_as_input, function()
     local lines = vim.api.nvim_buf_get_lines(output_window.bufnr, 0, -1, false)
     vim.api.nvim_buf_set_lines(input_window.bufnr, 0, -1, false, lines)
     vim.api.nvim_buf_set_lines(output_window.bufnr, 0, -1, false, {})
@@ -130,7 +130,7 @@ M.edit_with_instructions = function()
   local settings_open = false
   for _, popup in ipairs({ settings_panel, instructions_input }) do
     for _, mode in ipairs({ "n", "i" }) do
-      popup:map(mode, Config.options.keymaps.toggle_settings, function()
+      popup:map(mode, Config.options.edit_with_instructions.keymaps.toggle_settings, function()
         if settings_open then
           layout:update(Layout.Box({
             Layout.Box({
@@ -175,7 +175,7 @@ M.edit_with_instructions = function()
       if mode == "i" and (popup == input_window or popup == output_window) then
         goto continue
       end
-      popup:map(mode, Config.options.keymaps.cycle_windows, function()
+      popup:map(mode, Config.options.edit_with_instructions.keymaps.cycle_windows, function()
         if active_panel == instructions_input then
           vim.api.nvim_set_current_win(input_window.winid)
           active_panel = input_window
@@ -202,10 +202,10 @@ M.edit_with_instructions = function()
   end
 
   -- toggle diff mode
-  local diff_mode = Config.options.edit_with_instructions_diff
+  local diff_mode = Config.options.edit_with_instructions.diff
   for _, popup in ipairs({ settings_panel, instructions_input }) do
     for _, mode in ipairs({ "n", "i" }) do
-      popup:map(mode, Config.options.keymaps.toggle_diff, function()
+      popup:map(mode, Config.options.edit_with_instructions.keymaps.toggle_diff, function()
         diff_mode = not diff_mode
         for _, winid in ipairs({ input_window.winid, output_window.winid }) do
           vim.api.nvim_set_current_win(winid)

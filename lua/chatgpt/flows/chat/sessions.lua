@@ -97,17 +97,17 @@ M.get_panel = function(set_session_cb)
   M.current_line = 1
   M.set_session_cb = set_session_cb
 
-  M.panel = Popup(Config.options.sessions_window)
+  M.panel = Popup(Config.options.chat.sessions_window)
 
-  M.panel:map("n", Config.options.keymaps.select_session, function()
+  M.panel:map("n", Config.options.chat.keymaps.select_session, function()
     M.set_session()
   end, { noremap = true })
 
-  M.panel:map("n", Config.options.keymaps.rename_session, function()
+  M.panel:map("n", Config.options.chat.keymaps.rename_session, function()
     M.rename_session()
   end, { noremap = true })
 
-  M.panel:map("n", Config.options.keymaps.delete_session, function()
+  M.panel:map("n", Config.options.chat.keymaps.delete_session, function()
     M.delete_session()
   end, { noremap = true, silent = true })
 
