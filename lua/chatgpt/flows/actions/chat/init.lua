@@ -19,14 +19,15 @@ local BaseAction = require("chatgpt.flows.actions.base")
 local Api = require("chatgpt.api")
 local Utils = require("chatgpt.utils")
 local Config = require("chatgpt.config")
+local Edits = require("chatgpt.code_edits")
 
 local ChatAction = classes.class(BaseAction)
 
+local STRATEGY_EDIT = "edit"
 local STRATEGY_REPLACE = "replace"
 local STRATEGY_APPEND = "append"
 local STRATEGY_PREPEND = "prepend"
 local STRATEGY_DISPLAY = "display"
-local STRATEGY_DIFF = "diff"
 
 function ChatAction:init(opts)
   self.super:init(opts)
@@ -124,55 +125,8 @@ function ChatAction:on_result(answer, usage)
       })
       vim.api.nvim_buf_set_lines(popup.bufnr, 0, 1, false, lines)
       popup:mount()
-    elseif self.strategy == STRATEGY_DIFF then
-      local winnr = vim.api.nvim_get_current_win()
-      -- create a new buffer for the answer
-      local newbufnr = vim.api.nvim_create_buf(false, true)
-      -- set filetype to the same as the original buffer
-      vim.api.nvim_buf_set_option(newbufnr, "filetype", self:get_filetype())
-      -- give a name to the new buffer
-      vim.api.nvim_buf_set_name(newbufnr, "ChatGPT answer " .. vim.api.nvim_buf_get_name(bufnr))
-      -- copy the old buffer into the new buffer
-      vim.api.nvim_buf_set_lines(newbufnr, 0, -1, false, vim.api.nvim_buf_get_lines(bufnr, 0, -1, false))
-      -- replace the answer in the new buffer
-      vim.api.nvim_buf_set_text(newbufnr, start_row, start_col, end_row, end_col, lines)
-      -- create a new tab with the new buffer and the old buffer side by side, then diff
-      -- them
-      vim.api.nvim_command("tabnew | buffer " .. bufnr .. "| vsplit | buffer " .. newbufnr .. " | windo diffthis | windo set wrap")
-      -- set a tab-scoped variable to handle special commands
-      vim.t.chatgpt_diff = { newbufnr, bufnr }
-      -- map quit if t:chatgpt_diff is set
-      vim.api.nvim_buf_set_keymap(
-        0,
-        "n",
-        Config.options.diff_tab.keymaps.quit,
-        "<cmd>lua if vim.t.chatgpt_diff ~= nil then require'chatgpt.utils'.close_diff_tab("
-          .. bufnr
-          .. ","
-          .. newbufnr
-          .. ","
-          .. start_row
-          .. ","
-          .. start_col .. "," .. winnr
-          .. ",false) end <CR>",
-        { noremap = true, silent = true }
-      )
-      -- map accept if t:chatgpt_diff is set
-      vim.api.nvim_buf_set_keymap(
-        0,
-        "n",
-        Config.options.diff_tab.keymaps.accept,
-        "<cmd>lua if vim.t.chatgpt_diff ~= nil then require'chatgpt.utils'.close_diff_tab("
-          .. bufnr
-          .. ","
-          .. newbufnr
-          .. ","
-          .. start_row
-          .. ","
-          .. start_col .. "," .. winnr
-          .. ",true) end <CR>",
-        { noremap = true, silent = true }
-      )
+    elseif self.strategy == STRATEGY_EDIT then
+      Edits.edit_with_instructions(lines, vim.api.nvim_get_current_win())
     else
       vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
 

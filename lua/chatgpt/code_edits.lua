@@ -53,10 +53,17 @@ local hide_progress = function()
   output_window.border:set_text("top", " Result ", "center")
 end
 
-local setup_and_mount = vim.schedule_wrap(function(lines)
+local setup_and_mount = vim.schedule_wrap(function(lines, output_lines, ...)
   layout:mount()
   -- set input
-  vim.api.nvim_buf_set_lines(input_window.bufnr, 0, -1, false, lines)
+  if lines then
+    vim.api.nvim_buf_set_lines(input_window.bufnr, 0, -1, false, lines)
+  end
+
+  -- set output
+  if output_lines then
+    vim.api.nvim_buf_set_lines(output_window.bufnr, 0, -1, false, output_lines)
+  end
 
   -- set input and output settings
   for _, window in ipairs({ input_window, output_window }) do
@@ -65,8 +72,10 @@ local setup_and_mount = vim.schedule_wrap(function(lines)
   end
 end)
 
-M.edit_with_instructions = function()
-  local winnr = vim.api.nvim_get_current_win()
+M.edit_with_instructions = function(output_lines, winnr, ...)
+  if winnr == nil then
+    winnr = vim.api.nvim_get_current_win()
+  end
   bufnr = vim.api.nvim_win_get_buf(winnr)
   filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
 
@@ -113,18 +122,23 @@ M.edit_with_instructions = function()
   )
 
   -- accept output window
-  instructions_input:map("i", Config.options.edit_with_instructions.keymaps.accept, function()
-    instructions_input.input_props.on_close()
-    vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col, output)
-    vim.notify("Successfully applied the change!", vim.log.levels.INFO)
-  end, { noremap = true })
+  for _, mode in ipairs({ "n", "i" }) do
+    instructions_input:map("i", Config.options.edit_with_instructions.keymaps.accept, function()
+      instructions_input.input_props.on_close()
+      local lines = vim.api.nvim_buf_get_lines(output_window.bufnr, 0, -1, false)
+      vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col, lines)
+      vim.notify("Successfully applied the change!", vim.log.levels.INFO)
+    end, { noremap = true })
+  end
 
   -- use output as input
-  instructions_input:map("i", Config.options.edit_with_instructions.use_output_as_input, function()
-    local lines = vim.api.nvim_buf_get_lines(output_window.bufnr, 0, -1, false)
-    vim.api.nvim_buf_set_lines(input_window.bufnr, 0, -1, false, lines)
-    vim.api.nvim_buf_set_lines(output_window.bufnr, 0, -1, false, {})
-  end, { noremap = true })
+  for _, mode in ipairs({ "n", "i" }) do
+    instructions_input:map("i", Config.options.edit_with_instructions.use_output_as_input, function()
+      local lines = vim.api.nvim_buf_get_lines(output_window.bufnr, 0, -1, false)
+      vim.api.nvim_buf_set_lines(input_window.bufnr, 0, -1, false, lines)
+      vim.api.nvim_buf_set_lines(output_window.bufnr, 0, -1, false, {})
+    end, { noremap = true })
+  end
 
   -- toggle settings
   local settings_open = false
@@ -220,7 +234,7 @@ M.edit_with_instructions = function()
     end
   end
 
-  setup_and_mount(visual_lines)
+  setup_and_mount(visual_lines, output_lines)
 end
 
 return M

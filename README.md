@@ -58,12 +58,6 @@ use({
       use_output_as_input = "<C-i>",
     },
   },
-  diff_tab = {
-    keymaps = {
-      quit = "<C-c>",
-      accept = "<C-y>",
-    }
-  },
   chat = {
     welcome_message = WELCOME_MESSAGE,
     loading_text = "Loading, please wait ...",
@@ -225,23 +219,32 @@ An example of custom action may look like this: (`#` marks comments)
   "action_name": {
     "type": "chat", # or "completion" or "edit"
     "opts": {
-      "template": "A template using possible variable: {{lang}} (language being used), {{filetype}} (neovim filetype), {{input}} (the selected text)",
-      "strategy": "replace", # or "display" or "append" or "diff"
+      "template": "A template using possible variable: {{filetype}} (neovim filetype), {{input}} (the selected text) an {{argument}} (provided on the command line)",
+      "strategy": "replace", # or "display" or "append" or "edit"
       "params": { # parameters according to the official OpenAI API
         "model": "gpt-3.5-turbo", # or any other model supported by `"type"` in the OpenAI API, use the playground for reference
         "stop": [
           "```" # a string used to stop the model
         ]
       }
+    },
+    "args": {
+      "argument": {
+          "type": "strig",
+          "optional": "true",
+          "default": "some value"
+      }
     }
   }
 }
 ```
-The `diff` strategy consists in a special tab where the original and generated files are
-diffed. In that tab, you can use all the standard neovim commands, including the diff
-mode commands (e.g. `dp`, `dg`, etc.). You can press `<C-c>` in normal mode to quit the tab and `<C-y>` to accept all the changes. Once the tab is closed, the merged changes will be retained.
+The `edit` strategy consists in showing the output side by side with the iput and
+available for further editing requests.
+For now, `edit` strategy is implemented for `chat` type only.
 
-For now, `diff` strategy is implemented for `chat` type only.
+The `display` strategy shows the output in a float window.
+
+`append` and `replace` modify the text directly in the buffer.
 
 ### Interactive popup
 When using `ChatGPT` and `ChatGPTEditWithInstructions`, the following
