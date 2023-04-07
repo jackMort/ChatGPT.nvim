@@ -14,7 +14,7 @@ function M.defaults()
     edit_with_instructions = {
       diff = false,
       keymaps = {
-        yank_last = "<C-y>",
+        accept = "<C-y>",
         toggle_diff = "<C-d>",
         toggle_settings = "<C-o>",
         cycle_windows = "<Tab>",

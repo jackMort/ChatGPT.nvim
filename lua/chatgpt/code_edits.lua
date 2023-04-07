@@ -112,8 +112,8 @@ M.edit_with_instructions = function()
     }, { dir = "row" })
   )
 
-  -- yank output window
-  instructions_input:map("i", Config.options.edit_with_instructions.keymaps.yank_last, function()
+  -- accept output window
+  instructions_input:map("i", Config.options.edit_with_instructions.keymaps.accept, function()
     instructions_input.input_props.on_close()
     vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col, output)
     vim.notify("Successfully applied the change!", vim.log.levels.INFO)
