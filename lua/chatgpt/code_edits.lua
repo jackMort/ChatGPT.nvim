@@ -225,6 +225,7 @@ M.edit_with_instructions = function(output_lines, winnr, ...)
           vim.api.nvim_set_current_win(winid)
           if diff_mode then
             vim.api.nvim_command("diffthis")
+            vim.api.nvim_command("set wrap")
           else
             vim.api.nvim_command("diffoff")
           end
