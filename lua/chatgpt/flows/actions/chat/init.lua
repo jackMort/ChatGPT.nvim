@@ -140,16 +140,28 @@ function ChatAction:on_result(answer, usage)
       vim.api.nvim_command("tabnew | buffer " .. bufnr .. "| vsplit | buffer " .. newbufnr .. " | windo diffthis")
       -- set a tab-scoped variable to handle special commands
       vim.t.chatgpt_diff = { newbufnr, bufnr }
-      -- map q to close the tab if t:chatgpt_diff is set
+      -- map quit if t:chatgpt_diff is set
       vim.api.nvim_buf_set_keymap(
         0,
         "n",
-        "q",
-        "<cmd>lua if vim.t.chatgpt_diff ~= nil then require'chatgpt.utils'.keep_or_restore("
+        Config.options.diff_tab.keymaps.quit,
+        "<cmd>lua if vim.t.chatgpt_diff ~= nil then require'chatgpt.utils'.close_diff_tab("
           .. bufnr
           .. ","
           .. newbufnr
-          .. ") end <CR>",
+          .. ",false) end <CR>",
+        { noremap = true, silent = true }
+      )
+      -- map accept if t:chatgpt_diff is set
+      vim.api.nvim_buf_set_keymap(
+        0,
+        "n",
+        Config.options.diff_tab.keymaps.accept,
+        "<cmd>lua if vim.t.chatgpt_diff ~= nil then require'chatgpt.utils'.close_diff_tab("
+          .. bufnr
+          .. ","
+          .. newbufnr
+          .. ",true) end <CR>",
         { noremap = true, silent = true }
       )
     else

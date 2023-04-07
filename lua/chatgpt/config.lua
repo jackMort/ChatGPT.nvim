@@ -21,6 +21,12 @@ function M.defaults()
         use_output_as_input = "<C-i>",
       },
     },
+    diff_tab = {
+      keymaps = {
+        quit = "<C-c>",
+        accept = "<C-y>",
+      }
+    },
     chat = {
       welcome_message = WELCOME_MESSAGE,
       loading_text = "Loading, please wait ...",
