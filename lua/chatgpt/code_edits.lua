@@ -112,13 +112,15 @@ M.edit_with_instructions = function()
     }, { dir = "row" })
   )
 
+  -- yank output window
   instructions_input:map("i", Config.options.keymaps.yank_last, function()
     instructions_input.input_props.on_close()
     vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col, output)
     vim.notify("Successfully applied the change!", vim.log.levels.INFO)
   end, { noremap = true })
 
-  instructions_input:map("i", "<C-i>", function()
+  -- use output as input
+  instructions_input:map("i", Config.options.use_output_as_input, function()
     local lines = vim.api.nvim_buf_get_lines(output_window.bufnr, 0, -1, false)
     vim.api.nvim_buf_set_lines(input_window.bufnr, 0, -1, false, lines)
     vim.api.nvim_buf_set_lines(output_window.bufnr, 0, -1, false, {})
@@ -166,28 +168,53 @@ M.edit_with_instructions = function()
     end
   end
 
-  -- toggle panes
+  -- cycle windows
   local active_panel = instructions_input
-  for _, popup in ipairs({ settings_panel, instructions_input }) do
+  for _, popup in ipairs({ input_window, output_window, settings_panel, instructions_input }) do
     for _, mode in ipairs({ "n", "i" }) do
+      if mode == "i" and (popup == input_window or popup == output_window) then
+        goto continue
+      end
       popup:map(mode, Config.options.keymaps.cycle_windows, function()
-        if settings_open then
-          if active_panel == settings_panel then
+        if active_panel == instructions_input then
+          vim.api.nvim_set_current_win(input_window.winid)
+          active_panel = input_window
+          vim.api.nvim_command("stopinsert")
+        elseif active_panel == input_window and mode ~= "i" then
+          vim.api.nvim_set_current_win(output_window.winid)
+          active_panel = output_window
+          vim.api.nvim_command("stopinsert")
+        elseif active_panel == output_window and mode ~= "i" then
+          if settings_open then
+            vim.api.nvim_set_current_win(settings_panel.winid)
+            active_panel = settings_panel
+          else
             vim.api.nvim_set_current_win(instructions_input.winid)
             active_panel = instructions_input
-          else
-            vim.api.nvim_set_current_win(settings_panel.winid)
-            vim.api.nvim_buf_set_option(settings_panel.bufnr, "modifiable", false)
-            vim.api.nvim_win_set_option(settings_panel.winid, "cursorline", true)
-            active_panel = settings_panel
           end
+        elseif active_panel == settings_panel then
+          vim.api.nvim_set_current_win(instructions_input.winid)
+          active_panel = instructions_input
+        end
+      end, {})
+      ::continue::
+    end
+  end
 
-          -- TODO
-          -- set input and output settings
-          for _, window in ipairs({ input_window, output_window }) do
-            vim.api.nvim_buf_set_option(window.bufnr, "filetype", filetype)
-            vim.api.nvim_win_set_option(window.winid, "number", true)
+  -- toggle diff mode
+  local diff_mode = Config.options.edit_with_instructions_diff
+  for _, popup in ipairs({ settings_panel, instructions_input }) do
+    for _, mode in ipairs({ "n", "i" }) do
+      popup:map(mode, Config.options.keymaps.toggle_diff, function()
+        diff_mode = not diff_mode
+        for _, winid in ipairs({ input_window.winid, output_window.winid }) do
+          vim.api.nvim_set_current_win(winid)
+          if diff_mode then
+            vim.api.nvim_command("diffthis")
+          else
+            vim.api.nvim_command("diffoff")
           end
+          vim.api.nvim_set_current_win(instructions_input.winid)
         end
       end, {})
     end

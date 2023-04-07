@@ -16,6 +16,7 @@ function M.defaults()
     answer_sign = "ﮧ", -- 🤖
     max_line_length = 120,
     yank_register = "+",
+    edit_with_instructions_diff = false,
     chat_layout = {
       relative = "editor",
       position = "50%",
@@ -95,12 +96,14 @@ function M.defaults()
       yank_last_code = "<C-k>",
       scroll_up = "<C-u>",
       scroll_down = "<C-d>",
+      toggle_diff = "<C-f>",
       toggle_settings = "<C-o>",
       new_session = "<C-n>",
       cycle_windows = "<Tab>",
       select_session = "<Space>",
       rename_session = "r",
       delete_session = "d",
+      use_output_as_input = "<C-i>",
     },
     actions_paths = {},
     predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
