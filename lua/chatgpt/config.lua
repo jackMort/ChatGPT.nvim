@@ -25,7 +25,7 @@ function M.defaults()
       keymaps = {
         quit = "<C-c>",
         accept = "<C-y>",
-      }
+      },
     },
     chat = {
       welcome_message = WELCOME_MESSAGE,

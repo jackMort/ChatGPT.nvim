@@ -183,7 +183,8 @@ end
 function Chat:renderLastMessage()
   self:stopSpinner()
 
-  local signs = { Config.options.chat.question_sign, Config.options.chat.answer_sign, Config.options.chat.question_sign }
+  local signs =
+    { Config.options.chat.question_sign, Config.options.chat.answer_sign, Config.options.chat.question_sign }
   local msg = self:getSelected()
 
   local lines = {}
