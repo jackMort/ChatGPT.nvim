@@ -133,7 +133,7 @@ M.edit_with_instructions = function(output_lines, winnr, ...)
 
   -- use output as input
   for _, mode in ipairs({ "n", "i" }) do
-    instructions_input:map(mode, Config.options.edit_with_instructions.use_output_as_input, function()
+    instructions_input:map(mode, Config.options.edit_with_instructions.keymaps.use_output_as_input, function()
       local lines = vim.api.nvim_buf_get_lines(output_window.bufnr, 0, -1, false)
       vim.api.nvim_buf_set_lines(input_window.bufnr, 0, -1, false, lines)
       vim.api.nvim_buf_set_lines(output_window.bufnr, 0, -1, false, {})
