@@ -117,7 +117,6 @@
   "explain_code": {
     "type": "chat",
     "opts": {
-      "strategy": "display",
       "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nHere's what the above code is doing:\n```",
       "strategy": "display",
       "params": {
