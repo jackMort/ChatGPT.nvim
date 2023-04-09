@@ -89,7 +89,7 @@ function ChatAction:on_result(answer, usage)
       answer = self:get_selected_text() .. "\n\n" .. answer .. "\n"
     end
     local lines = Utils.split_string_by_line(answer)
-    local start_row, start_col, end_row, end_col = self:get_visual_selection()
+    local _, start_row, start_col, end_row, end_col = self:get_visual_selection()
 
     if self.strategy == STRATEGY_DISPLAY then
       local Popup = require("nui.popup")
@@ -126,7 +126,7 @@ function ChatAction:on_result(answer, usage)
       vim.api.nvim_buf_set_lines(popup.bufnr, 0, 1, false, lines)
       popup:mount()
     elseif self.strategy == STRATEGY_EDIT then
-      Edits.edit_with_instructions(lines, vim.api.nvim_get_current_win())
+      Edits.edit_with_instructions(lines, bufnr, {self:get_visual_selection()})
     else
       vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
 

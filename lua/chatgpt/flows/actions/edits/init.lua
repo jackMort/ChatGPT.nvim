@@ -61,7 +61,7 @@ function EditAction:on_result(answer, usage)
     self:set_loading(false)
 
     local bufnr = self:get_bufnr()
-    local visual_lines, start_row, start_col, end_row, end_col = Utils.get_visual_lines(bufnr)
+    local visual_lines, start_row, start_col, end_row, end_col = self:get_visual_selection(bufnr)
     local nlcount = Utils.count_newlines_at_end(table.concat(visual_lines, "\n"))
     local answer_nlfixed = Utils.replace_newlines_at_end(answer, nlcount)
     local lines = Utils.split_string_by_line(answer_nlfixed)
