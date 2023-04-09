@@ -72,14 +72,18 @@ local setup_and_mount = vim.schedule_wrap(function(lines, output_lines, ...)
   end
 end)
 
-M.edit_with_instructions = function(output_lines, winnr, ...)
-  if winnr == nil then
-    winnr = vim.api.nvim_get_current_win()
+M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
+  if bufnr == nil then
+    bufnr = vim.api.nvim_get_current_buf()
   end
-  bufnr = vim.api.nvim_win_get_buf(winnr)
   filetype = vim.api.nvim_buf_get_option(bufnr, "filetype")
 
-  local visual_lines, start_row, start_col, end_row, end_col = Utils.get_visual_lines(bufnr)
+  local visual_lines, start_row, start_col, end_row, end_col
+  if selection == nil then
+    visual_lines, start_row, start_col, end_row, end_col = Utils.get_visual_lines(bufnr)
+  else
+    visual_lines, start_row, start_col, end_row, end_col = unpack(selection)
+  end
   local openai_params = Config.options.openai_edit_params
   local settings_panel = Settings.get_settings_panel("edits", openai_params)
   input_window = Popup(Config.options.popup_window)
