@@ -1,6 +1,7 @@
 -- main module file
 local module = require("chatgpt.module")
 local config = require("chatgpt.config")
+local api = require("chatgpt.api")
 local signs = require("chatgpt.signs")
 
 local M = {}
@@ -14,6 +15,7 @@ M.setup = function(options)
   vim.api.nvim_set_hl(0, "ChatGPTCompletion", { fg = "#9399b2", italic = true, bold = false, default = true })
 
   config.setup(options)
+  api.setup(options)
   signs.setup()
 end
 

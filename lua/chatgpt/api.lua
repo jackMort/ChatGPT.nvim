@@ -8,10 +8,15 @@ Api.COMPLETIONS_URL = "https://api.openai.com/v1/completions"
 Api.CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions"
 Api.EDITS_URL = "https://api.openai.com/v1/edits"
 
--- API KEY
-Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not Api.OPENAI_API_KEY then
-  error("OPENAI_API_KEY environment variable not set")
+function Api.setup(options)
+  options = options or {}
+  Api.OPENAI_API_KEY = options.openai_api_key
+  if not Api.OPENAI_API_KEY then
+    Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    if not Api.OPENAI_API_KEY then
+      error("OPENAI_API_KEY environment variable not set")
+    end
+  end
 end
 
 function Api.completions(custom_params, cb)
