@@ -119,7 +119,6 @@
     "opts": {
       "strategy": "display",
       "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nHere's what the above code is doing:\n```",
-      "strategy": "replace",
       "params": {
         "model": "gpt-3.5-turbo",
         "stop": [
