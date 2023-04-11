@@ -10,12 +10,9 @@ Api.EDITS_URL = "https://api.openai.com/v1/edits"
 
 function Api.setup(options)
   options = options or {}
-  Api.OPENAI_API_KEY = options.openai_api_key
+  Api.OPENAI_API_KEY = options.openai_api_key or os.getenv("OPENAI_API_KEY")
   if not Api.OPENAI_API_KEY then
-    Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    if not Api.OPENAI_API_KEY then
-      error("OPENAI_API_KEY environment variable not set")
-    end
+    error("OPENAI_API_KEY environment variable not set")
   end
 end
 
