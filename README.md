@@ -197,7 +197,7 @@ wk.register({
 
 #### `ChatGPTRun`
 
-`ChatGPTRun [action]` command which runs specific actions -- see [`actions.json`](blob/main/lua/chatgpt/flows/actions/actions.json) file for a detailed list. Available actions are:
+`ChatGPTRun [action]` command which runs specific actions -- see [`actions.json`](./lua/chatgpt/flows/actions/actions.json) file for a detailed list. Available actions are:
   1. `grammar_correction`
   2. `translate`
   3. `keywords`
@@ -211,7 +211,7 @@ wk.register({
 
 All the above actions are using `gpt-3.5-turbo` model.
 
-It is possible to define custom actions with a JSON file. See [`actions.json`](blob/main/lua/chatgpt/flows/actions/actions.json) for an example. The path of custom actions can be set in the config (see `actions_paths` field in the cofig example above).
+It is possible to define custom actions with a JSON file. See [`actions.json`](./lua/chatgpt/flows/actions/actions.json) for an example. The path of custom actions can be set in the config (see `actions_paths` field in the cofig example above).
 
 An example of custom action may look like this: (`#` marks comments)
 ```python
