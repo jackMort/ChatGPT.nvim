@@ -126,7 +126,7 @@ function ChatAction:on_result(answer, usage)
       vim.api.nvim_buf_set_lines(popup.bufnr, 0, 1, false, lines)
       popup:mount()
     elseif self.strategy == STRATEGY_EDIT then
-      Edits.edit_with_instructions(lines, bufnr, {self:get_visual_selection()})
+      Edits.edit_with_instructions(lines, bufnr, { self:get_visual_selection() })
     else
       vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
 
