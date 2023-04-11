@@ -20,7 +20,7 @@ return function(name, on_submit)
       winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
     },
   }, {
-    prompt = Config.options.chat_input.prompt,
+    prompt = Config.options.popup_input.prompt,
     on_submit = on_submit,
   })
 

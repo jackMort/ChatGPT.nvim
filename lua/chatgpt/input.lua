@@ -126,13 +126,13 @@ function Input:mount()
     end, { once = true })
   end
 
-  self:map("i", Config.options.keymaps.submit, function()
+  self:map("i", Config.options.popup_input.submit, function()
     local lines = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false)
     local value = table.concat(lines, "\n")
     props.on_submit(value)
   end, { noremap = true })
 
-  self:map("n", Config.options.keymaps.submit, function()
+  self:map("n", Config.options.popup_input.submit, function()
     local lines = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false)
     local value = table.concat(lines, "\n")
     props.on_submit(value)

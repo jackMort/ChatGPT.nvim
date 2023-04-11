@@ -1,6 +1,7 @@
 local classes = require("chatgpt.common.classes")
 local Signs = require("chatgpt.signs")
 local Spinner = require("chatgpt.spinner")
+local Utils = require("chatgpt.utils")
 
 local BaseAction = classes.class()
 
@@ -31,46 +32,33 @@ function BaseAction:get_filetype()
 end
 
 function BaseAction:get_visual_selection()
+  -- return lines and selection, but caches them, so they always are the ones used
+  -- when the action was started, even if the user has changed buffer/selection
+  if self._selection then
+    return unpack(self._selection)
+  end
   local bufnr = self:get_bufnr()
+  local lines, start_row, start_col, end_row, end_col = Utils.get_visual_lines(bufnr)
+  self._selection = { lines, start_row, start_col, end_row, end_col }
 
-  local start_pos = vim.api.nvim_buf_get_mark(bufnr, "<")
-  local start_row = start_pos[1] - 1
-  local start_col = start_pos[2]
-
-  local end_pos = vim.api.nvim_buf_get_mark(bufnr, ">")
-  local end_row = end_pos[1] - 1
-  local end_col = end_pos[2] + 1
-
-  local start_line_length = vim.api.nvim_buf_get_lines(bufnr, start_row, start_row + 1, true)[1]:len()
-  start_col = math.min(start_col, start_line_length)
-
-  local end_line_length = vim.api.nvim_buf_get_lines(bufnr, end_row, end_row + 1, true)[1]:len()
-  end_col = math.min(end_col, end_line_length)
-
-  return start_row, start_col, end_row, end_col
-end
-
-function BaseAction:get_selected_lines()
-  local bufnr = self:get_bufnr()
-  local start_row, start_col, end_row, end_col = self:get_visual_selection()
-  return vim.api.nvim_buf_get_text(bufnr, start_row, start_col, end_row, end_col, {})
+  return lines, start_row, start_col, end_row, end_col
 end
 
 function BaseAction:get_selected_text()
-  local lines = self:get_selected_lines()
+  local lines, _, _, _, _ = self:get_visual_selection()
   return table.concat(lines, "\n")
 end
 
 function BaseAction:mark_selection_with_signs()
   local bufnr = self:get_bufnr()
-  local start_row, _, end_row, _ = self:get_visual_selection()
+  local _, start_row, _, end_row, _ = self:get_visual_selection()
   Signs.set_for_lines(bufnr, start_row, end_row, "action")
 end
 
 function BaseAction:render_spinner(state)
   vim.schedule(function()
     local bufnr = self:get_bufnr()
-    local start_row, start_col, end_row, end_col = self:get_visual_selection()
+    local _, start_row, start_col, end_row, end_col = self:get_visual_selection()
 
     vim.schedule(function()
       if self.extmark_id then

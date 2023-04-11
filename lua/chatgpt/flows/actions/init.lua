@@ -28,11 +28,14 @@ end
 
 function M.read_actions()
   local actions = {}
+  local paths = {}
 
   -- add default actions
-  local paths = Config.options.actions_paths
   local default_actions_path = debug.getinfo(1, "S").source:sub(2):match("(.*/)") .. "actions.json"
   table.insert(paths, default_actions_path)
+  for i = 1, #Config.options.actions_paths do
+    paths[#paths + 1] = Config.options.actions_paths[i]
+  end
 
   for _, filename in ipairs(paths) do
     local data = read_actions_from_file(filename)

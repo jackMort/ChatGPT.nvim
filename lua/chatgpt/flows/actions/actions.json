@@ -56,7 +56,7 @@
     "type": "chat",
     "opts": {
       "template": "# An elaborate, high quality docstring for the above function:\n# Writing a good docstring\n\nThis is an example of writing a really good docstring that follows a best practice for the given language. Attention is paid to detailing things like\n* parameter and return types (if applicable)\n* any errors that might be raised or returned, depending on the language\n\nI received the following code:\n\n```{{filetype}}\n{{input}}\n```\n\nThe code with a really good docstring added is below:\n\n```{{filetype}}",
-      "strategy": "replace",
+      "strategy": "edit",
       "params": {
         "model": "gpt-3.5-turbo",
         "stop": [
@@ -82,7 +82,7 @@
     "type": "chat",
     "opts": {
       "template": "Optimize the following code.\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nOptimized version:\n```{{filetype}}",
-      "strategy": "replace",
+      "strategy": "edit",
       "params": {
         "model": "gpt-3.5-turbo",
         "stop": [
@@ -95,7 +95,7 @@
     "type": "chat",
     "opts": {
       "template": "Summarize the following text.\n\nText:\n\"\"\"\n{{input}}\n\"\"\"\n\nSummary:",
-      "strategy": "replace",
+      "strategy": "edit",
       "params": {
         "model": "gpt-3.5-turbo"
       }
@@ -105,7 +105,7 @@
     "type": "chat",
     "opts": {
       "template": "Fix bugs in the below code\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nFixed code:\n```{{filetype}}",
-      "strategy": "replace",
+      "strategy": "edit",
       "params": {
         "model": "gpt-3.5-turbo",
         "stop": [
@@ -117,8 +117,8 @@
   "explain_code": {
     "type": "chat",
     "opts": {
-      "strategy": "display",
       "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nHere's what the above code is doing:\n```",
+      "strategy": "display",
       "params": {
         "model": "gpt-3.5-turbo",
         "stop": [

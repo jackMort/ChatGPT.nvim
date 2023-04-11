@@ -81,7 +81,7 @@ function CompletionAction:on_result(answer, usage)
       answer = self:get_selected_text() .. "\n" .. answer
     end
     local lines = Utils.split_string_by_line(answer)
-    local start_row, start_col, end_row, end_col = self:get_visual_selection()
+    local _, start_row, start_col, end_row, end_col = self:get_visual_selection()
 
     if self.strategy ~= STRATEGY_DISPLAY then
       vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
