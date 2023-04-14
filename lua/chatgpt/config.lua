@@ -61,7 +61,6 @@ function M.defaults()
       },
     },
     popup_window = {
-      filetype = "chatgpt",
       border = {
         highlight = "FloatBorder",
         style = "rounded",
@@ -72,6 +71,9 @@ function M.defaults()
       win_options = {
         winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
       },
+      buf_options = {
+        filetype = "markdown"
+      }
     },
     popup_input = {
       prompt = "  ",
