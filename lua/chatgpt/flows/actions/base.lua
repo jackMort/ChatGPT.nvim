@@ -49,10 +49,19 @@ function BaseAction:get_selected_text()
   return table.concat(lines, "\n")
 end
 
+function BaseAction:get_selected_text_with_line_numbers()
+  local lines, start_row, _, _, _ = self:get_visual_selection()
+  local lines_with_numbers = {}
+  for i, line in ipairs(lines) do
+    table.insert(lines_with_numbers, (start_row + i - 1) .. line)
+  end
+  return table.concat(lines_with_numbers, "\n")
+end
+
 function BaseAction:mark_selection_with_signs()
   local bufnr = self:get_bufnr()
   local _, start_row, _, end_row, _ = self:get_visual_selection()
-  Signs.set_for_lines(bufnr, start_row, end_row, "action")
+  Signs.set_for_lines(bufnr, start_row - 1, end_row - 1, "action")
 end
 
 function BaseAction:render_spinner(state)

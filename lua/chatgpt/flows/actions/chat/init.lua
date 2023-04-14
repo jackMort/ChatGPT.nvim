@@ -28,6 +28,7 @@ local STRATEGY_REPLACE = "replace"
 local STRATEGY_APPEND = "append"
 local STRATEGY_PREPEND = "prepend"
 local STRATEGY_DISPLAY = "display"
+local STRATEGY_QUICK_FIX = "quick_fix"
 
 function ChatAction:init(opts)
   self.super:init(opts)
@@ -38,9 +39,11 @@ function ChatAction:init(opts)
 end
 
 function ChatAction:render_template()
+  local input = self.strategy == STRATEGY_QUICK_FIX and self:get_selected_text_with_line_numbers()
+    or self:get_selected_text()
   local data = {
     filetype = self:get_filetype(),
-    input = self:get_selected_text(),
+    input = input,
   }
   data = vim.tbl_extend("force", {}, data, self.variables)
   local result = self.template
@@ -51,20 +54,13 @@ function ChatAction:render_template()
 end
 
 function ChatAction:get_params()
-  local additional_params = {}
-  local p_rendered = self:render_template()
-  local p1, s1 = string.match(p_rendered, "(.*)%[insert%](.*)")
-  if s1 ~= nil then
-    additional_params["suffix"] = s1
-    p_rendered = p1
-  end
-  local messages = {}
-  local message = {}
-  message.role = "user"
-  message.content = p_rendered
+  local messages = self.params.messages or {}
+  local message = {
+    role = "user",
+    content = self:render_template(),
+  }
   table.insert(messages, message)
-  additional_params["messages"] = messages
-  return vim.tbl_extend("force", Config.options.openai_params, self.params, additional_params)
+  return vim.tbl_extend("force", Config.options.openai_params, self.params, { messages = messages })
 end
 
 function ChatAction:run()
@@ -127,6 +123,23 @@ function ChatAction:on_result(answer, usage)
       popup:mount()
     elseif self.strategy == STRATEGY_EDIT then
       Edits.edit_with_instructions(lines, bufnr, { self:get_visual_selection() })
+    elseif self.strategy == STRATEGY_QUICK_FIX then
+      if #lines == 1 and lines[1] == "<OK>" then
+        vim.notify("Your Code looks fine, no issues.", vim.log.levels.INFO)
+        return
+      end
+
+      local entries = {}
+      vim.pretty_print(lines)
+      for _, line in ipairs(lines) do
+        local lnum, text = line:match("(%d+):(.*)")
+
+        local entry = { filename = vim.fn.expand("%:p"), lnum = tonumber(lnum), text = text }
+        vim.pretty_print(entry)
+        table.insert(entries, entry)
+      end
+      vim.fn.setqflist(entries)
+      vim.cmd(Config.options.show_quickfixes_cmd)
     else
       vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
 

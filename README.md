@@ -208,6 +208,7 @@ wk.register({
   8. `fix_bugs`
   9. `explain_code`
   10. `roxygen_edit`
+  11. `code_readability_analysis` -- see [demo](https://youtu.be/zlU3YGGv2zY)
 
 All the above actions are using `gpt-3.5-turbo` model.
 

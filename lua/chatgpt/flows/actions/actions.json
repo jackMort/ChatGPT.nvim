@@ -138,5 +138,77 @@
         "max_tokens": 1024
       }
     }
+  },
+  "create_react_component": {
+    "type": "chat",
+    "opts": {
+      "template": "{{prompt}}",
+      "params": {
+        "model": "gpt-3.5-turbo",
+        "messages": [
+          {
+            "role": "user",
+            "content": "create next.js + tailwind css code for button 200 x 100, light purple background, generate text on it. Please create a complete next.js component"
+          },
+          {
+            "role": "assistant",
+            "content": "\n                    import React from 'react';\n                    const MyComponent = () => {\n                      return (\n                        <div className=\"flex flex-col items-center justify-center h-screen\">\n                          <h1 className=\"text-3xl font-bold mb-4\">Hello World</h1>\n                          <p className=\"text-lg mb-4\">Welcome to my Next.js component using Tailwind CSS</p>\n                          <button className=\"bg-purple-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-opacity-50\">Click Me</button>\n                        </div>\n                      );\n                    };\n                    export default MyComponent;\n                "
+          },
+          {
+            "role": "user",
+            "content": "Please create html code with inline css that creates the following component, Material UI look and feel, return only code"
+          },
+          {
+            "role": "user",
+            "content": "DO NOT wrap the returned code with ```"
+          }
+        ]
+      }
+    },
+    "args": {
+      "prompt": {
+        "type": "text"
+      }
+    }
+  },
+  "code_readability_analysis": {
+    "type": "chat",
+    "opts": {
+      "strategy": "quick_fix",
+      "template": "{{input}}",
+      "params": {
+        "model": "gpt-3.5-turbo",
+        "messages": [
+          {
+            "role": "system",
+            "content": "\nYou must identify any readability issues in the code snippet.\nSome readability issues to consider:\n- Unclear naming\n- Unclear purpose\n- Redundant or obvious comments\n- Lack of comments\n- Long or complex one liners\n- Too much nesting\n- Long variable names\n- Inconsistent naming and code style.\n- Code repetition\nYou may identify additional problems. The user submits a small section of code from a larger file.\nOnly list lines with readability issues, in the format <line_num>|<issue and proposed solution>\nYour commentary must fit on a single line\nDo not use the range of lines but just single line number\nIf there's no issues with code respond with only: <OK>\n"
+          },
+          {
+            "role": "user",
+            "content": "\n0 public class Logic {\n1      public static void main(String[] args) {\n2         Scanner sc = new Scanner(System.in);\n3         int n = sc.nextInt();\n4         int[] arr = new int[n];\n5         for (int i = 0; i < n; i++) {\n6             arr[i] = sc.nextInt();\n7         }\n8         int[] dp = new int[n];\n9         dp[0] = arr[0];\n10         dp[1] = Math.max(arr[0], arr[1]);\n11         for (int i = 2; i < n; i++) {\n12             dp[i] = Math.max(dp[i - 1], dp[i - 2] + arr[i]);\n13         }\n14         System.out.println(dp[n - 1]);\n15     }\n16 }"
+          },
+          {
+            "role": "assistant",
+            "content": "\n0: The class name 'Logic' is too generic. A more meaningful name could be 'DynamicProgramming'\n2: The variable name 'sc' is unclear. A more meaningful name could be 'scanner'.\n3: The variable name 'n' is unclear. A more meaningful name could be 'arraySize' or 'numElements'.\n4: The variable name 'arr' unclear. A more descriptive name could be 'inputArray' or 'elementValues'.\n8: The variable name 'dp' is unclear. A more informative name could be 'maxSum' or 'optimalSolution'.\n9: There are no comments explaining the meaning of the 'dp' array values and how they relate to the problem statement.\n11: There are no comments explaining the logic and purpose of the for loop"
+          },
+          {
+            "role": "user",
+            "content": "\n0    for (let i: number = 0; i < l; i++) {\n1       let notAddr: boolean = false;\n2       // non standard input\n3       if (items[i].scriptSig && !items[i].addr) {\n4         items[i].addr = 'Unparsed address [' + u++ + ']';\n5         items[i].notAddr = true;\n6         notAddr = true;\n7       }\n8 \n9       // non standard output\n10       if (items[i].scriptPubKey && !items[i].scriptPubKey.addresses) {\n11         items[i].scriptPubKey.addresses = ['Unparsed address [' + u++ + ']'];"
+          },
+          {
+            "role": "assistant",
+            "content": "\n0: The variable name 'i' and 'l' are unclear and easily confused with other characters like '1'. More meaningful names could be 'index' and 'length' respectively.\n1: The variable name 'notAddr' is unclear and a double negative. An alternative could be 'hasUnparsedAddress'.\n3: The comment \"non standard input\" is not very informative. It could be more descriptive, e.g., \"Check for non standard input address\"\n9: The comment \"non standard output\" is not very informative. It could be more descriptive, e.g., \"Check for non standard output address\"\n10: The variable name 'items' might be more informative if changed to 'transactions' or 'txItems'.\n11: The array element 'Unparsed address [' + u++ + ']' could use a more descriptive comment, e.g., \"Assign a unique identifier to non standard output addresses\"\n11: The variable name 'u' is unclear. A more meaningful name could be 'unparsedAddressCount' or 'unparsedAddressId'."
+          },
+          {
+            "role": "user",
+            "content": "\n0 function BaseAction:init(opts)\n1   self.opts = opts\n2 end"
+          },
+          {
+            "role": "assistant",
+            "content": "<OK>"
+          }
+        ]
+      }
+    }
   }
 }
