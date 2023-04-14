@@ -72,8 +72,8 @@ function M.defaults()
         winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
       },
       buf_options = {
-        filetype = "markdown"
-      }
+        filetype = "markdown",
+      },
     },
     popup_input = {
       prompt = "  ",
