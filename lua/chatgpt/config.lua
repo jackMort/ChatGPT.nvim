@@ -1,5 +1,3 @@
--- ASCII-ART credits:
---  https://www.reddit.com/r/ASCII_Archive/comments/iga1d4/your_robot_friend/
 WELCOME_MESSAGE = [[
  
      If you don't ask the right questions,

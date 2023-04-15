@@ -141,7 +141,7 @@ function ChatAction:on_result(answer, usage)
       vim.fn.setqflist(entries)
       vim.cmd(Config.options.show_quickfixes_cmd)
     else
-      vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
+      vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col - 1, lines)
 
       -- set the cursor onto the answer
       if self.strategy == STRATEGY_APPEND then
