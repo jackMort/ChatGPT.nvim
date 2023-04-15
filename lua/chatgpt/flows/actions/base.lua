@@ -12,7 +12,7 @@ local function get_selection_center(start_row, start_col, end_row, end_col)
     local diff = math.floor((end_row - start_row) / 2)
     start_row = start_row + diff
   end
-  return start_row, start_col
+  return start_row - 1, start_col - 1
 end
 
 function BaseAction:init(opts)
