@@ -1,6 +1,7 @@
 local job = require("plenary.job")
+local Log = require("chatgpt.log")
 local Config = require("chatgpt.config")
-
+local Log = require("chatgpt.log")
 local Api = {}
 
 -- API URL
@@ -31,6 +32,7 @@ end
 
 function Api.make_call(url, params, cb)
   TMP_MSG_FILENAME = os.tmpname()
+  Log.log_main("tmp file: " .. TMP_MSG_FILENAME)
   local f = io.open(TMP_MSG_FILENAME, "w+")
   if f == nil then
     vim.notify("Cannot open temporary message file: " .. TMP_MSG_FILENAME, vim.log.levels.ERROR)
@@ -66,6 +68,7 @@ Api.handle_response = vim.schedule_wrap(function(response, exit_code, cb)
 
   local result = table.concat(response:result(), "\n")
   local json = vim.fn.json_decode(result)
+  Log.log_write_json(json)
   if json == nil then
     cb("No Response.")
   elseif json.error then

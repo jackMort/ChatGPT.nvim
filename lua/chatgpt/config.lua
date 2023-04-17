@@ -117,6 +117,7 @@ function M.defaults()
     actions_paths = {},
     show_quickfixes_cmd = "Trouble quickfix",
     predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
+    log_file = "chatgpt.log",
   }
   return defaults
 end
