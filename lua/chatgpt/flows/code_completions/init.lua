@@ -3,7 +3,7 @@ local Utils = require("chatgpt.utils")
 local Signs = require("chatgpt.signs")
 local Spinner = require("chatgpt.spinner")
 
-M = {}
+local M = {}
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTCC")
 
