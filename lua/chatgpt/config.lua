@@ -109,7 +109,7 @@ function M.defaults()
       n = 1,
     },
     openai_edit_params = {
-      model = "code-davinci-edit-001",
+      model = "code-davinci-edit-002",
       temperature = 0,
       top_p = 1,
       n = 1,
