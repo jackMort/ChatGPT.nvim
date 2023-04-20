@@ -12,7 +12,7 @@ local classes_by_type = {
 }
 
 local read_actions_from_file = function(filename)
-  local home = os.getenv("HOME")
+  local home = os.getenv("HOME") or os.getenv("USERPROFILE")
   filename = filename:gsub("~", home)
   local file = io.open(filename, "rb")
   if not file then
