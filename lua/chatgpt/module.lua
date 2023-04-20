@@ -192,7 +192,7 @@ local open_chat = function()
   end
 
   -- close_normal
-  local close_normal_keymaps = Config.options.keymaps.close_normal
+  local close_normal_keymaps = Config.options.chat.keymaps.close_normal
   if type(close_normal_keymaps) ~= "table" then
     close_normal_keymaps = { close_normal_keymaps }
   end
