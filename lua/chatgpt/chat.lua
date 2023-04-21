@@ -163,13 +163,33 @@ function Chat:getSelected()
   return self.messages[self.selectedIndex]
 end
 
+function getTextAfterNewline(inputString)
+  local index = string.find(inputString, "\n")
+  if index == nil then
+    return inputString
+  else
+    return string.sub(inputString, index + 1)
+  end
+end
+function all_trim(s)
+  return s:match("^%s*(.-)%s*$")
+end
+
 function Chat:getSelectedCode()
   local msg = self:getSelected()
   local text = msg.text
-
-  local _, endIdx = string.find(text, "```\n")
-  local startIdx2, _ = string.find(text, "\n```", endIdx)
-  return string.sub(text, endIdx + 1, startIdx2)
+  -- Iterate through all code blocks in the message using a regular expression pattern
+  local lastCodeBlock
+  for codeBlock in text:gmatch("```.-```%s*") do
+    lastCodeBlock = codeBlock
+  end
+  -- If a code block was found, strip the delimiters and return the code
+  if lastCodeBlock then
+    lastCodeBlock = getTextAfterNewline(lastCodeBlock)
+    return all_trim(lastCodeBlock:gsub("```\n", ""):gsub("```", ""))
+  else
+    return nil
+  end
 end
 
 function Chat:get_last_answer()
