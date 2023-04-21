@@ -42,8 +42,8 @@ local function write_virtual_text(bufnr, ns, line, chunks, mode)
 end
 
 M.read_config = function()
-  local file =
-    io.open(os.getenv("HOME") or os.getenv("USERPROFILE") .. "/" .. ".chatgpt-" .. M.type .. "-params.json", "rb")
+  local home = os.getenv("HOME") or os.getenv("USERPROFILE")
+  local file = io.open(home .. "/" .. ".chatgpt-" .. M.type .. "-params.json", "rb")
   if not file then
     return nil
   end
