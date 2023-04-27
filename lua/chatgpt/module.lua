@@ -176,19 +176,21 @@ local open_chat = function()
   end, { noremap = true, silent = true })
 
   -- close
-  local close_keymaps = Config.options.chat.keymaps.close
-  if type(close_keymaps) ~= "table" then
-    close_keymaps = { close_keymaps }
-  end
+  for _, popup in ipairs({ settings_panel, sessions_panel, chat_input, chat_window }) do
+    local close_keymaps = Config.options.chat.keymaps.close
+    if type(close_keymaps) ~= "table" then
+      close_keymaps = { close_keymaps }
+    end
 
-  for _, keymap in ipairs(close_keymaps) do
-    chat_input:map("i", keymap, function()
-      chat_input.input_props.on_close()
-    end, { noremap = true, silent = true })
+    for _, keymap in ipairs(close_keymaps) do
+      popup:map("i", keymap, function()
+        chat_input.input_props.on_close()
+      end, { noremap = true, silent = true })
 
-    chat_input:map("n", keymap, function()
-      chat_input.input_props.on_close()
-    end, { noremap = true, silent = true })
+      popup:map("n", keymap, function()
+        chat_input.input_props.on_close()
+      end, { noremap = true, silent = true })
+    end
   end
 
   -- toggle settings
