@@ -55,8 +55,8 @@ M.read_config = function()
 end
 
 M.write_config = function(config)
-  local file, err =
-    io.open(os.getenv("HOME") or os.getenv("USERPROFILE") .. "/" .. ".chatgpt-" .. M.type .. "-params.json", "w")
+  local home = os.getenv("HOME") or os.getenv("USERPROFILE")
+  local file, err = io.open(home .. "/" .. ".chatgpt-" .. M.type .. "-params.json", "w")
   if file ~= nil then
     local json_string = vim.json.encode(config)
     file:write(json_string)
