@@ -15,10 +15,17 @@
   "grammar_correction": {
     "type": "chat",
     "opts": {
-      "template": "Correct this to standard English:\n\n{{input}}",
+      "template": "Correct this to standard {{lang}}:\n\n{{input}}",
       "strategy": "replace",
       "params": {
         "model": "gpt-3.5-turbo"
+      }
+    },
+    "args": {
+      "lang": {
+        "type": "string",
+        "optional": "true",
+        "default": "english"
       }
     }
   },
