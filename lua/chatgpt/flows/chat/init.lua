@@ -32,6 +32,7 @@ function Chat:init()
   self.settings_open = false
   self.prompt_lines = 1
 
+  self.display_mode = Config.options.popup_layout.default
   self.params = Config.options.openai_params
 
   self.session = Session.latest()
@@ -213,9 +214,6 @@ end
 
 function Chat:renderLastMessage()
   self:stopSpinner()
-
-  local signs =
-    { Config.options.chat.question_sign, Config.options.chat.answer_sign, Config.options.chat.question_sign }
   local msg = self:getSelected()
 
   local lines = {}
@@ -394,7 +392,39 @@ function Chat:set_active_panel(panel)
 end
 
 function Chat:get_layout_params()
-  local config = Config.options.popup_layout
+  local lines_height = vim.api.nvim_get_option("lines")
+  local statusline_height = vim.o.laststatus == 0 and 0 or 1 -- height of the statusline if present
+  local cmdline_height = vim.o.cmdheight -- height of the cmdline if present
+  local tabline_height = vim.o.showtabline == 0 and 0 or 1 -- height of the tabline if present
+  local total_height = lines_height
+  local used_height = statusline_height + cmdline_height + tabline_height
+  local layout_height = total_height - used_height
+  local starting_row = tabline_height == 0 and 0 or 1
+
+  local right_layout_config = {
+    relative = "editor",
+    position = {
+      row = starting_row,
+      col = "100%",
+    },
+    size = {
+      width = Config.options.popup_layout.right.width,
+      height = layout_height,
+    },
+  }
+
+  local center_layout_config = {
+    relative = "editor",
+    position = "50%",
+    size = {
+      width = Config.options.popup_layout.center.width,
+      height = Config.options.popup_layout.center.height,
+    },
+  }
+
+  local config = self.display_mode == "right" and right_layout_config or center_layout_config
+  print(self.display_mode)
+
   local box = Layout.Box({
     Layout.Box(self.chat_window, { grow = 1 }),
     Layout.Box(self.chat_input, { size = 2 + self.prompt_lines }),
@@ -412,6 +442,7 @@ function Chat:get_layout_params()
       }, { dir = "col", size = 40 }),
     }, { dir = "row" })
   end
+
   return config, box
 end
 
@@ -522,6 +553,12 @@ function Chat:open()
     else
       self:set_active_panel(self.chat_input)
     end
+  end)
+
+  -- cycle modes
+  self:map(Config.options.chat.keymaps.cycle_modes, function()
+    self.display_mode = self.display_mode == "right" and "center" or "right"
+    self.layout:update(self:get_layout_params())
   end)
 
   self.layout:mount()

@@ -45,17 +45,21 @@ function M.defaults()
         toggle_settings = "<C-o>",
         new_session = "<C-n>",
         cycle_windows = "<Tab>",
+        cycle_modes = "<C-m>",
         select_session = "<Space>",
         rename_session = "r",
         delete_session = "d",
       },
     },
     popup_layout = {
-      relative = "editor",
-      position = "50%",
-      size = {
-        height = "80%",
+      default = "center",
+      center = {
         width = "80%",
+        height = "80%",
+      },
+      right = {
+        width = "30%",
+        width_settings_open = "50%"
       },
     },
     popup_window = {
