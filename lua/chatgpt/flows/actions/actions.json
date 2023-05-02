@@ -124,7 +124,7 @@
   "explain_code": {
     "type": "chat",
     "opts": {
-      "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nHere's what the above code is doing:\n```",
+      "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nUse line breaks\nHere's what the above code is doing:\n```",
       "strategy": "display",
       "params": {
         "model": "gpt-3.5-turbo",
@@ -146,38 +146,6 @@
       }
     }
   },
-  "create_react_component": {
-    "type": "chat",
-    "opts": {
-      "template": "{{prompt}}",
-      "params": {
-        "model": "gpt-3.5-turbo",
-        "messages": [
-          {
-            "role": "user",
-            "content": "create next.js + tailwind css code for button 200 x 100, light purple background, generate text on it. Please create a complete next.js component"
-          },
-          {
-            "role": "assistant",
-            "content": "\n                    import React from 'react';\n                    const MyComponent = () => {\n                      return (\n                        <div className=\"flex flex-col items-center justify-center h-screen\">\n                          <h1 className=\"text-3xl font-bold mb-4\">Hello World</h1>\n                          <p className=\"text-lg mb-4\">Welcome to my Next.js component using Tailwind CSS</p>\n                          <button className=\"bg-purple-500 text-white px-4 py-2 rounded-lg shadow-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-600 focus:ring-opacity-50\">Click Me</button>\n                        </div>\n                      );\n                    };\n                    export default MyComponent;\n                "
-          },
-          {
-            "role": "user",
-            "content": "Please create html code with inline css that creates the following component, Material UI look and feel, return only code"
-          },
-          {
-            "role": "user",
-            "content": "DO NOT wrap the returned code with ```"
-          }
-        ]
-      }
-    },
-    "args": {
-      "prompt": {
-        "type": "text"
-      }
-    }
-  },
   "code_readability_analysis": {
     "type": "chat",
     "opts": {
@@ -185,6 +153,7 @@
       "template": "{{input}}",
       "params": {
         "model": "gpt-3.5-turbo",
+        "max_tokens": 2048,
         "messages": [
           {
             "role": "system",
