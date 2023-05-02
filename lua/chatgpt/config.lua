@@ -59,7 +59,7 @@ function M.defaults()
       },
       right = {
         width = "30%",
-        width_settings_open = "50%"
+        width_settings_open = "50%",
       },
     },
     popup_window = {

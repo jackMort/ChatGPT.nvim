@@ -115,7 +115,14 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   })
 
   layout = Layout(
-    Config.options.popup_layout,
+    {
+      relative = "editor",
+      position = "50%",
+      size = {
+        width = Config.options.popup_layout.center.width,
+        height = Config.options.popup_layout.center.height,
+      },
+    },
     Layout.Box({
       Layout.Box({
         Layout.Box(input_window, { grow = 1 }),

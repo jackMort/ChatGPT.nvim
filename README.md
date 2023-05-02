@@ -254,6 +254,7 @@ keybindings are available:
 - `<C-y>` [Both] to copy/yank last answer.
 - `<C-o>` [Both] Toggle settings window.
 - `<Tab>` [Both] Cycle over windows.
+- `<C-m>` [Chat] Cycle over modes (center, stick to right).
 - `<C-c>` [Chat] to close chat window.
 - `<C-u>` [Chat] scroll up chat window.
 - `<C-d>` [Chat] scroll down chat window.
