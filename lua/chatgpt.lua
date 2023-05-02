@@ -22,7 +22,7 @@ end
 --
 
 M.openChat = function()
-  module.openChat()
+  module.open_chat()
 end
 
 M.selectAwesomePrompt = function()
