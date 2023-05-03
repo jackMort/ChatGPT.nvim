@@ -449,12 +449,12 @@ function Chat:open()
   self.chat_input = ChatInput(Config.options.popup_input, {
     prompt = Config.options.popup_input.prompt,
     on_close = function()
-      self.layout:hide()
+      self:hide()
     end,
     on_change = vim.schedule_wrap(function(lines)
       if self.prompt_lines ~= #lines then
         self.prompt_lines = #lines
-        self.layout:update(self:get_layout_params())
+        self:redraw()
       end
     end),
     on_submit = vim.schedule_wrap(function(value)
@@ -512,13 +512,13 @@ function Chat:open()
 
   -- close
   self:map(Config.options.chat.keymaps.close, function()
-    self.layout:hide()
+    self:hide()
   end)
 
   -- toggle settings
   self:map(Config.options.chat.keymaps.toggle_settings, function()
     self.settings_open = not self.settings_open
-    self.layout:update(self:get_layout_params())
+    self:redraw()
 
     if self.settings_open then
       vim.api.nvim_buf_set_option(self.settings_panel.bufnr, "modifiable", false)
@@ -552,7 +552,7 @@ function Chat:open()
   -- cycle modes
   self:map(Config.options.chat.keymaps.cycle_modes, function()
     self.display_mode = self.display_mode == "right" and "center" or "right"
-    self.layout:update(self:get_layout_params())
+    self:redraw()
   end)
 
   self.layout:mount()
@@ -560,11 +560,24 @@ function Chat:open()
   self:welcome()
 end
 
+function Chat:redraw()
+  self.layout:update(self:get_layout_params())
+end
+
+function Chat:hide()
+  self.layout:hide()
+end
+
+function Chat:show()
+  self:redraw()
+  self.layout:show()
+end
+
 function Chat:toggle()
   if self.layout.winid ~= nil then
-    self.layout:hide()
+    self:hide()
   else
-    self.layout:show()
+    self:show()
   end
 end
 
