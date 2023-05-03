@@ -46,6 +46,11 @@ function Chat:init()
 end
 
 function Chat:welcome()
+  self.messages = {}
+  self.selectedIndex = 0
+  self:set_lines(0, -1, false, {})
+  self:set_cursor({ 1, 0 })
+
   if #self.session.conversation > 0 then
     for _, item in ipairs(self.session.conversation) do
       self:_add(item.type, item.text, item.usage)
@@ -65,10 +70,6 @@ function Chat:new_session()
   self.session = Session:new()
   self.session:save()
 
-  self.messages = {}
-  self.selectedIndex = 0
-  self:set_lines(0, -1, false, {})
-  self:set_cursor({ 1, 0 })
   self:welcome()
 end
 
