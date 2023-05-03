@@ -91,6 +91,7 @@ function M.defaults()
         winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
       },
       submit = "<C-Enter>",
+      submit_n = "<Enter>",
     },
     settings_window = {
       border = {

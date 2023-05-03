@@ -483,9 +483,6 @@ function Chat:open()
 
   self.layout = Layout(self:get_layout_params())
 
-  --
-  -- add keymaps
-  --
   -- yank last answer
   self:map(Config.options.chat.keymaps.yank_last, function()
     local msg = self:getSelected()
@@ -510,7 +507,6 @@ function Chat:open()
   end, { self.chat_input })
 
   -- scroll up
-  --
   self:map(Config.options.chat.keymaps.scroll_down, function()
     self:scroll(-1)
   end, { self.chat_input })
@@ -560,8 +556,8 @@ function Chat:open()
     self:redraw()
   end)
 
+  -- initialize
   self.layout:mount()
-
   self:welcome()
 end
 
