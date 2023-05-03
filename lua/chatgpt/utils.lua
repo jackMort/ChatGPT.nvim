@@ -113,4 +113,20 @@ function M.change_mode_to_insert()
   vim.api.nvim_command("startinsert")
 end
 
+function M.calculate_percentage_width(percentage)
+  -- Check that the input is a string and ends with a percent sign
+  if type(percentage) ~= "string" or not percentage:match("%%$") then
+    error("Input must be a string with a percent sign at the end (e.g. '50%').")
+  end
+
+  -- Remove the percent sign from the string
+  local percent = tonumber(string.sub(percentage, 1, -2))
+  local editor_width = vim.api.nvim_get_option("columns")
+
+  -- Calculate the percentage of the width
+  local width = math.floor(editor_width * (percent / 100))
+  -- Return the calculated width
+  return width
+end
+
 return M

@@ -396,6 +396,11 @@ function Chat:get_layout_params()
   local layout_height = total_height - used_height
   local starting_row = tabline_height == 0 and 0 or 1
 
+  local width = Utils.calculate_percentage_width(Config.options.popup_layout.right.width)
+  if self.settings_open then
+    width = width + 40
+  end
+
   local right_layout_config = {
     relative = "editor",
     position = {
@@ -403,7 +408,7 @@ function Chat:get_layout_params()
       col = "100%",
     },
     size = {
-      width = Config.options.popup_layout.right.width,
+      width = width,
       height = layout_height,
     },
   }
@@ -560,8 +565,12 @@ function Chat:open()
   self:welcome()
 end
 
-function Chat:redraw()
+function Chat:redraw(noinit)
+  noinit = noinit or false
   self.layout:update(self:get_layout_params())
+  if not noinit then
+    self:welcome()
+  end
 end
 
 function Chat:hide()
@@ -569,7 +578,7 @@ function Chat:hide()
 end
 
 function Chat:show()
-  self:redraw()
+  self:redraw(true)
   self.layout:show()
 end
 
