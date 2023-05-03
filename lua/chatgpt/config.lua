@@ -45,7 +45,7 @@ function M.defaults()
         toggle_settings = "<C-o>",
         new_session = "<C-n>",
         cycle_windows = "<Tab>",
-        cycle_modes = "<C-m>",
+        cycle_modes = "<C-f>",
         select_session = "<Space>",
         rename_session = "r",
         delete_session = "d",
