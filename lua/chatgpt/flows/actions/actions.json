@@ -124,7 +124,8 @@
   "explain_code": {
     "type": "chat",
     "opts": {
-      "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nUse line breaks\nHere's what the above code is doing:\n```",
+      "title": " Explain Code",
+      "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nUse markdown format.\nHere's what the above code is doing:\n```",
       "strategy": "display",
       "params": {
         "model": "gpt-3.5-turbo",

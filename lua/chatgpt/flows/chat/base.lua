@@ -11,7 +11,6 @@ local Utils = require("chatgpt.utils")
 local Signs = require("chatgpt.signs")
 local Spinner = require("chatgpt.spinner")
 local Session = require("chatgpt.flows.chat.session")
-local Tokens = require("chatgpt.flows.chat.tokens")
 
 QUESTION, ANSWER, SYSTEM = 1, 2, 3
 
@@ -171,18 +170,6 @@ function Chat:getSelected()
   return self.messages[self.selectedIndex]
 end
 
-function getTextAfterNewline(inputString)
-  local index = string.find(inputString, "\n")
-  if index == nil then
-    return inputString
-  else
-    return string.sub(inputString, index + 1)
-  end
-end
-function all_trim(s)
-  return s:match("^%s*(.-)%s*$")
-end
-
 function Chat:getSelectedCode()
   local msg = self:getSelected()
   local text = msg.text
@@ -193,11 +180,13 @@ function Chat:getSelectedCode()
   end
   -- If a code block was found, strip the delimiters and return the code
   if lastCodeBlock then
-    lastCodeBlock = getTextAfterNewline(lastCodeBlock)
-    return all_trim(lastCodeBlock:gsub("```\n", ""):gsub("```", ""))
-  else
-    return nil
+    local index = string.find(lastCodeBlock, "\n")
+    if index ~= nil then
+      lastCodeBlock = string.sub(lastCodeBlock, index + 1)
+    end
+    return lastCodeBlock:gsub("```\n", ""):gsub("```", ""):match("^%s*(.-)%s*$")
   end
+  return nil
 end
 
 function Chat:get_last_answer()
@@ -244,7 +233,7 @@ function Chat:renderLastMessage()
         virt_text = {
           { "", "ChatGPTTotalTokensBorder" },
           {
-            "TOKENS: " .. msg.usage.total_tokens .. " / PRICE: $" .. Tokens.usage_in_dollars(msg.usage.total_tokens),
+            "TOKENS: " .. msg.usage.total_tokens,
             "ChatGPTTotalTokens",
           },
           { "", "ChatGPTTotalTokensBorder" },

@@ -88,13 +88,15 @@ function ChatAction:on_result(answer, usage)
     local _, start_row, start_col, end_row, end_col = self:get_visual_selection()
 
     if self.strategy == STRATEGY_DISPLAY then
-      local Popup = require("nui.popup")
+      local PreviewWindow = require("chatgpt.common.preview_window")
+      local popup = PreviewWindow({
 
-      local popup = Popup({
-        position = 1,
-        size = {
-          width = 60,
-          height = 10,
+        border = {
+          style = "single",
+          text = {
+            top = " " .. self.opts.title .. " ",
+            top_align = "left",
+          },
         },
         relative = {
           type = "buf",
@@ -102,21 +104,6 @@ function ChatAction:on_result(answer, usage)
             row = start_row,
             col = start_col,
           },
-        },
-        padding = { 1, 1, 1, 1 },
-        enter = true,
-        focusable = true,
-        zindex = 50,
-        border = {
-          style = "single",
-        },
-        buf_options = {
-          modifiable = false,
-          readonly = true,
-        },
-        win_options = {
-          winblend = 20,
-          winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
         },
       })
       vim.api.nvim_buf_set_lines(popup.bufnr, 0, 1, false, lines)
