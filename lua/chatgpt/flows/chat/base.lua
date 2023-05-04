@@ -497,7 +497,7 @@ function Chat:open()
   end, { self.chat_input })
 
   -- scroll up
-  self:map(Config.options.chat.keymaps.scroll_down, function()
+  self:map(Config.options.chat.keymaps.scroll_up, function()
     self:scroll(-1)
   end, { self.chat_input })
 
