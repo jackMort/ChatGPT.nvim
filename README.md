@@ -180,7 +180,7 @@ from the `credential` field of the `OpenAI` entry.
 
 ```lua
 require("chatgpt").setup({
-    api_key_cmd = "op item get OpenAI --field credential"
+    api_key_cmd = "op read op://private/OpenAI/credential --no-newline"
 })
 ```
 

@@ -92,15 +92,15 @@ end
 
 function Api.setup()
   -- API KEY
-  if (Config.options.api_key_cmd == nil or Config.options.api_key_cmd == "") then
   Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-    if not Api.OPENAI_API_KEY then
+  if not Api.OPENAI_API_KEY then
+    if (Config.options.api_key_cmd ~= nil or Config.options.api_key_cmd ~= "") then
+      Api.OPENAI_API_KEY = vim.fn.system(Config.options.api_key_cmd)
+      if not Api.OPENAI_API_KEY then
+        error("Config 'api_key_cmd' did not return a value when executed")
+      end
+    else
       error("OPENAI_API_KEY environment variable not set")
-    end
-  else
-    Api.OPENAI_API_KEY = vim.fn.system(Config.options.api_key_cmd)
-    if not Api.OPENAI_API_KEY then
-      error("Config 'api_key_cmd' did not return a value when executed")
     end
   end
 end
