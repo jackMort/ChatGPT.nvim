@@ -8,12 +8,6 @@ Api.COMPLETIONS_URL = "https://api.openai.com/v1/completions"
 Api.CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions"
 Api.EDITS_URL = "https://api.openai.com/v1/edits"
 
--- API KEY
-Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-if not Api.OPENAI_API_KEY then
-  error("OPENAI_API_KEY environment variable not set")
-end
-
 function Api.completions(custom_params, cb)
   local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
   Api.make_call(Api.COMPLETIONS_URL, params, cb)
@@ -93,6 +87,21 @@ end)
 function Api.close()
   if Api.job then
     job:shutdown()
+  end
+end
+
+function Api.setup()
+  -- API KEY
+  if (Config.options.api_key_cmd == nil or Config.options.api_key_cmd == "") then
+  Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+    if not Api.OPENAI_API_KEY then
+      error("OPENAI_API_KEY environment variable not set")
+    end
+  else
+    Api.OPENAI_API_KEY = vim.fn.system(Config.options.api_key_cmd)
+    if not Api.OPENAI_API_KEY then
+      error("Config 'api_key_cmd' did not return a value when executed")
+    end
   end
 end
 
