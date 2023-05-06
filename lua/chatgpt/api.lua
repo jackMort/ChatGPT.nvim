@@ -94,7 +94,7 @@ function Api.setup()
   -- API KEY
   Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
   if not Api.OPENAI_API_KEY then
-    if (Config.options.api_key_cmd ~= nil or Config.options.api_key_cmd ~= "") then
+    if Config.options.api_key_cmd ~= nil or Config.options.api_key_cmd ~= "" then
       Api.OPENAI_API_KEY = vim.fn.system(Config.options.api_key_cmd)
       if not Api.OPENAI_API_KEY then
         error("Config 'api_key_cmd' did not return a value when executed")
