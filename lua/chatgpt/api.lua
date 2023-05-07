@@ -103,6 +103,7 @@ function Api.setup()
       error("OPENAI_API_KEY environment variable not set")
     end
   end
+  Api.OPENAI_API_KEY = Api.OPENAI_API_KEY:gsub("%s+$", "")
 end
 
 return Api
