@@ -653,9 +653,12 @@ function Chat:open()
 
     local lines = vim.api.nvim_buf_get_lines(self.chat_input.bufnr, 0, -1, false)
     local text = table.concat(lines, "\n")
-
-    vim.api.nvim_buf_set_lines(self.chat_input.bufnr, 0, -1, false, { "" })
-    self:add(self.role == ROLE_USER and QUESTION or ANSWER, text)
+    if #text > 0 then
+      vim.api.nvim_buf_set_lines(self.chat_input.bufnr, 0, -1, false, { "" })
+      self:add(self.role == ROLE_USER and QUESTION or ANSWER, text)
+    else
+      vim.notify("Cannot add empty message.", vim.log.levels.WARN)
+    end
   end)
 
   -- initialize
