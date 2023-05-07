@@ -8,6 +8,7 @@ WELCOME_MESSAGE = [[
 local M = {}
 function M.defaults()
   local defaults = {
+    api_key_cmd = nil,
     yank_register = "+",
     edit_with_instructions = {
       diff = false,

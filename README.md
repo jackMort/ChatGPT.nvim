@@ -10,7 +10,13 @@ With `ChatGPT`, you can ask questions and get answers from GPT-3 in real-time.
 ## Installation
 
 - Make sure you have `curl` installed.
-- Set environment variable called `$OPENAI_API_KEY` which you can [obtain here](https://beta.openai.com/account/api-keys).
+- Get an API key from OpenAI, which you can [obtain here](https://beta.openai.com/account/api-keys).
+
+The OpenAI API key can be provided in one of the following two ways:
+
+1. In the configuration option `api_key_cmd`, provide the path and arguments to
+   an executable that returns the API key via stdout.
+1. Setting it via an environment variable called `$OPENAI_API_KEY`.
 
 ```lua
 -- Packer
@@ -47,6 +53,7 @@ use({
 
 ```lua
 {
+  api_key_cmd = nil,
   yank_register = "+",
   edit_with_instructions = {
     diff = false,
@@ -155,6 +162,37 @@ use({
   predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
 }
 ```
+
+### Secrets Management
+
+Providing the OpenAI API key via an environment variable is dangerous, as it
+leaves the API key easily readable by any process that can access the
+environment variables of other processes. In addition, it encourages the user
+to store the credential in clear-text in a configuration file.
+
+As an alternative to providing the API key via the `OPENAI_API_KEY` environment
+variable, the user is encouraged to use the `api_key_cmd` configuration option.
+The `api_key_cmd` configuration option takes a string, which is executed at
+startup, and whose output is used as the API key.
+
+The following configuration would use 1Passwords CLI, `op`, to fetch the API key
+from the `credential` field of the `OpenAI` entry.
+
+```lua
+require("chatgpt").setup({
+    api_key_cmd = "op read op://private/OpenAI/credential --no-newline"
+})
+```
+
+The following configuration would use GPG to decrypt a local file containing the
+API key
+
+```lua
+require("chatgpt").setup({
+    api_key_cmd = "gpg --decrypt ~/secret.txt.gpg 2>/dev/null"
+})
+```
+
 ## Usage
 
 Plugin exposes following commands:
