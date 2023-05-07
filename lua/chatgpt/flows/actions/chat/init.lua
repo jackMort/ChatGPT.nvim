@@ -117,12 +117,10 @@ function ChatAction:on_result(answer, usage)
       end
 
       local entries = {}
-      vim.pretty_print(lines)
       for _, line in ipairs(lines) do
         local lnum, text = line:match("(%d+):(.*)")
 
         local entry = { filename = vim.fn.expand("%:p"), lnum = tonumber(lnum), text = text }
-        vim.pretty_print(entry)
         table.insert(entries, entry)
       end
       vim.fn.setqflist(entries)

@@ -1,5 +1,4 @@
 local classes = require("chatgpt.common.classes")
-local InputWidget = require("chatgpt.common.input_widget")
 local Path = require("plenary.path")
 local scan = require("plenary.scandir")
 
@@ -69,7 +68,23 @@ function Session:add_item(item)
   if self.updated_at == self.name and item.type == 1 then
     self.name = item.text
   end
-  table.insert(self.conversation, item)
+  -- tmp hack for system message
+  if item.type == 3 then
+    local found = false
+    for index, msg in ipairs(self.conversation) do
+      if msg.type == item.type then
+        self.conversation[index].text = item.text
+        found = true
+      end
+    end
+
+    if not found then
+      table.insert(self.conversation, 1, item)
+    end
+  else
+    table.insert(self.conversation, item)
+  end
+
   self.updated_at = get_current_date()
   self:save()
 end

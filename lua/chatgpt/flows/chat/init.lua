@@ -1,5 +1,3 @@
-local Api = require("chatgpt.api")
-local Settings = require("chatgpt.settings")
 local Session = require("chatgpt.flows.chat.session")
 local Prompts = require("chatgpt.prompts")
 local Chat = require("chatgpt.flows.chat.base")
@@ -28,13 +26,8 @@ M.open_with_awesome_prompt = function()
       chat:open()
       chat.chat_window.border:set_text("top", " ChatGPT - Acts as " .. act .. " ", "center")
 
-      chat:addSystem(prompt)
-      chat:showProgess()
-
-      local params = vim.tbl_extend("keep", { messages = chat:toMessages() }, Settings.params)
-      Api.chat_completions(params, function(answer, usage)
-        chat:addAnswer(answer, usage)
-      end)
+      chat:set_system_message(prompt)
+      chat:open_system_panel()
     end),
   })
 end

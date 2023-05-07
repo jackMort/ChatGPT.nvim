@@ -11,23 +11,33 @@ local Utils = require("chatgpt.utils")
 local Signs = require("chatgpt.signs")
 local Spinner = require("chatgpt.spinner")
 local Session = require("chatgpt.flows.chat.session")
+local SystemWindow = require("chatgpt.flows.chat.system_window")
 
 QUESTION, ANSWER, SYSTEM = 1, 2, 3
+ROLE_ASSISTANT = "assistant"
+ROLE_SYSTEM = "system"
+ROLE_USER = "user"
 
 local Chat = classes.class()
 
 function Chat:init()
   self.input_extmark_id = nil
 
+  self.active_panel = nil
+
+  -- UI ELEMENTS
+  self.layout = nil
   self.chat_panel = nil
   self.chat_input = nil
-  self.layout = nil
   self.chat_window = nil
-  self.active_panel = nil
   self.sessions_panel = nil
   self.settings_panel = nil
+  self.system_role_panel = nil
 
+  -- UI OPEN INDICATORS
   self.settings_open = false
+  self.system_role_open = false
+
   self.prompt_lines = 1
 
   self.display_mode = Config.options.popup_layout.default
@@ -35,6 +45,7 @@ function Chat:init()
 
   self.session = Session.latest()
   self.selectedIndex = 0
+  self.role = ROLE_USER
   self.messages = {}
   self.spinner = Spinner:new(function(state)
     vim.schedule(function()
@@ -49,17 +60,62 @@ function Chat:welcome()
   self.selectedIndex = 0
   self:set_lines(0, -1, false, {})
   self:set_cursor({ 1, 0 })
+  self:set_system_message(nil, true)
 
   if #self.session.conversation > 0 then
     for _, item in ipairs(self.session.conversation) do
-      self:_add(item.type, item.text, item.usage)
+      if item.type == SYSTEM then
+        self:set_system_message(item.text, true)
+      else
+        self:_add(item.type, item.text, item.usage)
+      end
     end
-  else
+  end
+
+  if #self.session.conversation == 0 or (#self.session.conversation == 1 and self.system_message ~= nil) then
     local lines = Utils.split_string_by_line(Config.options.chat.welcome_message)
     self:set_lines(0, 0, false, lines)
     for line_num = 0, #lines do
       self:add_highlight("ChatGPTWelcome", line_num, 0, -1)
     end
+  end
+  self:render_role()
+end
+
+function Chat:render_role()
+  if self.role_extmark_id ~= nil then
+    vim.api.nvim_buf_del_extmark(self.chat_input.bufnr, Config.namespace_id, self.role_extmark_id)
+  end
+
+  self.role_extmark_id = vim.api.nvim_buf_set_extmark(self.chat_input.bufnr, Config.namespace_id, 0, 0, {
+    virt_text = {
+      { "", "ChatGPTTotalTokensBorder" },
+      {
+        string.upper(self.role),
+        "ChatGPTTotalTokens",
+      },
+      { "", "ChatGPTTotalTokensBorder" },
+      { " " },
+    },
+    virt_text_pos = "right_align",
+  })
+end
+
+function Chat:set_system_message(msg, skip_session_add)
+  self.system_message = msg
+  if msg == nil then
+    self.system_role_panel:set_text({})
+    return
+  end
+
+  if not skip_session_add then
+    self.session:add_item({
+      type = SYSTEM,
+      text = msg,
+      usage = {},
+    })
+  else
+    self.system_role_panel:set_text(Utils.split_string_by_line(msg))
   end
 end
 
@@ -69,6 +125,8 @@ function Chat:new_session()
   self.session = Session:new()
   self.session:save()
 
+  self.system_message = nil
+  self.system_role_panel:set_text({})
   self:welcome()
 end
 
@@ -95,18 +153,13 @@ function Chat:add(type, text, usage)
     usage = usage,
   })
   self:_add(type, text, usage)
+  self:render_role()
 end
 
 function Chat:_add(type, text, usage)
   if not self:is_buf_exists() then
     return
   end
-  local width = self:get_width() - 10 -- add some space
-  local max_width = Config.options.chat.max_line_length
-  if width > max_width then
-    max_width = width
-  end
-  text = Utils.wrapText(text, width)
 
   local start_line = 0
   if self.selectedIndex > 0 then
@@ -135,7 +188,7 @@ function Chat:_add(type, text, usage)
 end
 
 function Chat:addQuestion(text)
-  self:add(QUESTION, text)
+  self:add(self.role == ROLE_USER and QUESTION or ANSWER, text)
 end
 
 function Chat:addSystem(text)
@@ -270,6 +323,10 @@ end
 
 function Chat:toMessages()
   local messages = {}
+  if self.system_message ~= nil then
+    table.insert(messages, { role = "system", content = self.system_message })
+  end
+
   for _, msg in pairs(self.messages) do
     local role = "user"
     if msg.type == SYSTEM then
@@ -350,7 +407,7 @@ end
 
 function Chat:map(keys, fn, windows, modes)
   if windows == nil or next(windows) == nil then
-    windows = { self.settings_panel, self.sessions_panel, self.chat_input, self.chat_window }
+    windows = { self.settings_panel, self.sessions_panel, self.system_role_panel, self.chat_input, self.chat_window }
   end
 
   if modes == nil or next(modes) == nil then
@@ -414,15 +471,23 @@ function Chat:get_layout_params()
 
   local config = self.display_mode == "right" and right_layout_config or center_layout_config
 
+  local left_layout = Layout.Box(self.chat_window, { grow = 1 })
+  if self.system_role_open then
+    left_layout = Layout.Box({
+      Layout.Box(self.system_role_panel, { size = self.display_mode == "center" and 33 or 10 }),
+      Layout.Box(self.chat_window, { grow = 1 }),
+    }, { dir = self.display_mode == "center" and "row" or "col", grow = 1 })
+  end
+
   local box = Layout.Box({
-    Layout.Box(self.chat_window, { grow = 1 }),
+    left_layout,
     Layout.Box(self.chat_input, { size = 2 + self.prompt_lines }),
   }, { dir = "col" })
 
   if self.settings_open then
     box = Layout.Box({
       Layout.Box({
-        Layout.Box(self.chat_window, { grow = 1 }),
+        left_layout,
         Layout.Box(self.chat_input, { size = 2 + self.prompt_lines }),
       }, { dir = "col", grow = 1 }),
       Layout.Box({
@@ -441,6 +506,11 @@ function Chat:open()
     self:set_session(session)
   end)
   self.chat_window = Popup(Config.options.popup_window)
+  self.system_role_panel = SystemWindow({
+    on_change = function(text)
+      self:set_system_message(text)
+    end,
+  })
   self.chat_input = ChatInput(Config.options.popup_input, {
     prompt = Config.options.popup_input.prompt,
     on_close = function()
@@ -462,12 +532,13 @@ function Chat:open()
       end
 
       self:addQuestion(value)
-      self:showProgess()
-
-      local params = vim.tbl_extend("keep", { messages = self:toMessages() }, Settings.params)
-      Api.chat_completions(params, function(answer, usage)
-        self:addAnswer(answer, usage)
-      end)
+      if self.role == ROLE_USER then
+        self:showProgess()
+        local params = vim.tbl_extend("keep", { messages = self:toMessages() }, Settings.params)
+        Api.chat_completions(params, function(answer, usage)
+          self:addAnswer(answer, usage)
+        end)
+      end
     end),
   })
 
@@ -532,6 +603,12 @@ function Chat:open()
     if self.active_panel == self.settings_panel then
       self:set_active_panel(self.sessions_panel)
     elseif self.active_panel == self.chat_input then
+      if self.system_role_open then
+        self:set_active_panel(self.system_role_panel)
+      else
+        self:set_active_panel(self.chat_window)
+      end
+    elseif self.active_panel == self.system_role_panel then
       self:set_active_panel(self.chat_window)
     elseif self.active_panel == self.chat_window and self.settings_open == true then
       self:set_active_panel(self.settings_panel)
@@ -546,9 +623,50 @@ function Chat:open()
     self:redraw()
   end)
 
+  -- toggle system
+  self:map(Config.options.chat.keymaps.toggle_system_role_open, function()
+    if self.system_role_open and self.active_panel == self.system_role_panel then
+      self:set_active_panel(self.chat_input)
+    end
+
+    self.system_role_open = not self.system_role_open
+
+    self:redraw()
+
+    if self.system_role_open then
+      self:set_active_panel(self.system_role_panel)
+    end
+  end)
+
+  -- toggle role
+  self:map(Config.options.chat.keymaps.toggle_message_role, function()
+    self.role = self.role == ROLE_USER and ROLE_ASSISTANT or ROLE_USER
+    self:render_role()
+  end)
+
+  -- draft message
+  self:map(Config.options.chat.keymaps.draft_message, function()
+    if self:isBusy() then
+      vim.notify("I'm busy, please wait a moment...", vim.log.levels.WARN)
+      return
+    end
+
+    local lines = vim.api.nvim_buf_get_lines(self.chat_input.bufnr, 0, -1, false)
+    local text = table.concat(lines, "\n")
+
+    vim.api.nvim_buf_set_lines(self.chat_input.bufnr, 0, -1, false, { "" })
+    self:add(self.role == ROLE_USER and QUESTION or ANSWER, text)
+  end)
+
   -- initialize
   self.layout:mount()
   self:welcome()
+end
+
+function Chat:open_system_panel()
+  self.system_role_open = true
+  self:redraw()
+  self:set_active_panel(self.system_role_panel)
 end
 
 function Chat:redraw(noinit)

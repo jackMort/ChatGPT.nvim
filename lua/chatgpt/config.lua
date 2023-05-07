@@ -43,13 +43,16 @@ function M.defaults()
         yank_last_code = "<C-k>",
         scroll_up = "<C-u>",
         scroll_down = "<C-d>",
-        toggle_settings = "<C-o>",
         new_session = "<C-n>",
         cycle_windows = "<Tab>",
         cycle_modes = "<C-f>",
         select_session = "<Space>",
         rename_session = "r",
         delete_session = "d",
+        draft_message = "<C-d>",
+        toggle_settings = "<C-o>",
+        toggle_message_role = "<C-r>",
+        toggle_system_role_open = "<C-s>",
       },
     },
     popup_layout = {
@@ -72,10 +75,28 @@ function M.defaults()
         },
       },
       win_options = {
+        wrap = true,
+        linebreak = true,
+        foldcolumn = "1",
         winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
       },
       buf_options = {
         filetype = "markdown",
+      },
+    },
+    system_window = {
+      border = {
+        highlight = "FloatBorder",
+        style = "rounded",
+        text = {
+          top = " SYSTEM ",
+        },
+      },
+      win_options = {
+        wrap = true,
+        linebreak = true,
+        foldcolumn = "2",
+        winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
       },
     },
     popup_input = {

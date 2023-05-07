@@ -8,7 +8,7 @@ function PreviewWindow:init(options)
     position = 1,
     size = {
       width = "40%",
-      height = 20,
+      height = 10,
     },
     padding = { 1, 1, 1, 1 },
     enter = true,
