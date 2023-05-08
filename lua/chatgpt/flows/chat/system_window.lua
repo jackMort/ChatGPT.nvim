@@ -16,6 +16,10 @@ function SystemWindow:toggle_placeholder()
   local lines = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false)
   local text = table.concat(lines, "\n")
 
+  if self.extmark then
+    vim.api.nvim_buf_del_extmark(self.bufnr, Config.namespace_id, self.extmark)
+  end
+
   if #text == 0 then
     self.extmark = vim.api.nvim_buf_set_extmark(self.bufnr, Config.namespace_id, 0, 0, {
       virt_text = {
@@ -26,8 +30,6 @@ function SystemWindow:toggle_placeholder()
       },
       virt_text_pos = "overlay",
     })
-  elseif self.extmark then
-    vim.api.nvim_buf_del_extmark(self.bufnr, Config.namespace_id, self.extmark)
   end
 end
 

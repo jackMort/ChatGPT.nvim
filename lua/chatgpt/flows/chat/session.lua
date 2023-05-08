@@ -65,7 +65,7 @@ function Session:to_export()
 end
 
 function Session:add_item(item)
-  if self.updated_at == self.name and (item.type == 1 or item.type == 3) then
+  if self.updated_at == self.name and item.type == 1 then
     self.name = item.text
   end
   -- tmp hack for system message
