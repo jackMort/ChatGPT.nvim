@@ -87,6 +87,14 @@ function Session:add_item(item)
 
   self.updated_at = get_current_date()
   self:save()
+
+  return #self.conversation + 1
+end
+
+function Session:delete_by_index(idx)
+  table.remove(self.conversation, idx)
+  self.updated_at = get_current_date()
+  self:save()
 end
 
 function Session:save()

@@ -24,6 +24,7 @@ function Chat:init()
   self.input_extmark_id = nil
 
   self.active_panel = nil
+  self.selected_message_nsid = vim.api.nvim_create_namespace("ChatGPTNSSM")
 
   -- UI ELEMENTS
   self.layout = nil
@@ -63,11 +64,11 @@ function Chat:welcome()
   self:set_system_message(nil, true)
 
   if #self.session.conversation > 0 then
-    for _, item in ipairs(self.session.conversation) do
+    for idx, item in ipairs(self.session.conversation) do
       if item.type == SYSTEM then
         self:set_system_message(item.text, true)
       else
-        self:_add(item.type, item.text, item.usage)
+        self:_add(item.type, item.text, item.usage, idx)
       end
     end
   end
@@ -147,16 +148,16 @@ function Chat:isBusy()
 end
 
 function Chat:add(type, text, usage)
-  self.session:add_item({
+  local idx = self.session:add_item({
     type = type,
     text = text,
     usage = usage,
   })
-  self:_add(type, text, usage)
+  self:_add(type, text, usage, idx)
   self:render_role()
 end
 
-function Chat:_add(type, text, usage)
+function Chat:_add(type, text, usage, idx)
   if not self:is_buf_exists() then
     return
   end
@@ -175,6 +176,7 @@ function Chat:_add(type, text, usage)
   end
 
   table.insert(self.messages, {
+    idx = idx,
     usage = usage or {},
     type = type,
     text = text,
@@ -183,7 +185,7 @@ function Chat:_add(type, text, usage)
     start_line = start_line,
     end_line = start_line + nr_of_lines - 1,
   })
-  self:next()
+  self.selectedIndex = self.selectedIndex + 1
   self:renderLastMessage()
 end
 
@@ -217,10 +219,86 @@ function Chat:next()
   else
     self.selectedIndex = 1
   end
+  self:show_message_selection()
+end
+
+function Chat:prev()
+  local count = self:count()
+  if self.selectedIndex > 1 then
+    self.selectedIndex = self.selectedIndex - 1
+  else
+    self.selectedIndex = count
+  end
+  self:show_message_selection()
+end
+
+function Chat:show_message_selection()
+  local msg = self:getSelected()
+
+  self:set_cursor({ msg.start_line + 1, 0 })
+
+  vim.api.nvim_buf_clear_namespace(self.chat_window.bufnr, self.selected_message_nsid, 0, -1)
+  vim.api.nvim_buf_set_extmark(self.chat_window.bufnr, self.selected_message_nsid, msg.start_line, 0, {
+    end_col = 0,
+    end_row = msg.end_line + 1,
+    hl_group = "ChatGPTSelectedMessage",
+    hl_eol = true,
+  })
+  self:render_message_actions()
+end
+
+function Chat:hide_message_selection()
+  vim.api.nvim_buf_clear_namespace(self.chat_window.bufnr, self.selected_message_nsid, 0, -1)
 end
 
 function Chat:getSelected()
   return self.messages[self.selectedIndex]
+end
+
+function Chat:delete_message()
+  local selected_index = self.selectedIndex
+  local msg = self:getSelected()
+  self.session:delete_by_index(msg.idx)
+
+  if msg.extmark_id then
+    vim.api.nvim_buf_del_extmark(self.chat_window.bufnr, Config.namespace_id, msg.extmark_id)
+  end
+
+  self:welcome()
+  if selected_index > 1 then
+    self.selectedIndex = selected_index - 1
+    local current_msg = self:getSelected()
+    self:set_cursor({ current_msg.start_line + 1, 0 })
+  end
+  self:show_message_selection()
+end
+
+function Chat:render_message_actions()
+  local msg = self:getSelected()
+  if msg ~= nil then
+    vim.api.nvim_buf_set_extmark(self.chat_window.bufnr, self.selected_message_nsid, msg.start_line, 0, {
+      virt_text = {
+        {
+          " Delete (" .. Config.options.chat.keymaps.delete_message .. ") ",
+          "ChatGPTMessageAction",
+        },
+        { " ", "ChatGPTSelectedMessage" },
+      },
+      virt_text_pos = "right_align",
+    })
+
+    -- vim.api.nvim_buf_set_extmark(self.chat_window.bufnr, self.selected_message_nsid, msg.start_line, 0, {
+    --   virt_text = {
+    --     { "  ", "ChatGPTSelectedMessage" },
+    --     {
+    --       " Edit (" .. Config.options.chat.keymaps.edit_message .. ") ",
+    --       "ChatGPTMessageAction",
+    --     },
+    --     { " ", "ChatGPTSelectedMessage" },
+    --   },
+    --   virt_text_pos = "right_align",
+    -- })
+  end
 end
 
 function Chat:getSelectedCode()
@@ -282,18 +360,19 @@ function Chat:renderLastMessage()
   else
     local total_tokens = msg.usage.total_tokens
     if total_tokens ~= nil then
-      vim.api.nvim_buf_set_extmark(self.chat_window.bufnr, Config.namespace_id, msg.end_line + 1, 0, {
-        virt_text = {
-          { "", "ChatGPTTotalTokensBorder" },
-          {
-            "TOKENS: " .. msg.usage.total_tokens,
-            "ChatGPTTotalTokens",
+      self.messages[self.selectedIndex].extmark_id =
+        vim.api.nvim_buf_set_extmark(self.chat_window.bufnr, Config.namespace_id, msg.end_line + 1, 0, {
+          virt_text = {
+            { "", "ChatGPTTotalTokensBorder" },
+            {
+              "TOKENS: " .. msg.usage.total_tokens,
+              "ChatGPTTotalTokens",
+            },
+            { "", "ChatGPTTotalTokensBorder" },
+            { " ", "" },
           },
-          { "", "ChatGPTTotalTokensBorder" },
-          { " ", "" },
-        },
-        virt_text_pos = "right_align",
-      })
+          virt_text_pos = "right_align",
+        })
     end
 
     Signs.set_for_lines(self.chat_window.bufnr, msg.start_line, msg.end_line, "chat")
@@ -431,6 +510,12 @@ function Chat:set_active_panel(panel)
   vim.api.nvim_set_current_win(panel.winid)
   self.active_panel = panel
   Utils.change_mode_to_normal()
+
+  if self.active_panel == self.chat_window then
+    self:show_message_selection()
+  else
+    self:hide_message_selection()
+  end
 end
 
 function Chat:get_layout_params()
@@ -567,6 +652,16 @@ function Chat:open()
     self:scroll(1)
   end, { self.chat_input })
 
+  -- next message
+  self:map(Config.options.chat.keymaps.next_message, function()
+    self:next()
+  end, { self.chat_window }, { "n" })
+
+  -- prev message
+  self:map(Config.options.chat.keymaps.prev_message, function()
+    self:prev()
+  end, { self.chat_window }, { "n" })
+
   -- scroll up
   self:map(Config.options.chat.keymaps.scroll_up, function()
     self:scroll(-1)
@@ -664,6 +759,24 @@ function Chat:open()
       vim.notify("Cannot add empty message.", vim.log.levels.WARN)
     end
   end)
+
+  -- delete message
+  self:map(Config.options.chat.keymaps.delete_message, function()
+    if self:count() > 0 then
+      self:delete_message()
+    else
+      vim.notify("Nothing selected.", vim.log.levels.WARN)
+    end
+  end, { self.chat_window }, { "n" })
+
+  -- edit message
+  self:map(Config.options.chat.keymaps.edit_message, function()
+    if self:count() > 0 then
+      self:edit_message()
+    else
+      vim.notify("Nothing selected.", vim.log.levels.WARN)
+    end
+  end, { self.chat_window }, { "n" })
 
   -- initialize
   self.layout:mount()
