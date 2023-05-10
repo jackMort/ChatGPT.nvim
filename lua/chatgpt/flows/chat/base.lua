@@ -234,9 +234,11 @@ end
 
 function Chat:show_message_selection()
   local msg = self:getSelected()
+  if msg == nil then
+    return
+  end
 
   self:set_cursor({ msg.start_line + 1, 0 })
-
   vim.api.nvim_buf_clear_namespace(self.chat_window.bufnr, self.selected_message_nsid, 0, -1)
   vim.api.nvim_buf_set_extmark(self.chat_window.bufnr, self.selected_message_nsid, msg.start_line, 0, {
     end_col = 0,
