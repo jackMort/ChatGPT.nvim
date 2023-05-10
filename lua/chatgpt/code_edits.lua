@@ -407,6 +407,15 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
     end
   end
 
+  -- close
+  for _, popup in ipairs({ input_window, output_window, settings_panel, instructions_input }) do
+    for _, mode in ipairs({ "n", "i" }) do
+      popup:map(mode, Config.options.edit_with_instructions.keymaps.close, function()
+        layout:hide()
+      end)
+    end
+  end
+
   setup_and_mount(visual_lines, output_lines)
 end
 
