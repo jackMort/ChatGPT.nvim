@@ -235,7 +235,12 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
         for _, winid in ipairs({ input_window.winid, output_window.winid }) do
           vim.api.nvim_set_current_win(winid)
           if diff_mode then
+            -- set local wrap to be previous option to make it mroe readable(wrap=true is often more readable in diff mode).
+            local previous_wrap = vim.o.wrap
             vim.api.nvim_command("diffthis")
+            if vim.o.wrap ~= previous_wrap then
+              vim.o.wrap = previous_wrap
+            end
           else
             vim.api.nvim_command("diffoff")
           end
