@@ -1,5 +1,6 @@
 local job = require("plenary.job")
 local Config = require("chatgpt.config")
+local logger = require("chatgpt.common.logger")
 
 local Api = {}
 
@@ -94,13 +95,15 @@ function Api.setup()
   -- API KEY
   Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
   if not Api.OPENAI_API_KEY then
-    if Config.options.api_key_cmd ~= nil or Config.options.api_key_cmd ~= "" then
+    if Config.options.api_key_cmd ~= nil and Config.options.api_key_cmd ~= "" then
       Api.OPENAI_API_KEY = vim.fn.system(Config.options.api_key_cmd)
       if not Api.OPENAI_API_KEY then
-        error("Config 'api_key_cmd' did not return a value when executed")
+        logger.warn("Config 'api_key_cmd' did not return a value when executed")
+        return
       end
     else
-      error("OPENAI_API_KEY environment variable not set")
+      logger.warn("OPENAI_API_KEY environment variable not set")
+      return
     end
   end
   Api.OPENAI_API_KEY = Api.OPENAI_API_KEY:gsub("%s+$", "")
