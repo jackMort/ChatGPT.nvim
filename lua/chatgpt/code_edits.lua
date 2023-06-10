@@ -151,6 +151,16 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
     end, { noremap = true })
   end
 
+  -- close
+  for _, mode in ipairs({ "n", "i" }) do
+    instructions_input:map(mode, Config.options.edit_with_instructions.keymaps.close, function()
+      if vim.fn.mode() == "i" then
+        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+      end
+      vim.cmd("q")
+    end, { noremap = true })
+  end
+
   -- toggle settings
   local settings_open = false
   for _, popup in ipairs({ settings_panel, instructions_input }) do
