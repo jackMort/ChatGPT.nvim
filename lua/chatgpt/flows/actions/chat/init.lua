@@ -36,6 +36,7 @@ function ChatAction:init(opts)
   self.template = opts.template or "{{input}}"
   self.variables = opts.variables or {}
   self.strategy = opts.strategy or STRATEGY_APPEND
+  self.ui = opts.ui or {}
 end
 
 function ChatAction:render_template()
@@ -89,10 +90,9 @@ function ChatAction:on_result(answer, usage)
 
     if self.strategy == STRATEGY_DISPLAY then
       local PreviewWindow = require("chatgpt.common.preview_window")
-      local popup = PreviewWindow({
-
+      local ui = vim.tbl_deep_extend("keep", self.ui, {
         border = {
-          style = "single",
+          style = "rounded",
           text = {
             top = " " .. self.opts.title .. " ",
             top_align = "left",
@@ -106,6 +106,7 @@ function ChatAction:on_result(answer, usage)
           },
         },
       })
+      local popup = PreviewWindow(ui)
       vim.api.nvim_buf_set_lines(popup.bufnr, 0, 1, false, lines)
       popup:mount()
     elseif self.strategy == STRATEGY_EDIT then

@@ -32,6 +32,7 @@ function CompletionAction:init(opts)
   self.template = opts.template or "{{input}}"
   self.variables = opts.variables or {}
   self.strategy = opts.strategy or STRATEGY_REPLACE
+  self.ui = opts.ui or {}
 end
 
 function CompletionAction:render_template()
@@ -87,8 +88,7 @@ function CompletionAction:on_result(answer, usage)
       vim.api.nvim_buf_set_text(bufnr, start_row, start_col, end_row, end_col, lines)
     else
       local Popup = require("nui.popup")
-
-      local popup = Popup({
+      local ui = vim.tbl_deep_extend("keep", self.ui, {
         position = 1,
         size = {
           width = 60,
@@ -106,7 +106,7 @@ function CompletionAction:on_result(answer, usage)
         focusable = true,
         zindex = 50,
         border = {
-          style = "single",
+          style = "rounded",
         },
         buf_options = {
           modifiable = false,
@@ -117,6 +117,7 @@ function CompletionAction:on_result(answer, usage)
           winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
         },
       })
+      local popup = Popup(ui)
       vim.api.nvim_buf_set_lines(popup.bufnr, 0, 1, false, lines)
       popup:mount()
     end
