@@ -7,7 +7,7 @@ local M = {
 }
 
 M.open = function()
-  if M.chat ~= nil then
+  if M.chat ~= nil and M.chat.active then
     M.chat:toggle()
   else
     M.chat = Chat:new()

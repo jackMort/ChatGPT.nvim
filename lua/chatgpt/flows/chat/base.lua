@@ -26,6 +26,9 @@ function Chat:init()
   self.active_panel = nil
   self.selected_message_nsid = vim.api.nvim_create_namespace("ChatGPTNSSM")
 
+  -- quit indicator
+  self.active = true
+
   -- UI ELEMENTS
   self.layout = nil
   self.chat_panel = nil
@@ -783,6 +786,11 @@ function Chat:open()
   -- initialize
   self.layout:mount()
   self:welcome()
+
+  local event = require("nui.utils.autocmd").event
+  self.chat_input:on(event.QuitPre, function()
+    self.active = false
+  end)
 end
 
 function Chat:open_system_panel()
