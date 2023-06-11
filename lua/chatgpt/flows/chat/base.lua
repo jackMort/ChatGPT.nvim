@@ -432,6 +432,21 @@ function Chat:is_buf_exists()
   return vim.fn.bufexists(self.chat_window.bufnr) == 1
 end
 
+function Chat:is_buf_visiable()
+  -- 获取当前标签页中所有窗口的列表
+  local wins = vim.api.nvim_tabpage_list_wins(0)
+  -- 遍历窗口列表，判断缓冲区是否在窗口中可见
+  local visible = false
+  for _, win in ipairs(wins) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    if buf == self.chat_window.bufnr then
+      visible = true
+      break
+    end
+  end
+  return visible
+end
+
 function Chat:set_lines(start_idx, end_idx, strict_indexing, lines)
   if self:is_buf_exists() then
     vim.api.nvim_buf_set_option(self.chat_window.bufnr, "modifiable", true)
@@ -447,7 +462,7 @@ function Chat:add_highlight(hl_group, line, col_start, col_end)
 end
 
 function Chat:set_cursor(pos)
-  if self:is_buf_exists() then
+  if self:is_buf_visiable() then
     vim.api.nvim_win_set_cursor(self.chat_window.winid, pos)
   end
 end
