@@ -689,7 +689,7 @@ function Chat:open()
     self:hide()
     -- If current in insert mode, switch to insert mode
     if vim.fn.mode() == "i" then
-      vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+        vim.api.nvim_command("stopinsert")
     end
   end)
 

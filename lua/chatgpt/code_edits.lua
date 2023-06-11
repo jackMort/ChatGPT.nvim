@@ -155,7 +155,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   for _, mode in ipairs({ "n", "i" }) do
     instructions_input:map(mode, Config.options.edit_with_instructions.keymaps.close, function()
       if vim.fn.mode() == "i" then
-        vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes("<Esc>", true, false, true), "n", true)
+        vim.api.nvim_command("stopinsert")
       end
       vim.cmd("q")
     end, { noremap = true })
