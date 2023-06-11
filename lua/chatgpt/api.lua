@@ -99,33 +99,29 @@ local splitCommandIntoTable = function(command)
   return cmd
 end
 
-local loadAsyncApiKey = function(command)
+local loadApiKey = function(command)
   local cmd = splitCommandIntoTable(command)
   -- API KEY
-  job:new({
-    command = cmd[1],
-    args = vim.list_slice(cmd, 2, #cmd),
-    on_exit = function(j, exit_code)
-      if exit_code ~= 0 then
-        logger.warn("Config 'api_key_cmd' did not return a value when executed")
-        return
-      end
-      Api.OPENAI_API_KEY = j:result()[1]:gsub("%s+$", "")
-    end,
-  }):start()
+  job
+    :new({
+      command = cmd[1],
+      args = vim.list_slice(cmd, 2, #cmd),
+      on_exit = function(j, exit_code)
+        if exit_code ~= 0 then
+          logger.warn("Config 'api_key_cmd' did not return a value when executed")
+          return
+        end
+        Api.OPENAI_API_KEY = j:result()[1]:gsub("%s+$", "")
+      end,
+    })
+    :start()
 end
 
 function Api.setup()
   Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
   if not Api.OPENAI_API_KEY then
     if Config.options.api_key_cmd ~= nil and Config.options.api_key_cmd ~= "" then
-      Api.OPENAI_API_KEY = vim.fn.system(Config.options.api_key_cmd)
-      if not Api.OPENAI_API_KEY then
-        logger.warn("Config 'api_key_cmd' did not return a value when executed")
-        return
-      end
-    elseif Config.options.async_api_key_cmd ~= nil and Config.options.async_api_key_cmd ~= "" then
-      loadAsyncApiKey(Config.options.async_api_key_cmd)
+      loadApiKey(Config.options.api_key_cmd)
     else
       logger.warn("OPENAI_API_KEY environment variable not set")
       return
