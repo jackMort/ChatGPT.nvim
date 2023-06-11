@@ -716,6 +716,9 @@ function Chat:open()
 
   -- cycle panes
   self:map(Config.options.chat.keymaps.cycle_windows, function()
+    if not self.active_panel then
+      self:set_active_panel(self.chat_input)
+    end
     if self.active_panel == self.settings_panel then
       self:set_active_panel(self.sessions_panel)
     elseif self.active_panel == self.chat_input then
