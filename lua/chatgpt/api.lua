@@ -127,7 +127,7 @@ function Api.setup()
       return
     end
   end
-  if Api.OPENAI_API_KEY ~=nil and Api.OPENAI_API_KEY ~= "" then
+  if Api.OPENAI_API_KEY ~= nil and Api.OPENAI_API_KEY ~= "" then
     Api.OPENAI_API_KEY = Api.OPENAI_API_KEY:gsub("%s+$", "")
   end
 end
