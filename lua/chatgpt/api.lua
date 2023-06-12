@@ -143,22 +143,45 @@ function Api.close()
   end
 end
 
-function Api.setup()
+local splitCommandIntoTable = function(command)
+  local cmd = {}
+  for word in command:gmatch("%S+") do
+    table.insert(cmd, word)
+  end
+  return cmd
+end
+
+local loadApiKey = function(command)
+  local cmd = splitCommandIntoTable(command)
   -- API KEY
+  job
+    :new({
+      command = cmd[1],
+      args = vim.list_slice(cmd, 2, #cmd),
+      on_exit = function(j, exit_code)
+        if exit_code ~= 0 then
+          logger.warn("Config 'api_key_cmd' did not return a value when executed")
+          return
+        end
+        Api.OPENAI_API_KEY = j:result()[1]:gsub("%s+$", "")
+      end,
+    })
+    :start()
+end
+
+function Api.setup()
   Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
   if not Api.OPENAI_API_KEY then
     if Config.options.api_key_cmd ~= nil and Config.options.api_key_cmd ~= "" then
-      Api.OPENAI_API_KEY = vim.fn.system(Config.options.api_key_cmd)
-      if not Api.OPENAI_API_KEY then
-        logger.warn("Config 'api_key_cmd' did not return a value when executed")
-        return
-      end
+      loadApiKey(Config.options.api_key_cmd)
     else
       logger.warn("OPENAI_API_KEY environment variable not set")
       return
     end
   end
-  Api.OPENAI_API_KEY = Api.OPENAI_API_KEY:gsub("%s+$", "")
+  if Api.OPENAI_API_KEY ~= nil and Api.OPENAI_API_KEY ~= "" then
+    Api.OPENAI_API_KEY = Api.OPENAI_API_KEY:gsub("%s+$", "")
+  end
 end
 
 function Api.exec(cmd, args, on_stdout_chunk, on_complete)
