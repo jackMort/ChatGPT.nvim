@@ -215,8 +215,7 @@ function Chat:addAnswerPartial(text, state)
     start_line = prev.end_line + (prev.type == ANSWER and 2 or 1)
   end
 
-
-  if state == "END"  then
+  if state == "END" then
     local usage = {}
     local idx = self.session:add_item({
       type = ANSWER,
