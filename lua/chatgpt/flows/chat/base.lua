@@ -433,9 +433,9 @@ function Chat:is_buf_exists()
 end
 
 function Chat:is_buf_visiable()
-  -- 获取当前标签页中所有窗口的列表
+  -- Get all windows in the current tab
   local wins = vim.api.nvim_tabpage_list_wins(0)
-  -- 遍历窗口列表，判断缓冲区是否在窗口中可见
+  -- Traverse the window list to determine whether the buffer of chat_window is visible in the window
   local visible = false
   for _, win in ipairs(wins) do
     local buf = vim.api.nvim_win_get_buf(win)
