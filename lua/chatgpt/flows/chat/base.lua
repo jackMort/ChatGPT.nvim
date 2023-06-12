@@ -204,6 +204,75 @@ function Chat:addAnswer(text, usage)
   self:add(ANSWER, text, usage)
 end
 
+function Chat:addAnswerPartial(text, state)
+  if state == "ERROR" then
+    return self:addAnswer(text, {})
+  end
+
+  local start_line = 0
+  if self.selectedIndex > 0 then
+    local prev = self.messages[self.selectedIndex]
+    start_line = prev.end_line + (prev.type == ANSWER and 2 or 1)
+  end
+
+
+  if state == "END"  then
+    local usage = {}
+    local idx = self.session:add_item({
+      type = ANSWER,
+      text = text,
+      usage = usage,
+    })
+
+    local lines = {}
+    local nr_of_lines = 0
+    for line in string.gmatch(text, "[^\n]+") do
+      nr_of_lines = nr_of_lines + 1
+      table.insert(lines, line)
+    end
+
+    local end_line = start_line + nr_of_lines - 1
+    table.insert(self.messages, {
+      idx = idx,
+      usage = usage or {},
+      type = ANSWER,
+      text = text,
+      lines = lines,
+      nr_of_lines = nr_of_lines,
+      start_line = start_line,
+      end_line = end_line,
+    })
+    self.selectedIndex = self.selectedIndex + 1
+    vim.api.nvim_buf_set_lines(self.chat_window.bufnr, -1, -1, false, { "", "" })
+    Signs.set_for_lines(self.chat_window.bufnr, start_line, end_line, "chat")
+  end
+
+  if state == "START" then
+    self:stopSpinner()
+    self:set_lines(-2, -1, false, { "" })
+    vim.api.nvim_buf_set_option(self.chat_window.bufnr, "modifiable", true)
+  end
+
+  if state == "START" or state == "CONTINUE" then
+    local lines = vim.split(text, "\n", {})
+    local length = #lines
+    local buffer = self.chat_window.bufnr
+    local win = self.chat_window.winid
+
+    for i, line in ipairs(lines) do
+      local currentLine = vim.api.nvim_buf_get_lines(buffer, -2, -1, false)[1]
+      vim.api.nvim_buf_set_lines(buffer, -2, -1, false, { currentLine .. line })
+
+      local last_line_num = vim.api.nvim_buf_line_count(buffer)
+      Signs.set_for_lines(self.chat_window.bufnr, start_line, last_line_num - 1, "chat")
+      if i == length and i > 1 then
+        vim.api.nvim_buf_set_lines(buffer, -1, -1, false, { "" })
+      end
+      vim.api.nvim_win_set_cursor(win, { last_line_num, 0 })
+    end
+  end
+end
+
 function Chat:get_total_tokens()
   local total_tokens = 0
   for i = 1, #self.messages, 1 do
@@ -612,7 +681,7 @@ function Chat:open()
         self:redraw()
       end
     end),
-    on_submit = vim.schedule_wrap(function(value)
+    on_submit = function(value)
       -- clear input
       vim.api.nvim_buf_set_lines(self.chat_input.bufnr, 0, -1, false, { "" })
 
@@ -624,12 +693,12 @@ function Chat:open()
       self:addQuestion(value)
       if self.role == ROLE_USER then
         self:showProgess()
-        local params = vim.tbl_extend("keep", { messages = self:toMessages() }, Settings.params)
-        Api.chat_completions(params, function(answer, usage)
-          self:addAnswer(answer, usage)
+        local params = vim.tbl_extend("keep", { stream = true, messages = self:toMessages() }, Settings.params)
+        Api.chat_completions(params, function(answer, state)
+          self:addAnswerPartial(answer, state)
         end)
       end
-    end),
+    end,
   })
 
   self.layout = Layout(self:get_layout_params())
