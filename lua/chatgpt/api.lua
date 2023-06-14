@@ -16,7 +16,59 @@ end
 
 function Api.chat_completions(custom_params, cb)
   local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
-  Api.make_call(Api.CHAT_COMPLETIONS_URL, params, cb)
+  local stream = params.stream or false
+  if stream then
+    local raw_chunks = ""
+    local state = "START"
+
+    cb = vim.schedule_wrap(cb)
+
+    Api.exec("curl", {
+      "--silent",
+      "--show-error",
+      "--no-buffer",
+      Api.CHAT_COMPLETIONS_URL,
+      "-H",
+      "Content-Type: application/json",
+      "-H",
+      "Authorization: Bearer " .. Api.OPENAI_API_KEY,
+      "-d",
+      vim.json.encode(params),
+    }, function(chunk)
+      local ok, json = pcall(vim.json.decode, chunk)
+      if ok and json ~= nil then
+        if json.error ~= nil then
+          cb(json.error.message, "ERROR")
+          return
+        end
+      end
+      for line in chunk:gmatch("[^\n]+") do
+        local raw_json = string.gsub(line, "^data: ", "")
+        if raw_json == "[DONE]" then
+          cb(raw_chunks, "END")
+        else
+          ok, json = pcall(vim.json.decode, raw_json)
+          if ok and json ~= nil then
+            if
+              json
+              and json.choices
+              and json.choices[1]
+              and json.choices[1].delta
+              and json.choices[1].delta.content
+            then
+              cb(json.choices[1].delta.content, state)
+              raw_chunks = raw_chunks .. json.choices[1].delta.content
+              state = "CONTINUE"
+            end
+          end
+        end
+      end
+    end, function(err, _)
+      cb(err, "ERROR")
+    end)
+  else
+    Api.make_call(Api.CHAT_COMPLETIONS_URL, params, cb)
+  end
 end
 
 function Api.edits(custom_params, cb)
@@ -91,22 +143,90 @@ function Api.close()
   end
 end
 
-function Api.setup()
+local splitCommandIntoTable = function(command)
+  local cmd = {}
+  for word in command:gmatch("%S+") do
+    table.insert(cmd, word)
+  end
+  return cmd
+end
+
+local loadApiKey = function(command)
+  local cmd = splitCommandIntoTable(command)
   -- API KEY
+  job
+    :new({
+      command = cmd[1],
+      args = vim.list_slice(cmd, 2, #cmd),
+      on_exit = function(j, exit_code)
+        if exit_code ~= 0 then
+          logger.warn("Config 'api_key_cmd' did not return a value when executed")
+          return
+        end
+        Api.OPENAI_API_KEY = j:result()[1]:gsub("%s+$", "")
+      end,
+    })
+    :start()
+end
+
+function Api.setup()
   Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
   if not Api.OPENAI_API_KEY then
     if Config.options.api_key_cmd ~= nil and Config.options.api_key_cmd ~= "" then
-      Api.OPENAI_API_KEY = vim.fn.system(Config.options.api_key_cmd)
-      if not Api.OPENAI_API_KEY then
-        logger.warn("Config 'api_key_cmd' did not return a value when executed")
-        return
-      end
+      loadApiKey(Config.options.api_key_cmd)
     else
       logger.warn("OPENAI_API_KEY environment variable not set")
       return
     end
   end
-  Api.OPENAI_API_KEY = Api.OPENAI_API_KEY:gsub("%s+$", "")
+  if Api.OPENAI_API_KEY ~= nil and Api.OPENAI_API_KEY ~= "" then
+    Api.OPENAI_API_KEY = Api.OPENAI_API_KEY:gsub("%s+$", "")
+  end
+end
+
+function Api.exec(cmd, args, on_stdout_chunk, on_complete)
+  local stdout = vim.loop.new_pipe()
+  local stderr = vim.loop.new_pipe()
+  local stderr_chunks = {}
+
+  local function on_stdout_read(_, chunk)
+    if chunk then
+      vim.schedule(function()
+        on_stdout_chunk(chunk)
+      end)
+    end
+  end
+
+  local function on_stderr_read(_, chunk)
+    if chunk then
+      table.insert(stderr_chunks, chunk)
+    end
+  end
+
+  local handle, err
+  handle, err = vim.loop.spawn(cmd, {
+    args = args,
+    stdio = { nil, stdout, stderr },
+  }, function(code)
+    stdout:close()
+    stderr:close()
+    if handle ~= nil then
+      handle:close()
+    end
+
+    vim.schedule(function()
+      if code ~= 0 then
+        on_complete(vim.trim(table.concat(stderr_chunks, "")))
+      end
+    end)
+  end)
+
+  if not handle then
+    on_complete(cmd .. " could not be started: " .. err)
+  else
+    stdout:read_start(on_stdout_read)
+    stderr:read_start(on_stderr_read)
+  end
 end
 
 return Api
