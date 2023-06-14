@@ -267,7 +267,9 @@ function Chat:addAnswerPartial(text, state)
       if i == length and i > 1 then
         vim.api.nvim_buf_set_lines(buffer, -1, -1, false, { "" })
       end
-      vim.api.nvim_win_set_cursor(win, { last_line_num, 0 })
+      if self:is_buf_visiable() then
+        vim.api.nvim_win_set_cursor(win, { last_line_num, 0 })
+      end
     end
   end
 end
@@ -503,6 +505,21 @@ function Chat:is_buf_exists()
   return vim.fn.bufexists(self.chat_window.bufnr) == 1
 end
 
+function Chat:is_buf_visiable()
+  -- Get all windows in the current tab
+  local wins = vim.api.nvim_tabpage_list_wins(0)
+  -- Traverse the window list to determine whether the buffer of chat_window is visible in the window
+  local visible = false
+  for _, win in ipairs(wins) do
+    local buf = vim.api.nvim_win_get_buf(win)
+    if buf == self.chat_window.bufnr then
+      visible = true
+      break
+    end
+  end
+  return visible
+end
+
 function Chat:set_lines(start_idx, end_idx, strict_indexing, lines)
   if self:is_buf_exists() then
     vim.api.nvim_buf_set_option(self.chat_window.bufnr, "modifiable", true)
@@ -518,7 +535,7 @@ function Chat:add_highlight(hl_group, line, col_start, col_end)
 end
 
 function Chat:set_cursor(pos)
-  if self:is_buf_exists() then
+  if self:is_buf_visiable() then
     vim.api.nvim_win_set_cursor(self.chat_window.winid, pos)
   end
 end
@@ -743,6 +760,10 @@ function Chat:open()
   -- close
   self:map(Config.options.chat.keymaps.close, function()
     self:hide()
+    -- If current in insert mode, switch to insert mode
+    if vim.fn.mode() == "i" then
+      vim.api.nvim_command("stopinsert")
+    end
   end)
 
   -- toggle settings
@@ -768,6 +789,9 @@ function Chat:open()
 
   -- cycle panes
   self:map(Config.options.chat.keymaps.cycle_windows, function()
+    if not self.active_panel then
+      self:set_active_panel(self.chat_input)
+    end
     if self.active_panel == self.settings_panel then
       self:set_active_panel(self.sessions_panel)
     elseif self.active_panel == self.chat_input then

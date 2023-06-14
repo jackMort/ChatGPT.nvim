@@ -4,7 +4,7 @@ local Config = require("chatgpt.config")
 local PreviewWindow = Popup:extend("PreviewWindow")
 
 function PreviewWindow:init(options)
-  options = vim.tbl_deep_extend("force", options or {}, {
+  options = vim.tbl_deep_extend("keep", options or {}, {
     position = 1,
     size = {
       width = "40%",
@@ -15,7 +15,7 @@ function PreviewWindow:init(options)
     focusable = true,
     zindex = 50,
     border = {
-      style = "single",
+      style = "rounded",
     },
     buf_options = {
       modifiable = false,
