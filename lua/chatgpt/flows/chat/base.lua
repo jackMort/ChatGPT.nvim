@@ -267,7 +267,9 @@ function Chat:addAnswerPartial(text, state)
       if i == length and i > 1 then
         vim.api.nvim_buf_set_lines(buffer, -1, -1, false, { "" })
       end
-      vim.api.nvim_win_set_cursor(win, { last_line_num, 0 })
+      if self:is_buf_visiable() then
+        vim.api.nvim_win_set_cursor(win, { last_line_num, 0 })
+      end
     end
   end
 end
