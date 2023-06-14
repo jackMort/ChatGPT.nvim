@@ -344,7 +344,7 @@ keybindings are available:
 - `<C-d>` [Edit Window] view the diff between left and right panes and use diff-mode
   commands
 
-When the setting window is opened (with `<C-o>`), settigs can be modified by
+When the setting window is opened (with `<C-o>`), settings can be modified by
 pressing `Enter` on the related config. Settings are saved across sections
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/jackMort)
