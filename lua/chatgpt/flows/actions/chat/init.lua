@@ -90,7 +90,34 @@ function ChatAction:on_result(answer, usage)
 
     if self.strategy == STRATEGY_DISPLAY then
       local PreviewWindow = require("chatgpt.common.preview_window")
-      local ui = vim.tbl_deep_extend("keep", self.ui, {
+      -- compute size
+      -- the width is calculated based on the maximum number of lines and the height is calculated based on the width
+      local cur_win = vim.api.nvim_get_current_win()
+      local max_h = math.ceil(vim.api.nvim_win_get_height(cur_win) / 2)
+      local max_w = math.ceil(vim.api.nvim_win_get_width(cur_win) / 2)
+      local ui_w = 0
+      local len = 0
+      local ncount = 0
+      for _, v in ipairs(lines) do
+        local l = string.len(v)
+        if v == "" then
+          ncount = ncount + 1
+        end
+        ui_w = math.max(l, ui_w)
+        len = len + l
+      end
+      ui_w = math.min(ui_w, max_w)
+      ui_w = math.max(ui_w, 10)
+      local ui_h = math.ceil(len / ui_w) + ncount
+      ui_h = math.min(ui_h, max_h)
+      ui_h = math.max(ui_h, 1)
+
+      -- build ui opts
+      local ui_opts = vim.tbl_deep_extend("keep", {
+        size = {
+          width = ui_w,
+          height = ui_h,
+        },
         border = {
           style = "rounded",
           text = {
@@ -105,8 +132,9 @@ function ChatAction:on_result(answer, usage)
             col = start_col,
           },
         },
-      })
-      local popup = PreviewWindow(ui)
+      }, self.ui)
+
+      local popup = PreviewWindow(ui_opts)
       vim.api.nvim_buf_set_lines(popup.bufnr, 0, 1, false, lines)
       popup:mount()
     elseif self.strategy == STRATEGY_EDIT then
