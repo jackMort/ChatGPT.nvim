@@ -68,6 +68,7 @@ use({
     edit_with_instructions = {
       diff = false,
       keymaps = {
+        close = "<C-c>",
         accept = "<C-y>",
         toggle_diff = "<C-d>",
         toggle_settings = "<C-o>",
@@ -332,7 +333,7 @@ keybindings are available:
 - `<C-o>` [Both] Toggle settings window.
 - `<Tab>` [Both] Cycle over windows.
 - `<C-m>` [Chat] Cycle over modes (center, stick to right).
-- `<C-c>` [Chat] to close chat window.
+- `<C-c>` [Both] to close chat window.
 - `<C-u>` [Chat] scroll up chat window.
 - `<C-d>` [Chat] scroll down chat window.
 - `<C-k>` [Chat] to copy/yank code from last answer.
