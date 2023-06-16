@@ -366,7 +366,8 @@ c = {
   f = { "<cmd>ChatGPTRun fix_bugs<CR>", "Fix Bugs" },
   x = { "<cmd>ChatGPTRun explain_code<CR>", "Explain Code" },
   r = { "<cmd>ChatGPTRun roxygen_edit<CR>", "Roxygen Edit" },
-  l = { "<cmd>ChatGPTRun code_readability_analysis<CR>", "Code Readability Analysis" },Analysis" },
+  l = { "<cmd>ChatGPTRun code_readability_analysis<CR>", "Code Readability Analysis" },
+  },
 ```
 
 [!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/jackMort)
