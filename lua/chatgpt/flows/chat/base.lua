@@ -536,7 +536,7 @@ end
 
 function Chat:set_cursor(pos)
   if self:is_buf_visiable() then
-    vim.api.nvim_win_set_cursor(self.chat_window.winid, pos)
+    pcall(vim.api.nvim_win_set_cursor, self.chat_window.winid, pos)
   end
 end
 
