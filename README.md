@@ -229,7 +229,7 @@ API key
 
 ```lua
 require("chatgpt").setup({
-    api_key_cmd = "gpg --decrypt ~/secret.txt.gpg 2>/dev/null"
+    api_key_cmd = "gpg --decrypt ~/secret.txt.gpg"
 })
 ```
 
