@@ -228,8 +228,9 @@ The following configuration would use GPG to decrypt a local file containing the
 API key
 
 ```lua
+local home = vim.fn.expand("$HOME")
 require("chatgpt").setup({
-    api_key_cmd = "gpg --decrypt ~/secret.txt.gpg 2>/dev/null"
+    api_key_cmd = "gpg --decrypt " .. home .. "/secret.txt.gpg"
 })
 ```
 
