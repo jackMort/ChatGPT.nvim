@@ -250,7 +250,7 @@ model.
 #### `ChatGPTEditWithInstructions`
 `ChatGPTEditWithInstructions` command which opens interactive window to edit selected text or whole window using the `code-davinci-edit-002` model (GPT 3.5 fine-tuned for coding).
 
-You can map it usig the Lua API, e.g. using `which-key.nvim`:
+You can map it using the Lua API, e.g. using `which-key.nvim`:
 ```lua
 local chatgpt = require("chatgpt")
 wk.register({
