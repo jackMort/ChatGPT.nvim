@@ -5,9 +5,14 @@ local logger = require("chatgpt.common.logger")
 local Api = {}
 
 -- API URL
-Api.COMPLETIONS_URL = "https://api.openai.com/v1/completions"
-Api.CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions"
-Api.EDITS_URL = "https://api.openai.com/v1/edits"
+local base_url = os.getenv("OPENAI_API_PROXY")
+if not base_url then
+  base_url = "https://api.openai.com"
+end
+
+Api.COMPLETIONS_URL = base_url .. "/v1/completions"
+Api.CHAT_COMPLETIONS_URL = base_url .. "/v1/chat/completions"
+Api.EDITS_URL = base_url .. "/v1/edits"
 
 function Api.completions(custom_params, cb)
   local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
