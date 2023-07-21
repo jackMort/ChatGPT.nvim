@@ -10,6 +10,23 @@ local Utils = require("chatgpt.utils")
 local Spinner = require("chatgpt.spinner")
 local Settings = require("chatgpt.settings")
 
+-- I add message here, i don't know how to implement history:( 
+-- https://openai.com/blog/gpt-4-api-general-availability
+local messages = {
+	{
+		role = "system",
+		content = "Apply the change requested by the user to the code. code only, you are acting like a editor, just output things requested",
+	},
+	{
+		role = "user",
+		content = "",
+	},
+	{
+		role = "user",
+		content = "",
+	}
+}
+
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
 local instructions_input, layout, input_window, output_window, output, timer, filetype, bufnr, extmark_id
@@ -84,7 +101,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   else
     visual_lines, start_row, start_col, end_row, end_col = unpack(selection)
   end
-  local openai_params = Config.options.openai_edit_params
+  local openai_params = Config.options.openai_params
   local settings_panel = Settings.get_settings_panel("edits", openai_params)
   input_window = Popup(Config.options.popup_window)
   output_window = Popup(Config.options.popup_window)
@@ -101,7 +118,11 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
       show_progress()
 
       local input = table.concat(vim.api.nvim_buf_get_lines(input_window.bufnr, 0, -1, false), "\n")
-      local params = vim.tbl_extend("keep", { input = input, instruction = instruction }, Settings.params)
+	  -- deep copy the messages so it could be reused (maybe not needed)
+	  local msg = vim.deepcopy(messages)
+	  msg[2].content = input
+	  msg[3].content = instruction
+      local params = vim.tbl_extend("keep", { messages = msg }, Settings.params)
       Api.edits(params, function(output_txt, usage)
         hide_progress()
         local nlcount = Utils.count_newlines_at_end(input)
