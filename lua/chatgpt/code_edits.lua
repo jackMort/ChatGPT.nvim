@@ -15,15 +15,15 @@ local Settings = require("chatgpt.settings")
 local messages = {
 	{
 		role = "system",
-		content = "Apply the change requested by the user to the code. code only, you are acting like a editor, just output things requested",
+		content = "You are an AI code editor, capable of understanding and editing code from prompts in various languages. Please make the requested changes to the following code, regardless of the input language. Return only the modified code, with no additional comments or outputs.",
 	},
 	{
-		role = "user",
+		role = "system",
 		content = "",
 	},
 	{
 		role = "user",
-		content = "",
+		content = "Only return the edited code, with no explanations or comments.",
 	}
 }
 
@@ -121,7 +121,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
 	  -- deep copy the messages so it could be reused (maybe not needed)
 	  local msg = vim.deepcopy(messages)
 	  msg[2].content = input
-	  msg[3].content = instruction
+	  msg[3].content = instruction .. msg[3].content
       local params = vim.tbl_extend("keep", { messages = msg }, Settings.params)
       Api.edits(params, function(output_txt, usage)
         hide_progress()
