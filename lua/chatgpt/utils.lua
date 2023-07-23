@@ -129,4 +129,21 @@ function M.calculate_percentage_width(percentage)
   return width
 end
 
+function M.match_indentation(input, output)
+    local input_indent = input:match("\n*([^\n]*)"):match("^(%s*)")
+    local output_indent = output:match("\n*([^\n]*)"):match("^(%s*)")
+    if input_indent == output_indent then
+        return output
+    end
+    local lines = {}
+    for line in output:gmatch("([^\n]*\n?)") do
+        if line:match("^%s*$") then
+            table.insert(lines, line)
+        else
+            table.insert(lines, input_indent .. line)
+        end
+    end
+    return table.concat(lines)
+end
+
 return M

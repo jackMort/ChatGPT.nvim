@@ -126,9 +126,15 @@ Api.handle_response = vim.schedule_wrap(function(response, exit_code, cb)
   else
     local message = json.choices[1].message
     if message ~= nil then
-      local response_text = json.choices[1].message.content
-      if type(response_text) == "string" and response_text ~= "" then
-        cb(response_text, json.usage)
+      local message_response
+      local first_message = json.choices[1].message
+      if first_message.function_call then
+        message_response = vim.fn.json_decode(first_message.function_call.arguments)
+      else
+        message_response = first_message.content
+      end
+      if (type(message_response) == "string" and message_response ~= "") or type(message_response) == "table" then
+        cb(message_response, json.usage)
       else
         cb("...")
       end
