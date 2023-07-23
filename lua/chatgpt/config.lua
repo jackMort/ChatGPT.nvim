@@ -140,12 +140,14 @@ function M.defaults()
       top_p = 1,
       n = 1,
     },
-    -- openai_edit_params = {
-    --   model = "code-davinci-edit-001",
-    --   temperature = 0,
-    --   top_p = 1,
-    --   n = 1,
-    -- },
+    openai_edit_params = {
+      model = "gpt-3.5-turbo",
+      frequency_penalty = 0,
+      presence_penalty = 0,
+      temperature = 0,
+      top_p = 1,
+      n = 1,
+    },
     actions_paths = {},
     show_quickfixes_cmd = "Trouble quickfix",
     predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
@@ -159,9 +161,6 @@ M.namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
 function M.setup(options)
   options = options or {}
-  if options.openai_edit_params ~= nil then 
-	vim.notify("since edit api is deprecated, remove the \"openai_edit_params\" field to remove this notice", vim.log.levels.WARN)
-  end
   M.options = vim.tbl_deep_extend("force", {}, M.defaults(), options)
 end
 

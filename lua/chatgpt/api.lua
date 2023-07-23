@@ -73,10 +73,10 @@ end
 
 function Api.edits(custom_params, cb)
   local params = vim.tbl_extend("keep", custom_params, Config.options.openai_edit_params)
-  if params.model == "text-davinci-edit-001" or params.model == "code-davinci-edit-001" then 
-	vim.notify("Edit models are deprecated", vim.log.levels.WARN)
-  	Api.make_call(Api.EDITS_URL, params, cb)
-	return
+  if params.model == "text-davinci-edit-001" or params.model == "code-davinci-edit-001" then
+    vim.notify("Edit models are deprecated", vim.log.levels.WARN)
+    Api.make_call(Api.EDITS_URL, params, cb)
+    return
   end
 
   Api.make_call(Api.CHAT_COMPLETIONS_URL, params, cb)
@@ -91,7 +91,6 @@ function Api.make_call(url, params, cb)
   end
   f:write(vim.fn.json_encode(params))
   f:close()
-  print()
   Api.job = job
     :new({
       command = "curl",
