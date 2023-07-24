@@ -119,6 +119,7 @@ function M.defaults()
       },
       submit = "<C-Enter>",
       submit_n = "<Enter>",
+      max_visible_lines = nil
     },
     settings_window = {
       border = {
