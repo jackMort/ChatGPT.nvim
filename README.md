@@ -109,6 +109,7 @@ use({
         toggle_settings = "<C-o>",
         toggle_message_role = "<C-r>",
         toggle_system_role_open = "<C-s>",
+        stop_generating = "<C-x>",
       },
     },
     popup_layout = {
