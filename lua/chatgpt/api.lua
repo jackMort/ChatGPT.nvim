@@ -4,11 +4,6 @@ local logger = require("chatgpt.common.logger")
 
 local Api = {}
 
--- API URL
-Api.COMPLETIONS_URL = "https://api.openai.com/v1/completions"
-Api.CHAT_COMPLETIONS_URL = "https://api.openai.com/v1/chat/completions"
-Api.EDITS_URL = "https://api.openai.com/v1/edits"
-
 function Api.completions(custom_params, cb)
   local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
   Api.make_call(Api.COMPLETIONS_URL, params, cb)
@@ -160,37 +155,59 @@ local splitCommandIntoTable = function(command)
   return cmd
 end
 
-local loadApiKey = function(command)
+local function loadConfigFromCommand(command, optionName, callback, defaultValue)
   local cmd = splitCommandIntoTable(command)
-  -- API KEY
   job
     :new({
       command = cmd[1],
       args = vim.list_slice(cmd, 2, #cmd),
       on_exit = function(j, exit_code)
         if exit_code ~= 0 then
-          logger.warn("Config 'api_key_cmd' did not return a value when executed")
+          logger.warn("Config '" .. optionName .. "' did not return a value when executed")
           return
         end
-        Api.OPENAI_API_KEY = j:result()[1]:gsub("%s+$", "")
+        local value = j:result()[1]:gsub("%s+$", "")
+        if value ~= nil and value ~= "" then
+          callback(value)
+        elseif defaultValue ~= nil and defaultValue ~= "" then
+          callback(defaultValue)
+        end
       end,
     })
     :start()
 end
 
-function Api.setup()
-  Api.OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-  if not Api.OPENAI_API_KEY then
-    if Config.options.api_key_cmd ~= nil and Config.options.api_key_cmd ~= "" then
-      loadApiKey(Config.options.api_key_cmd)
+local function loadConfigFromEnv(envName, configName)
+  local variable = os.getenv(envName)
+  if not variable then
+    return
+  end
+  Api[configName] = variable:gsub("%s+$", "")
+end
+
+local function loadApiConfig(envName, configName, optionName, callback, defaultValue)
+  loadConfigFromEnv(envName, configName)
+  if not Api[configName] then
+    if Config.options[optionName] ~= nil and Config.options[optionName] ~= "" then
+      loadConfigFromCommand(Config.options[optionName], optionName, callback, defaultValue)
     else
-      logger.warn("OPENAI_API_KEY environment variable not set")
+      logger.warn(envName .. " environment variable not set")
       return
     end
   end
-  if Api.OPENAI_API_KEY ~= nil and Api.OPENAI_API_KEY ~= "" then
-    Api.OPENAI_API_KEY = Api.OPENAI_API_KEY:gsub("%s+$", "")
-  end
+end
+
+function Api.setup()
+  loadApiConfig("OPENAI_API_HOST", "OPENAI_API_HOST", "api_host_cmd", function(value)
+    Api.OPENAI_API_HOST = value
+    Api.COMPLETIONS_URL = "https://" .. Api.OPENAI_API_HOST .. "/v1/completions"
+    Api.CHAT_COMPLETIONS_URL = "https://" .. Api.OPENAI_API_HOST .. "/v1/chat/completions"
+    Api.EDITS_URL = "https://" .. Api.OPENAI_API_HOST .. "/v1/edits"
+  end, "api.openai.com")
+
+  loadApiConfig("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(value)
+    Api.OPENAI_API_KEY = value
+  end)
 end
 
 function Api.exec(cmd, args, on_stdout_chunk, on_complete, should_stop, on_stop)
