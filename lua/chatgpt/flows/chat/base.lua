@@ -686,6 +686,15 @@ function Chat:open()
       self:set_system_message(text)
     end,
   })
+  self.stop = false
+  self.should_stop = function()
+    if self.stop then
+      self.stop = false
+      return true
+    else
+      return false
+    end
+  end
   self.chat_input = ChatInput(Config.options.popup_input, {
     prompt = Config.options.popup_input.prompt,
     on_close = function()
@@ -712,7 +721,7 @@ function Chat:open()
         local params = vim.tbl_extend("keep", { stream = true, messages = self:toMessages() }, Settings.params)
         Api.chat_completions(params, function(answer, state)
           self:addAnswerPartial(answer, state)
-        end)
+        end, self.should_stop)
       end
     end,
   })
@@ -755,6 +764,11 @@ function Chat:open()
   -- scroll up
   self:map(Config.options.chat.keymaps.scroll_up, function()
     self:scroll(-1)
+  end, { self.chat_input })
+
+  -- stop generating
+  self:map(Config.options.chat.keymaps.stop_generating, function()
+    self.stop = true
   end, { self.chat_input })
 
   -- close

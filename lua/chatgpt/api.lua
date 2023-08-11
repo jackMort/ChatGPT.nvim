@@ -14,7 +14,7 @@ function Api.completions(custom_params, cb)
   Api.make_call(Api.COMPLETIONS_URL, params, cb)
 end
 
-function Api.chat_completions(custom_params, cb)
+function Api.chat_completions(custom_params, cb, should_stop)
   local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
   local stream = params.stream or false
   if stream then
@@ -23,49 +23,58 @@ function Api.chat_completions(custom_params, cb)
 
     cb = vim.schedule_wrap(cb)
 
-    Api.exec("curl", {
-      "--silent",
-      "--show-error",
-      "--no-buffer",
-      Api.CHAT_COMPLETIONS_URL,
-      "-H",
-      "Content-Type: application/json",
-      "-H",
-      "Authorization: Bearer " .. Api.OPENAI_API_KEY,
-      "-d",
-      vim.json.encode(params),
-    }, function(chunk)
-      local ok, json = pcall(vim.json.decode, chunk)
-      if ok and json ~= nil then
-        if json.error ~= nil then
-          cb(json.error.message, "ERROR")
-          return
+    Api.exec(
+      "curl",
+      {
+        "--silent",
+        "--show-error",
+        "--no-buffer",
+        Api.CHAT_COMPLETIONS_URL,
+        "-H",
+        "Content-Type: application/json",
+        "-H",
+        "Authorization: Bearer " .. Api.OPENAI_API_KEY,
+        "-d",
+        vim.json.encode(params),
+      },
+      function(chunk)
+        local ok, json = pcall(vim.json.decode, chunk)
+        if ok and json ~= nil then
+          if json.error ~= nil then
+            cb(json.error.message, "ERROR")
+            return
+          end
         end
-      end
-      for line in chunk:gmatch("[^\n]+") do
-        local raw_json = string.gsub(line, "^data: ", "")
-        if raw_json == "[DONE]" then
-          cb(raw_chunks, "END")
-        else
-          ok, json = pcall(vim.json.decode, raw_json)
-          if ok and json ~= nil then
-            if
-              json
-              and json.choices
-              and json.choices[1]
-              and json.choices[1].delta
-              and json.choices[1].delta.content
-            then
-              cb(json.choices[1].delta.content, state)
-              raw_chunks = raw_chunks .. json.choices[1].delta.content
-              state = "CONTINUE"
+        for line in chunk:gmatch("[^\n]+") do
+          local raw_json = string.gsub(line, "^data: ", "")
+          if raw_json == "[DONE]" then
+            cb(raw_chunks, "END")
+          else
+            ok, json = pcall(vim.json.decode, raw_json)
+            if ok and json ~= nil then
+              if
+                json
+                and json.choices
+                and json.choices[1]
+                and json.choices[1].delta
+                and json.choices[1].delta.content
+              then
+                cb(json.choices[1].delta.content, state)
+                raw_chunks = raw_chunks .. json.choices[1].delta.content
+                state = "CONTINUE"
+              end
             end
           end
         end
+      end,
+      function(err, _)
+        cb(err, "ERROR")
+      end,
+      should_stop,
+      function()
+        cb(raw_chunks, "END")
       end
-    end, function(err, _)
-      cb(err, "ERROR")
-    end)
+    )
   else
     Api.make_call(Api.CHAT_COMPLETIONS_URL, params, cb)
   end
@@ -184,14 +193,25 @@ function Api.setup()
   end
 end
 
-function Api.exec(cmd, args, on_stdout_chunk, on_complete)
+function Api.exec(cmd, args, on_stdout_chunk, on_complete, should_stop, on_stop)
   local stdout = vim.loop.new_pipe()
   local stderr = vim.loop.new_pipe()
   local stderr_chunks = {}
 
+  local handle, err
   local function on_stdout_read(_, chunk)
     if chunk then
       vim.schedule(function()
+        if should_stop and should_stop() then
+          if handle ~= nil then
+            handle:kill(2) -- send SIGINT
+            stdout:close()
+            stderr:close()
+            handle:close()
+            on_stop()
+          end
+          return
+        end
         on_stdout_chunk(chunk)
       end)
     end
@@ -203,7 +223,6 @@ function Api.exec(cmd, args, on_stdout_chunk, on_complete)
     end
   end
 
-  local handle, err
   handle, err = vim.loop.spawn(cmd, {
     args = args,
     stdio = { nil, stdout, stderr },
