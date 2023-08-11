@@ -185,7 +185,21 @@ local function loadConfigFromEnv(envName, configName)
   Api[configName] = variable:gsub("%s+$", "")
 end
 
-local function loadApiConfig(envName, configName, optionName, callback, defaultValue)
+local function loadApiHost(envName, configName, optionName, callback, defaultValue)
+  loadConfigFromEnv(envName, configName)
+  if Api[configName] then
+    callback(Api[configName])
+  else
+    if Config.options[optionName] ~= nil and Config.options[optionName] ~= "" then
+      loadConfigFromCommand(Config.options[optionName], optionName, callback, defaultValue)
+    else
+      logger.warn(envName .. " environment variable not set")
+      return
+    end
+  end
+end
+
+local function loadApiKey(envName, configName, optionName, callback, defaultValue)
   loadConfigFromEnv(envName, configName)
   if not Api[configName] then
     if Config.options[optionName] ~= nil and Config.options[optionName] ~= "" then
@@ -198,14 +212,14 @@ local function loadApiConfig(envName, configName, optionName, callback, defaultV
 end
 
 function Api.setup()
-  loadApiConfig("OPENAI_API_HOST", "OPENAI_API_HOST", "api_host_cmd", function(value)
+  loadApiHost("OPENAI_API_HOST", "OPENAI_API_HOST", "api_host_cmd", function(value)
     Api.OPENAI_API_HOST = value
     Api.COMPLETIONS_URL = "https://" .. Api.OPENAI_API_HOST .. "/v1/completions"
     Api.CHAT_COMPLETIONS_URL = "https://" .. Api.OPENAI_API_HOST .. "/v1/chat/completions"
     Api.EDITS_URL = "https://" .. Api.OPENAI_API_HOST .. "/v1/edits"
   end, "api.openai.com")
 
-  loadApiConfig("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(value)
+  loadApiKey("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(value)
     Api.OPENAI_API_KEY = value
   end)
 end
