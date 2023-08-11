@@ -119,6 +119,7 @@ function M.defaults()
       },
       submit = "<C-Enter>",
       submit_n = "<Enter>",
+      max_visible_lines = 20,
     },
     settings_window = {
       border = {

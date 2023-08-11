@@ -97,6 +97,10 @@ function Input:init(popup_options, options)
   if options.on_change then
     props.on_change = function()
       local lines = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false)
+      local max_lines = Config.options.popup_input.max_visible_lines -- Set the maximum number of lines here
+      if max_lines ~= nil and #lines > max_lines then
+        lines = { unpack(lines, 1, max_lines) } -- Only keep the first max_lines lines
+      end
       if #lines == 1 then
         vim.fn.sign_place(0, "my_group", "singleprompt_sign", self.bufnr, { lnum = 1, priority = 10 })
       else
