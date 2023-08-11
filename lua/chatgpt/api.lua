@@ -193,8 +193,7 @@ local function loadApiHost(envName, configName, optionName, callback, defaultVal
     if Config.options[optionName] ~= nil and Config.options[optionName] ~= "" then
       loadConfigFromCommand(Config.options[optionName], optionName, callback, defaultValue)
     else
-      logger.warn(envName .. " environment variable not set")
-      return
+      callback(defaultValue)
     end
   end
 end
