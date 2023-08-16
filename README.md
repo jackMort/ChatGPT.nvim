@@ -324,7 +324,7 @@ An example of custom action may look like this: (`#` marks comments)
   }
 }
 ```
-The `edit` strategy consists in showing the output side by side with the iput and
+The `edit` strategy consists in showing the output side by side with the input and
 available for further editing requests.
 For now, `edit` strategy is implemented for `chat` type only.
 
