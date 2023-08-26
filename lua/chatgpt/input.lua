@@ -118,6 +118,8 @@ function Input:mount()
 
   Input.super.mount(self)
 
+  vim.api.nvim_buf_set_option(0, "ft", "chatgpt-input")
+
   if props.on_change then
     vim.api.nvim_buf_attach(self.bufnr, false, {
       on_lines = props.on_change,
