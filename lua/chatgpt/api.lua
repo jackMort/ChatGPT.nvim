@@ -77,7 +77,13 @@ end
 
 function Api.edits(custom_params, cb)
   local params = vim.tbl_extend("keep", custom_params, Config.options.openai_edit_params)
-  Api.make_call(Api.EDITS_URL, params, cb)
+  if params.model == "text-davinci-edit-001" or params.model == "code-davinci-edit-001" then
+    vim.notify("Edit models are deprecated", vim.log.levels.WARN)
+    Api.make_call(Api.EDITS_URL, params, cb)
+    return
+  end
+
+  Api.make_call(Api.CHAT_COMPLETIONS_URL, params, cb)
 end
 
 function Api.make_call(url, params, cb)
@@ -124,9 +130,15 @@ Api.handle_response = vim.schedule_wrap(function(response, exit_code, cb)
   else
     local message = json.choices[1].message
     if message ~= nil then
-      local response_text = json.choices[1].message.content
-      if type(response_text) == "string" and response_text ~= "" then
-        cb(response_text, json.usage)
+      local message_response
+      local first_message = json.choices[1].message
+      if first_message.function_call then
+        message_response = vim.fn.json_decode(first_message.function_call.arguments)
+      else
+        message_response = first_message.content
+      end
+      if (type(message_response) == "string" and message_response ~= "") or type(message_response) == "table" then
+        cb(message_response, json.usage)
       else
         cb("...")
       end
