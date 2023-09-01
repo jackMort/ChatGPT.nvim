@@ -37,11 +37,19 @@ EDIT_FUNCTION_ARGUMENTS = {
 }
 
 -- https://openai.com/blog/gpt-4-api-general-availability
-local build_edit_messages = function(input, instructions)
+local build_edit_messages = function(input, instructions, use_functions_for_edits)
+  local system_message_content
+  if use_functions_for_edits then
+    system_message_content =
+      "Apply the changes requested by the user to the code. Output ONLY the changed code and a brief description of the edits. DO NOT wrap the code in a formatting block. DO NOT provide other text or explanation."
+  else
+    system_message_content =
+      "Apply the changes requested by the user to the code. Output ONLY the changed code. DO NOT wrap the code in a formatting block. DO NOT provide other text or explanation."
+  end
   local messages = {
     {
       role = "system",
-      content = "Apply the changes requested by the user to the code. Output ONLY the changed code and a brief description of the edits. DO NOT wrap the code in a formatting block. DO NOT provide other text or explanation.",
+      content = system_message_content,
     },
     {
       role = "user",
@@ -147,7 +155,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
       show_progress()
 
       local input = table.concat(vim.api.nvim_buf_get_lines(input_window.bufnr, 0, -1, false), "\n")
-      local messages = build_edit_messages(input, instruction)
+      local messages = build_edit_messages(input, instruction, use_functions_for_edits)
       local function_params = use_functions_for_edits and EDIT_FUNCTION_ARGUMENTS or {}
       local params = vim.tbl_extend("keep", { messages = messages }, Settings.params, function_params)
       Api.edits(params, function(response, usage)
