@@ -12,28 +12,28 @@ local Settings = require("chatgpt.settings")
 
 EDIT_FUNCTION_ARGUMENTS = {
   function_call = {
-    name = 'apply_code_changes'
+    name = "apply_code_changes",
   },
   functions = {
     {
-      name = 'apply_code_changes',
-      description = 'Apply changes to the provided code based on the provided instructions, and briefly describe the edits.',
+      name = "apply_code_changes",
+      description = "Apply changes to the provided code based on the provided instructions, and briefly describe the edits.",
       parameters = {
-        type = 'object',
+        type = "object",
         properties = {
           changed_code = {
-            type = 'string',
-            description = 'The changed code.'
+            type = "string",
+            description = "The changed code.",
           },
           applied_changes = {
-            type = 'string',
-            description = 'Brief descriptions of the edits applied to the original code, formatted as a bullet list.'
-          }
-        }
+            type = "string",
+            description = "Brief descriptions of the edits applied to the original code, formatted as a bullet list.",
+          },
+        },
       },
-      required = {'changed_code', 'applied_changes'},
-    }
-  }
+      required = { "changed_code", "applied_changes" },
+    },
+  },
 }
 
 -- https://openai.com/blog/gpt-4-api-general-availability
@@ -50,7 +50,7 @@ local build_edit_messages = function(input, instructions)
     {
       role = "user",
       content = instructions,
-    }
+    },
   }
   return messages
 end
