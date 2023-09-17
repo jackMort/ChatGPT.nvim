@@ -5,7 +5,7 @@
       "template": "Complete the following code written in {{lang}} by pasting the existing code and continuing it.\n\nExisting code:\n```{{filetype}}\n{{input}}\n```\n\n```{{filetype}}\n",
       "strategy": "replace",
       "params": {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4",
         "stop": [
           "```"
         ]
@@ -18,7 +18,7 @@
       "template": "Correct this to standard {{lang}}:\n\n{{input}}",
       "strategy": "replace",
       "params": {
-        "model": "gpt-3.5-turbo"
+        "model": "gpt-4"
       }
     },
     "args": {
@@ -35,7 +35,7 @@
       "template": "Translate this into {{lang}}:\n\n{{input}}",
       "strategy": "replace",
       "params": {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4",
         "temperature": 0.3
       }
     },
@@ -53,7 +53,7 @@
       "template": "Extract the main keywords from the following text.\n\n{{input}}",
       "strategy": "replace",
       "params": {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4",
         "temperature": 0.5,
         "frequency_penalty": 0.8
       }
@@ -65,7 +65,7 @@
       "template": "# An elaborate, high quality docstring for the above function:\n# Writing a good docstring\n\nThis is an example of writing a really good docstring that follows a best practice for the given language. Attention is paid to detailing things like\n* parameter and return types (if applicable)\n* any errors that might be raised or returned, depending on the language\n\nI received the following code:\n\n```{{filetype}}\n{{input}}\n```\n\nThe code with a really good docstring added is below:\n\n```{{filetype}}",
       "strategy": "edit",
       "params": {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4",
         "stop": [
           "```"
         ]
@@ -78,7 +78,7 @@
       "template": "Implement tests for the following code.\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nTests:\n```{{filetype}}",
       "strategy": "append",
       "params": {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4",
         "stop": [
           "```"
         ]
@@ -91,7 +91,7 @@
       "template": "Optimize the following code.\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nOptimized version:\n```{{filetype}}",
       "strategy": "edit",
       "params": {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4",
         "stop": [
           "```"
         ]
@@ -104,7 +104,7 @@
       "template": "Summarize the following text.\n\nText:\n\"\"\"\n{{input}}\n\"\"\"\n\nSummary:",
       "strategy": "edit",
       "params": {
-        "model": "gpt-3.5-turbo"
+        "model": "gpt-4"
       }
     }
   },
@@ -114,7 +114,7 @@
       "template": "Fix bugs in the below code\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nFixed code:\n```{{filetype}}",
       "strategy": "edit",
       "params": {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4",
         "stop": [
           "```"
         ]
@@ -128,7 +128,7 @@
       "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nUse markdown format.\nHere's what the above code is doing:\n```",
       "strategy": "display",
       "params": {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4",
         "stop": [
           "```"
         ]
@@ -141,7 +141,7 @@
       "template": "Insert a roxygen skeleton to document this R function:\n\n```{{filetype}}\n[insert]\n\n{{input}}\n\n```",
       "strategy": "prepend",
       "params": {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4",
         "temperature": 0.5,
         "max_tokens": 1024
       }
@@ -153,7 +153,7 @@
       "strategy": "quick_fix",
       "template": "{{input}}",
       "params": {
-        "model": "gpt-3.5-turbo",
+        "model": "gpt-4",
         "max_tokens": 2048,
         "messages": [
           {
