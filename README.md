@@ -240,6 +240,8 @@ require("chatgpt").setup({
 })
 ```
 
+Note that the `api_key_cmd` arguments are split by whitespace. If you need whitespace inside an argument (for example to reference a path with spaces), you can wrap it in a separate script and use that the executable.
+
 ## Usage
 
 Plugin exposes following commands:
