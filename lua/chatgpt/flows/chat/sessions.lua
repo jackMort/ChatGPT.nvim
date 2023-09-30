@@ -56,7 +56,7 @@ M.render_list = function()
 
   local details = {}
   for i, session in pairs(M.sessions) do
-    local icon = i == M.active_line and "  " or "  "
+    local icon = i == M.active_line and " 󰄵 " or " 󰄱 "
     local cls = i == M.active_line and "ErrorMsg" or "Comment"
     local name = Utils.trimText(session.name, 30)
     local vt = {
