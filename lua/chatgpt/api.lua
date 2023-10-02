@@ -234,12 +234,16 @@ local function loadAzureConfigs()
   end, "2023-05-15")
 
   if Api["OPENAI_API_BASE"] and Api["OPENAI_API_AZURE_ENGINE"] then
-    Api.COMPLETIONS_URL = Api.OPENAI_API_BASE ..
-        "/openai/deployments/" .. Api.OPENAI_API_AZURE_ENGINE ..
-        "/completions?api-version=" .. Api.OPENAI_API_AZURE_VERSION
-    Api.CHAT_COMPLETIONS_URL = Api.OPENAI_API_BASE ..
-        "/openai/deployments/" .. Api.OPENAI_API_AZURE_ENGINE ..
-        "/chat/completions?api-version=" .. Api.OPENAI_API_AZURE_VERSION
+    Api.COMPLETIONS_URL = Api.OPENAI_API_BASE
+      .. "/openai/deployments/"
+      .. Api.OPENAI_API_AZURE_ENGINE
+      .. "/completions?api-version="
+      .. Api.OPENAI_API_AZURE_VERSION
+    Api.CHAT_COMPLETIONS_URL = Api.OPENAI_API_BASE
+      .. "/openai/deployments/"
+      .. Api.OPENAI_API_AZURE_ENGINE
+      .. "/chat/completions?api-version="
+      .. Api.OPENAI_API_AZURE_VERSION
   end
 end
 
