@@ -78,9 +78,9 @@ local display_input_suffix = function(suffix)
 
   extmark_id = vim.api.nvim_buf_set_extmark(instructions_input.bufnr, namespace_id, 0, -1, {
     virt_text = {
-      { "", "ChatGPTTotalTokensBorder" },
+      { Config.options.chat.border_left_sign, "ChatGPTTotalTokensBorder" },
       { "" .. suffix, "ChatGPTTotalTokens" },
-      { "", "ChatGPTTotalTokensBorder" },
+      { Config.options.chat.border_right_sign, "ChatGPTTotalTokensBorder" },
       { " ", "" },
     },
     virt_text_pos = "right_align",

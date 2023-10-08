@@ -26,8 +26,13 @@ function M.defaults()
       loading_text = "Loading, please wait ...",
       question_sign = "", -- 🙂
       answer_sign = "ﮧ", -- 🤖
+      border_left_sign = "",
+      border_right_sign = "",
       max_line_length = 120,
       sessions_window = {
+        active_sign = "  ",
+        inactive_sign = "  ",
+        current_line_sign = "",
         border = {
           style = "rounded",
           text = {
@@ -123,6 +128,7 @@ function M.defaults()
       max_visible_lines = 20,
     },
     settings_window = {
+      setting_sign = "  ",
       border = {
         style = "rounded",
         text = {
