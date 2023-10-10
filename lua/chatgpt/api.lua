@@ -28,7 +28,7 @@ function Api.chat_completions(custom_params, cb, should_stop)
         "-H",
         "Content-Type: application/json",
         "-H",
-        "Authorization: Bearer " .. Api.OPENAI_API_KEY,
+        Api.AUTHORIZATION_HEADER,
         "-d",
         vim.json.encode(params),
       },
@@ -103,7 +103,7 @@ function Api.make_call(url, params, cb)
         "-H",
         "Content-Type: application/json",
         "-H",
-        "Authorization: Bearer " .. Api.OPENAI_API_KEY,
+        Api.AUTHORIZATION_HEADER,
         "-d",
         "@" .. TMP_MSG_FILENAME,
       },
@@ -222,6 +222,31 @@ local function loadApiKey(envName, configName, optionName, callback, defaultValu
   end
 end
 
+local function loadAzureConfigs()
+  loadApiKey("OPENAI_API_BASE", "OPENAI_API_BASE", "azure_api_base_cmd", function(value)
+    Api.OPENAI_API_BASE = value
+  end)
+  loadApiKey("OPENAI_API_AZURE_ENGINE", "OPENAI_API_AZURE_ENGINE", "azure_api_engine_cmd", function(value)
+    Api.OPENAI_API_AZURE_ENGINE = value
+  end)
+  loadApiHost("OPENAI_API_AZURE_VERSION", "OPENAI_API_AZURE_VERSION", "azure_api_version_cmd", function(value)
+    Api.OPENAI_API_AZURE_VERSION = value
+  end, "2023-05-15")
+
+  if Api["OPENAI_API_BASE"] and Api["OPENAI_API_AZURE_ENGINE"] then
+    Api.COMPLETIONS_URL = Api.OPENAI_API_BASE
+      .. "/openai/deployments/"
+      .. Api.OPENAI_API_AZURE_ENGINE
+      .. "/completions?api-version="
+      .. Api.OPENAI_API_AZURE_VERSION
+    Api.CHAT_COMPLETIONS_URL = Api.OPENAI_API_BASE
+      .. "/openai/deployments/"
+      .. Api.OPENAI_API_AZURE_ENGINE
+      .. "/chat/completions?api-version="
+      .. Api.OPENAI_API_AZURE_VERSION
+  end
+end
+
 function Api.setup()
   loadApiHost("OPENAI_API_HOST", "OPENAI_API_HOST", "api_host_cmd", function(value)
     Api.OPENAI_API_HOST = value
@@ -233,6 +258,14 @@ function Api.setup()
   loadApiKey("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(value)
     Api.OPENAI_API_KEY = value
   end)
+
+  loadConfigFromEnv("OPENAI_API_TYPE", "OPENAI_API_TYPE")
+  if Api["OPENAI_API_TYPE"] == "azure" then
+    loadAzureConfigs()
+    Api.AUTHORIZATION_HEADER = "api-key: " .. Api.OPENAI_API_KEY
+  else
+    Api.AUTHORIZATION_HEADER = "Authorization: Bearer " .. Api.OPENAI_API_KEY
+  end
 end
 
 function Api.exec(cmd, args, on_stdout_chunk, on_complete, should_stop, on_stop)

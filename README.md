@@ -32,6 +32,13 @@ Custom OpenAI API host with the configuration option `api_host_cmd` or
 environment variable called `$OPENAI_API_HOST`. It's useful if you can't access
 OpenAI directly
 
+For Azure deployments, you also need to set environment variables
+`$OPENAI_API_TYPE` to `azure`, `$OPENAI_API_BASE` to your own resource URL,
+e.g. `https://{your-resource-name}.openai.azure.com`, and `$OPENAI_API_AZURE_ENGINE`
+to your deployment ID. Optionally, if you need a different API version,
+set `$OPENAI_API_AZURE_VERSION` as well. Note that edit models have been deprecated
+so they might not work.
+
 ```lua
 -- Packer
 use({
