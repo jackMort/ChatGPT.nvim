@@ -78,7 +78,7 @@ M.get_settings_panel = function(type, default_params)
   for _, key in pairs(params_order) do
     if M.params[key] ~= nil then
       local vt = {
-        { "  " .. key .. ": ", "ErrorMsg" },
+        { Config.options.settings_window.setting_sign .. key .. ": ", "ErrorMsg" },
         { M.params[key] .. "", "Identifier" },
       }
       table.insert(details, vt)
@@ -112,7 +112,8 @@ M.get_settings_panel = function(type, default_params)
     M.open_edit_property_input(key, value, row, function(new_value)
       M.params[key] = params_validators[key](new_value)
       local vt = {
-        { "  " .. key .. ": ", "ErrorMsg" },
+
+        { Config.options.settings_window.setting_sign .. key .. ": ", "ErrorMsg" },
         { M.params[key] .. "", "Identifier" },
       }
       vim.api.nvim_buf_del_extmark(M.panel.bufnr, namespace_id, M.vts[row - 1])
@@ -152,7 +153,7 @@ M.open_edit_property_input = function(key, value, row, cb)
       winhighlight = "Normal:Normal,FloatBorder:Normal",
     },
   }, {
-    prompt = "  " .. key .. ": ",
+    prompt = Config.options.popup_input.prompt .. key .. ": ",
     default_value = "" .. value,
     on_submit = cb,
   })

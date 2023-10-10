@@ -56,11 +56,12 @@ M.render_list = function()
 
   local details = {}
   for i, session in pairs(M.sessions) do
-    local icon = i == M.active_line and "  " or "  "
+    local icon = i == M.active_line and Config.options.chat.sessions_window.active_sign
+      or Config.options.chat.sessions_window.inactive_sign
     local cls = i == M.active_line and "ErrorMsg" or "Comment"
     local name = Utils.trimText(session.name, 30)
     local vt = {
-      { (M.current_line == i and "" or " ") .. icon .. name, cls },
+      { (M.current_line == i and Config.options.chat.sessions_window.current_line_sign or " ") .. icon .. name, cls },
     }
     table.insert(details, vt)
   end

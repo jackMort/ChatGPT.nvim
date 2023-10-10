@@ -93,12 +93,12 @@ function Chat:render_role()
 
   self.role_extmark_id = vim.api.nvim_buf_set_extmark(self.chat_input.bufnr, Config.namespace_id, 0, 0, {
     virt_text = {
-      { "", "ChatGPTTotalTokensBorder" },
+      { Config.options.chat.border_left_sign, "ChatGPTTotalTokensBorder" },
       {
         string.upper(self.role),
         "ChatGPTTotalTokens",
       },
-      { "", "ChatGPTTotalTokensBorder" },
+      { Config.options.chat.border_right_sign, "ChatGPTTotalTokensBorder" },
       { " " },
     },
     virt_text_pos = "right_align",
@@ -438,12 +438,12 @@ function Chat:renderLastMessage()
       self.messages[self.selectedIndex].extmark_id =
         vim.api.nvim_buf_set_extmark(self.chat_window.bufnr, Config.namespace_id, msg.end_line + 1, 0, {
           virt_text = {
-            { "", "ChatGPTTotalTokensBorder" },
+            { Config.options.chat.border_left_sign, "ChatGPTTotalTokensBorder" },
             {
               "TOKENS: " .. msg.usage.total_tokens,
               "ChatGPTTotalTokens",
             },
-            { "", "ChatGPTTotalTokensBorder" },
+            { Config.options.chat.border_right_sign, "ChatGPTTotalTokensBorder" },
             { " ", "" },
           },
           virt_text_pos = "right_align",
@@ -554,9 +554,9 @@ function Chat:display_input_suffix(suffix)
   if suffix then
     self.extmark_id = vim.api.nvim_buf_set_extmark(self.chat_input.bufnr, Config.namespace_id, 0, -1, {
       virt_text = {
-        { "", "ChatGPTTotalTokensBorder" },
+        { Config.options.chat.border_left_sign, "ChatGPTTotalTokensBorder" },
         { "" .. suffix, "ChatGPTTotalTokens" },
-        { "", "ChatGPTTotalTokensBorder" },
+        { Config.options.chat.border_right_sign, "ChatGPTTotalTokensBorder" },
         { " ", "" },
       },
       virt_text_pos = "right_align",
