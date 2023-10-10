@@ -169,8 +169,7 @@ end
 
 local function loadConfigFromCommand(command, optionName, callback, defaultValue)
   local cmd = splitCommandIntoTable(command)
-  job
-    :new({
+  local j = job:new({
       command = cmd[1],
       args = vim.list_slice(cmd, 2, #cmd),
       on_exit = function(j, exit_code)
@@ -186,7 +185,8 @@ local function loadConfigFromCommand(command, optionName, callback, defaultValue
         end
       end,
     })
-    :start()
+  j:start()
+  j:wait() -- we should wait the job to finish. Otherwise we can't ensure correctly reading config before using it.
 end
 
 local function loadConfigFromEnv(envName, configName)
