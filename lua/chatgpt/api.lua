@@ -257,15 +257,14 @@ function Api.setup()
 
   loadApiKey("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(value)
     Api.OPENAI_API_KEY = value
+    loadConfigFromEnv("OPENAI_API_TYPE", "OPENAI_API_TYPE")
+    if Api["OPENAI_API_TYPE"] == "azure" then
+      loadAzureConfigs()
+      Api.AUTHORIZATION_HEADER = "api-key: " .. Api.OPENAI_API_KEY
+    else
+      Api.AUTHORIZATION_HEADER = "Authorization: Bearer " .. Api.OPENAI_API_KEY
+    end
   end)
-
-  loadConfigFromEnv("OPENAI_API_TYPE", "OPENAI_API_TYPE")
-  if Api["OPENAI_API_TYPE"] == "azure" then
-    loadAzureConfigs()
-    Api.AUTHORIZATION_HEADER = "api-key: " .. Api.OPENAI_API_KEY
-  else
-    Api.AUTHORIZATION_HEADER = "Authorization: Bearer " .. Api.OPENAI_API_KEY
-  end
 end
 
 function Api.exec(cmd, args, on_stdout_chunk, on_complete, should_stop, on_stop)
