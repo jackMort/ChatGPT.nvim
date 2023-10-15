@@ -200,7 +200,7 @@ local function loadConfigFromEnv(envName, configName, callback)
 end
 
 local function loadApiHost(envName, configName, optionName, callback, defaultValue)
-  loadConfigFromEnv(envName, configName)
+  loadConfigFromEnv(envName, configName, callback)
   if Api[configName] then
     callback(Api[configName])
   else
