@@ -196,7 +196,9 @@ local function loadConfigFromEnv(envName, configName, callback)
   end
   local value = variable:gsub("%s+$", "")
   Api[configName] = value
-  callback(value)
+  if callback then
+    callback(value)
+  end
 end
 
 local function loadApiHost(envName, configName, optionName, callback, defaultValue)
