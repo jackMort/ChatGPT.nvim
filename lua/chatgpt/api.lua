@@ -75,8 +75,25 @@ function Api.chat_completions(custom_params, cb, should_stop)
   end
 end
 
+function Api.convert_chat_to_instruct(params)
+  local messages = params.messages;
+  local prompt = "";
+  for _, message in ipairs(messages) do
+    prompt = string.format("%s|%s|\n%s\n\n", prompt, message.title or message.role, message.content)
+  end
+  prompt = prompt.."|answer|\n"
+  params.prompt = prompt
+  params.messages = nil
+  return params
+end
+
 function Api.edits(custom_params, cb)
   local params = vim.tbl_extend("keep", custom_params, Config.options.openai_edit_params)
+  if params.model == "gpt-3.5-turbo-instruct" then
+    local converted = Api.convert_chat_to_instruct(params)
+    Api.make_call(Api.COMPLETIONS_URL, converted, cb)
+    return
+  end
   if params.model == "text-davinci-edit-001" or params.model == "code-davinci-edit-001" then
     vim.notify("Edit models are deprecated", vim.log.levels.WARN)
     Api.make_call(Api.EDITS_URL, params, cb)
