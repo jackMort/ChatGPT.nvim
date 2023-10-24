@@ -170,21 +170,21 @@ end
 local function loadConfigFromCommand(command, optionName, callback, defaultValue)
   local cmd = splitCommandIntoTable(command)
   local j = job:new({
-      command = cmd[1],
-      args = vim.list_slice(cmd, 2, #cmd),
-      on_exit = function(j, exit_code)
-        if exit_code ~= 0 then
-          logger.warn("Config '" .. optionName .. "' did not return a value when executed")
-          return
-        end
-        local value = j:result()[1]:gsub("%s+$", "")
-        if value ~= nil and value ~= "" then
-          callback(value)
-        elseif defaultValue ~= nil and defaultValue ~= "" then
-          callback(defaultValue)
-        end
-      end,
-    })
+    command = cmd[1],
+    args = vim.list_slice(cmd, 2, #cmd),
+    on_exit = function(j, exit_code)
+      if exit_code ~= 0 then
+        logger.warn("Config '" .. optionName .. "' did not return a value when executed")
+        return
+      end
+      local value = j:result()[1]:gsub("%s+$", "")
+      if value ~= nil and value ~= "" then
+        callback(value)
+      elseif defaultValue ~= nil and defaultValue ~= "" then
+        callback(defaultValue)
+      end
+    end,
+  })
   j:start()
   j:wait() -- we should wait the job to finish. Otherwise we can't ensure correctly reading config before using it.
 end
