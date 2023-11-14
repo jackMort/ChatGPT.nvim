@@ -251,12 +251,24 @@ local function loadAzureConfigs()
   end
 end
 
+local function startsWith(str, start)
+  return string.sub(str, 1, string.len(start)) == start
+end
+
+local function ensureUrlProtocol(str)
+  if startsWith(str, "https://") or startsWith(str, "http://") then
+    return str
+  end
+
+  return "https://" .. str
+end
+
 function Api.setup()
   loadApiHost("OPENAI_API_HOST", "OPENAI_API_HOST", "api_host_cmd", function(value)
     Api.OPENAI_API_HOST = value
-    Api.COMPLETIONS_URL = "https://" .. Api.OPENAI_API_HOST .. "/v1/completions"
-    Api.CHAT_COMPLETIONS_URL = "https://" .. Api.OPENAI_API_HOST .. "/v1/chat/completions"
-    Api.EDITS_URL = "https://" .. Api.OPENAI_API_HOST .. "/v1/edits"
+    Api.COMPLETIONS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/completions")
+    Api.CHAT_COMPLETIONS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/chat/completions")
+    Api.EDITS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/edits")
   end, "api.openai.com")
 
   loadApiKey("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(value)
