@@ -653,17 +653,22 @@ function Chat:get_layout_params()
       Layout.Box(self.chat_window, { grow = 1 }),
     }, { dir = self.display_mode == "center" and "row" or "col", grow = 1 })
   end
-
   local box = Layout.Box({
     left_layout,
-    Layout.Box(self.chat_input, { size = 2 + self.prompt_lines }),
+    Layout.Box(
+      self.chat_input,
+      { size = vim.print(vim.print(self.chat_input.border._.style) == "none" and 0 or 2) + self.prompt_lines }
+    ),
   }, { dir = "col" })
 
   if self.settings_open then
     box = Layout.Box({
       Layout.Box({
         left_layout,
-        Layout.Box(self.chat_input, { size = 2 + self.prompt_lines }),
+        Layout.Box(
+          self.chat_input,
+          { size = (self.chat_input.border._.style == "none" and 0 or 2) + self.prompt_lines }
+        ),
       }, { dir = "col", grow = 1 }),
       Layout.Box({
         Layout.Box(self.settings_panel, { size = "30%" }),
