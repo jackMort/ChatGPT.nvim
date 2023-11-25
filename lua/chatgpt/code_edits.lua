@@ -69,11 +69,11 @@ local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 local instructions_input, layout, input_window, output_window, output, timer, filetype, bufnr, extmark_id
 
 local display_input_suffix = function(suffix)
-  if extmark_id then
+  if extmark_id and input_window.bufnr ~= nil then
     vim.api.nvim_buf_del_extmark(instructions_input.bufnr, namespace_id, extmark_id)
   end
 
-  if not suffix then
+  if not suffix or input_window.bufnr == nil then
     return
   end
 
@@ -90,7 +90,9 @@ end
 
 local spinner = Spinner:new(function(state)
   vim.schedule(function()
-    output_window.border:set_text("top", " " .. state .. " ", "center")
+    if input_window.bufnr ~= nil then
+      output_window.border:set_text("top", " " .. state .. " ", "center")
+    end
     display_input_suffix(state)
   end)
 end, {
@@ -104,7 +106,10 @@ end
 local hide_progress = function()
   spinner:stop()
   display_input_suffix()
-  output_window.border:set_text("top", " Result ", "center")
+
+  if output_window.bufnr ~= nil then
+    output_window.border:set_text("top", " Result ", "center")
+  end
 end
 
 local setup_and_mount = vim.schedule_wrap(function(lines, output_lines, ...)
@@ -175,7 +180,10 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
         local output_txt_nlfixed = Utils.replace_newlines_at_end(output_txt, nlcount)
         output = Utils.split_string_by_line(output_txt_nlfixed)
 
-        vim.api.nvim_buf_set_lines(output_window.bufnr, 0, -1, false, output)
+        if output_window.bufnr ~= nil then
+          vim.api.nvim_buf_set_lines(output_window.bufnr, 0, -1, false, output)
+        end
+
         if usage then
           display_input_suffix(usage.total_tokens)
         end

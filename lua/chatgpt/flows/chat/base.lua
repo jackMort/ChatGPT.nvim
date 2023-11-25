@@ -247,8 +247,11 @@ function Chat:addAnswerPartial(text, state)
       end_line = end_line,
     })
     self.selectedIndex = self.selectedIndex + 1
-    vim.api.nvim_buf_set_lines(self.chat_window.bufnr, -1, -1, false, { "", "" })
-    Signs.set_for_lines(self.chat_window.bufnr, start_line, end_line, "chat")
+
+    if self.chat_window.bufnr ~= nil then
+      vim.api.nvim_buf_set_lines(self.chat_window.bufnr, -1, -1, false, { "", "" })
+      Signs.set_for_lines(self.chat_window.bufnr, start_line, end_line, "chat")
+    end
 
     self.is_streaming_response = false
   end
@@ -258,7 +261,9 @@ function Chat:addAnswerPartial(text, state)
 
     self:stopSpinner()
     self:set_lines(-2, -1, false, { "" })
-    vim.api.nvim_buf_set_option(self.chat_window.bufnr, "modifiable", true)
+    if self.chat_input.bufnr ~= nil then
+      vim.api.nvim_buf_set_option(self.chat_window.bufnr, "modifiable", true)
+    end
   end
 
   if state == "START" or state == "CONTINUE" then
@@ -266,6 +271,10 @@ function Chat:addAnswerPartial(text, state)
     local length = #lines
     local buffer = self.chat_window.bufnr
     local win = self.chat_window.winid
+
+    if buffer == nil then
+      return
+    end
 
     for i, line in ipairs(lines) do
       local currentLine = vim.api.nvim_buf_get_lines(buffer, -2, -1, false)[1]
@@ -574,6 +583,10 @@ function Chat:get_width()
 end
 
 function Chat:display_input_suffix(suffix)
+  if self.chat_input.bufnr == nil then
+      return
+  end
+
   if self.extmark_id then
     vim.api.nvim_buf_del_extmark(self.chat_input.bufnr, Config.namespace_id, self.extmark_id)
   end
