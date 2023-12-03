@@ -17,6 +17,7 @@ function M.defaults()
         accept = "<C-y>",
         toggle_diff = "<C-d>",
         toggle_settings = "<C-o>",
+        toggle_help = "<C-h>",
         cycle_windows = "<Tab>",
         use_output_as_input = "<C-i>",
       },
@@ -128,6 +129,18 @@ function M.defaults()
       max_visible_lines = 20,
     },
     settings_window = {
+      setting_sign = "  ",
+      border = {
+        style = "rounded",
+        text = {
+          top = " Settings ",
+        },
+      },
+      win_options = {
+        winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
+      },
+    },
+    help_window = {
       setting_sign = "  ",
       border = {
         style = "rounded",
