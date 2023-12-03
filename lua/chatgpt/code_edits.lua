@@ -9,6 +9,7 @@ local Config = require("chatgpt.config")
 local Utils = require("chatgpt.utils")
 local Spinner = require("chatgpt.spinner")
 local Settings = require("chatgpt.settings")
+local Help = require("chatgpt.help")
 
 EDIT_FUNCTION_ARGUMENTS = {
   function_call = {
@@ -140,6 +141,8 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   local openai_params = Config.options.openai_edit_params
   local use_functions_for_edits = Config.options.use_openai_functions_for_edits
   local settings_panel = Settings.get_settings_panel("edits", openai_params)
+  local help_panel = Help.get_help_panel("edits")
+  local open_extra_panels = {}
   input_window = Popup(Config.options.popup_window)
   output_window = Popup(Config.options.popup_window)
   instructions_input = ChatInput(Config.options.popup_input, {
@@ -226,44 +229,104 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
     end, { noremap = true })
   end
 
+  local function inTable(tbl, item)
+    for key, value in pairs(tbl) do
+      if value == item then
+        return key
+      end
+    end
+    return false
+  end
+
+  -- toggle extra panels
+  local function toggle_extra_panel(extra_panel)
+    local extra_open = inTable(open_extra_panels, extra_panel)
+    if not extra_open then
+      table.insert(open_extra_panels, extra_panel)
+      local extra_boxes = function()
+        local box_size = (100 / #open_extra_panels) .. "%"
+        local boxes = {}
+        for _, panel in ipairs(open_extra_panels) do
+          table.insert(boxes, Layout.Box(panel, { size = box_size }))
+        end
+        return Layout.Box(boxes, { dir = "col", size = 40 })
+      end
+      layout:update(Layout.Box({
+        Layout.Box({
+          Layout.Box(input_window, { grow = 1 }),
+          Layout.Box(instructions_input, { size = 3 }),
+        }, { dir = "col", grow = 1 }),
+        Layout.Box(output_window, { grow = 1 }),
+        extra_boxes(),
+      }, { dir = "row" }))
+      extra_panel:show()
+      extra_panel:mount()
+
+      vim.api.nvim_set_current_win(extra_panel.winid)
+      vim.api.nvim_buf_set_option(extra_panel.bufnr, "modifiable", false)
+      vim.api.nvim_win_set_option(extra_panel.winid, "cursorline", true)
+    else
+      table.remove(open_extra_panels, extra_open)
+      if #open_extra_panels == 0 then
+        layout:update(Layout.Box({
+          Layout.Box({
+            Layout.Box(input_window, { grow = 1 }),
+            Layout.Box(instructions_input, { size = 3 }),
+          }, { dir = "col", size = "50%" }),
+          Layout.Box(output_window, { size = "50%" }),
+        }, { dir = "row" }))
+        extra_panel:hide()
+        vim.api.nvim_set_current_win(instructions_input.winid)
+      else
+        local box_size = (100 / #open_extra_panels) .. "%"
+        local extra_boxes = function()
+          local boxes = {}
+          for _, panel in ipairs(open_extra_panels) do
+            table.insert(boxes, Layout.Box(panel, { size = box_size }))
+          end
+          return Layout.Box(boxes, { dir = "col", size = 40 })
+        end
+        layout:update(Layout.Box({
+          Layout.Box({
+            Layout.Box(input_window, { grow = 1 }),
+            Layout.Box(instructions_input, { size = 3 }),
+          }, { dir = "col", grow = 1 }),
+          Layout.Box(output_window, { grow = 1 }),
+          extra_boxes(),
+        }, { dir = "row" }))
+        extra_panel:hide()
+        vim.api.nvim_set_current_win(open_extra_panels[#open_extra_panels].winid)
+      end
+    end
+    for _, window in ipairs({ input_window, output_window }) do
+      vim.api.nvim_buf_set_option(window.bufnr, "filetype", filetype)
+      vim.api.nvim_win_set_option(window.winid, "number", true)
+    end
+    for _, window in ipairs(open_extra_panels) do
+      vim.api.nvim_buf_set_option(window.bufnr, "filetype", filetype)
+      vim.api.nvim_win_set_option(window.winid, "number", true)
+    end
+  end
+
   -- toggle settings
   local settings_open = false
-  for _, popup in ipairs({ settings_panel, instructions_input }) do
+  for _, popup in ipairs({ settings_panel, help_panel, instructions_input }) do
     for _, mode in ipairs({ "n", "i" }) do
       popup:map(mode, Config.options.edit_with_instructions.keymaps.toggle_settings, function()
-        if settings_open then
-          layout:update(Layout.Box({
-            Layout.Box({
-              Layout.Box(input_window, { grow = 1 }),
-              Layout.Box(instructions_input, { size = 3 }),
-            }, { dir = "col", size = "50%" }),
-            Layout.Box(output_window, { size = "50%" }),
-          }, { dir = "row" }))
-          settings_panel:hide()
-          vim.api.nvim_set_current_win(instructions_input.winid)
-        else
-          layout:update(Layout.Box({
-            Layout.Box({
-              Layout.Box(input_window, { grow = 1 }),
-              Layout.Box(instructions_input, { size = 3 }),
-            }, { dir = "col", grow = 1 }),
-            Layout.Box(output_window, { grow = 1 }),
-            Layout.Box(settings_panel, { size = 40 }),
-          }, { dir = "row" }))
-          settings_panel:show()
-          settings_panel:mount()
-
-          vim.api.nvim_set_current_win(settings_panel.winid)
-          vim.api.nvim_buf_set_option(settings_panel.bufnr, "modifiable", false)
-          vim.api.nvim_win_set_option(settings_panel.winid, "cursorline", true)
-        end
-        settings_open = not settings_open
+        toggle_extra_panel(settings_panel)
         -- set input and output settings
         --  TODO
-        for _, window in ipairs({ input_window, output_window }) do
-          vim.api.nvim_buf_set_option(window.bufnr, "filetype", filetype)
-          vim.api.nvim_win_set_option(window.winid, "number", true)
-        end
+      end, {})
+    end
+  end
+
+  -- toggle help
+  for _, popup in ipairs({ help_panel, settings_panel, instructions_input }) do
+    for _, mode in ipairs({ "n", "i" }) do
+      popup:map(mode, Config.options.edit_with_instructions.keymaps.toggle_help, function()
+        toggle_extra_panel(help_panel)
+        -- set input and output settings
+        --  TODO
       end, {})
     end
   end
