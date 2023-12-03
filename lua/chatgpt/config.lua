@@ -145,7 +145,7 @@ function M.defaults()
       border = {
         style = "rounded",
         text = {
-          top = " Settings ",
+          top = " Help ",
         },
       },
       win_options = {

@@ -142,7 +142,8 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   local use_functions_for_edits = Config.options.use_openai_functions_for_edits
   local settings_panel = Settings.get_settings_panel("edits", openai_params)
   local help_panel = Help.get_help_panel("edits")
-  local open_extra_panels = {}
+  local open_extra_panels = {} -- tracks which extra panels are open
+  local active_panel = instructions_input -- for cycling windows
   input_window = Popup(Config.options.popup_window)
   output_window = Popup(Config.options.popup_window)
   instructions_input = ChatInput(Config.options.popup_input, {
@@ -239,7 +240,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   end
 
   -- toggle extra panels
-  local function toggle_extra_panel(extra_panel)
+  local function toggle_extra_panel(extra_panel, modifiable_panel)
     local extra_open = inTable(open_extra_panels, extra_panel)
     if not extra_open then
       table.insert(open_extra_panels, extra_panel)
@@ -263,7 +264,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
       extra_panel:mount()
 
       vim.api.nvim_set_current_win(extra_panel.winid)
-      vim.api.nvim_buf_set_option(extra_panel.bufnr, "modifiable", false)
+      vim.api.nvim_buf_set_option(extra_panel.bufnr, "modifiable", modifiable_panel)
       vim.api.nvim_win_set_option(extra_panel.winid, "cursorline", true)
     else
       table.remove(open_extra_panels, extra_open)
@@ -277,6 +278,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
         }, { dir = "row" }))
         extra_panel:hide()
         vim.api.nvim_set_current_win(instructions_input.winid)
+        active_panel = instructions_input
       else
         local box_size = (100 / #open_extra_panels) .. "%"
         local extra_boxes = function()
@@ -296,6 +298,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
         }, { dir = "row" }))
         extra_panel:hide()
         vim.api.nvim_set_current_win(open_extra_panels[#open_extra_panels].winid)
+        active_panel = open_extra_panels[#open_extra_panels]
       end
     end
     for _, window in ipairs({ input_window, output_window }) do
@@ -309,11 +312,10 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   end
 
   -- toggle settings
-  local settings_open = false
-  for _, popup in ipairs({ settings_panel, help_panel, instructions_input }) do
+  for _, popup in ipairs({ instructions_input, settings_panel, help_panel }) do
     for _, mode in ipairs({ "n", "i" }) do
       popup:map(mode, Config.options.edit_with_instructions.keymaps.toggle_settings, function()
-        toggle_extra_panel(settings_panel)
+        toggle_extra_panel(settings_panel, false)
         -- set input and output settings
         --  TODO
       end, {})
@@ -321,10 +323,10 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   end
 
   -- toggle help
-  for _, popup in ipairs({ help_panel, settings_panel, instructions_input }) do
+  for _, popup in ipairs({ instructions_input, settings_panel, help_panel }) do
     for _, mode in ipairs({ "n", "i" }) do
       popup:map(mode, Config.options.edit_with_instructions.keymaps.toggle_help, function()
-        toggle_extra_panel(help_panel)
+        toggle_extra_panel(help_panel, false)
         -- set input and output settings
         --  TODO
       end, {})
@@ -332,13 +334,13 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   end
 
   -- cycle windows
-  local active_panel = instructions_input
-  for _, popup in ipairs({ input_window, output_window, settings_panel, instructions_input }) do
+  for _, popup in ipairs({ input_window, output_window, settings_panel, help_panel, instructions_input }) do
     for _, mode in ipairs({ "n", "i" }) do
       if mode == "i" and (popup == input_window or popup == output_window) then
         goto continue
       end
       popup:map(mode, Config.options.edit_with_instructions.keymaps.cycle_windows, function()
+        local in_table = inTable(open_extra_panels, active_panel)
         if active_panel == instructions_input then
           vim.api.nvim_set_current_win(input_window.winid)
           active_panel = input_window
@@ -348,16 +350,21 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
           active_panel = output_window
           vim.api.nvim_command("stopinsert")
         elseif active_panel == output_window and mode ~= "i" then
-          if settings_open then
-            vim.api.nvim_set_current_win(settings_panel.winid)
-            active_panel = settings_panel
-          else
+          if #open_extra_panels == 0 then
             vim.api.nvim_set_current_win(instructions_input.winid)
             active_panel = instructions_input
+          else
+            vim.api.nvim_set_current_win(open_extra_panels[1].winid)
+            active_panel = open_extra_panels[1]
           end
-        elseif active_panel == settings_panel then
-          vim.api.nvim_set_current_win(instructions_input.winid)
-          active_panel = instructions_input
+        elseif in_table then
+          if in_table == #open_extra_panels then
+            vim.api.nvim_set_current_win(instructions_input.winid)
+            active_panel = instructions_input
+          else
+            vim.api.nvim_set_current_win(open_extra_panels[in_table + 1].winid)
+            active_panel = open_extra_panels[in_table + 1]
+          end
         end
       end, {})
       ::continue::
@@ -366,7 +373,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
 
   -- toggle diff mode
   local diff_mode = Config.options.edit_with_instructions.diff
-  for _, popup in ipairs({ settings_panel, instructions_input }) do
+  for _, popup in ipairs({ help_panel, settings_panel, instructions_input }) do
     for _, mode in ipairs({ "n", "i" }) do
       popup:map(mode, Config.options.edit_with_instructions.keymaps.toggle_diff, function()
         diff_mode = not diff_mode
