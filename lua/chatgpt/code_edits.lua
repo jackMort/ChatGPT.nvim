@@ -264,6 +264,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
       extra_panel:mount()
 
       vim.api.nvim_set_current_win(extra_panel.winid)
+      active_panel = extra_panel
       vim.api.nvim_buf_set_option(extra_panel.bufnr, "modifiable", modifiable_panel)
       vim.api.nvim_win_set_option(extra_panel.winid, "cursorline", true)
     else
