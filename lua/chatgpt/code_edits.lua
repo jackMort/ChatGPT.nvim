@@ -359,12 +359,18 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
             active_panel = open_extra_panels[1]
           end
         elseif in_table then
-          if in_table == #open_extra_panels then
+          if not in_table then
             vim.api.nvim_set_current_win(instructions_input.winid)
             active_panel = instructions_input
           else
-            vim.api.nvim_set_current_win(open_extra_panels[in_table + 1].winid)
-            active_panel = open_extra_panels[in_table + 1]
+            local next_index = (in_table + 1) % #open_extra_panels
+            if next_index == 0 then
+              vim.api.nvim_set_current_win(instructions_input.winid)
+              active_panel = instructions_input
+            else
+              vim.api.nvim_set_current_win(open_extra_panels[next_index].winid)
+              active_panel = open_extra_panels[next_index]
+            end
           end
         end
       end, {})
