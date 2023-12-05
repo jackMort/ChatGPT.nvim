@@ -45,7 +45,7 @@ function M.defaults()
         },
       },
       keymaps = {
-        close = { "<C-c>" },
+        close = "<C-c>",
         yank_last = "<C-y>",
         yank_last_code = "<C-k>",
         scroll_up = "<C-u>",
@@ -62,6 +62,8 @@ function M.defaults()
         edit_message = "e",
         delete_message = "d",
         toggle_settings = "<C-o>",
+        toggle_sessions = "<C-p>",
+        toggle_help = "<C-h>",
         toggle_message_role = "<C-r>",
         toggle_system_role_open = "<C-s>",
         stop_generating = "<C-x>",
