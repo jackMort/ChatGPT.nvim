@@ -141,7 +141,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   local openai_params = Config.options.openai_edit_params
   local use_functions_for_edits = Config.options.use_openai_functions_for_edits
   local settings_panel = Settings.get_settings_panel("edits", openai_params)
-  local help_panel = Help.get_help_panel("edits")
+  local help_panel = Help.get_help_panel("lua") -- I like the highlighting for Lua.
   local open_extra_panels = {} -- tracks which extra panels are open
   local active_panel = instructions_input -- for cycling windows
   input_window = Popup(Config.options.popup_window)
@@ -306,10 +306,6 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
       vim.api.nvim_buf_set_option(window.bufnr, "filetype", filetype)
       vim.api.nvim_win_set_option(window.winid, "number", true)
     end
-    for _, window in ipairs(open_extra_panels) do
-      vim.api.nvim_buf_set_option(window.bufnr, "filetype", filetype)
-      vim.api.nvim_win_set_option(window.winid, "number", true)
-    end
   end
 
   -- toggle settings
@@ -363,7 +359,8 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
             vim.api.nvim_set_current_win(instructions_input.winid)
             active_panel = instructions_input
           else
-            local next_index = (in_table + 1) % #open_extra_panels
+            -- next index with wrap around and 0 for instructions_input
+            local next_index = (in_table + 1) % (#open_extra_panels + 1)
             if next_index == 0 then
               vim.api.nvim_set_current_win(instructions_input.winid)
               active_panel = instructions_input

@@ -4,8 +4,8 @@ M.vts = {}
 local Popup = require("nui.popup")
 local Config = require("chatgpt.config")
 
-M.get_help_panel = function(type)
-  M.type = type
+M.get_help_panel = function(filetype)
+  M.filetype = filetype
   M.panel = Popup(Config.options.help_window)
 
   local line = 0
@@ -17,6 +17,7 @@ M.get_help_panel = function(type)
     line = line + 1
   end
 
+  vim.api.nvim_buf_set_option(M.panel.bufnr, "filetype", filetype)
   return M.panel
 end
 
