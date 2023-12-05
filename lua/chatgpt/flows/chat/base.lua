@@ -863,16 +863,15 @@ function Chat:open()
   self:map(Config.options.chat.keymaps.new_session, function()
     self:new_session()
     Sessions:refresh()
-  end, { self.settings_panel, self.chat_input })
+  end, { self.settings_panel, self.chat_input, self.help_panel })
 
   -- cycle panes
   self:map(Config.options.chat.keymaps.cycle_windows, function()
+    local in_table = inTable(self.open_extra_panels, self.active_panel)
     if not self.active_panel then
       self:set_active_panel(self.chat_input)
     end
-    if self.active_panel == self.settings_panel then
-      self:set_active_panel(self.sessions_panel)
-    elseif self.active_panel == self.chat_input then
+    if self.active_panel == self.chat_input then
       if self.system_role_open then
         self:set_active_panel(self.system_role_panel)
       else
@@ -880,8 +879,19 @@ function Chat:open()
       end
     elseif self.active_panel == self.system_role_panel then
       self:set_active_panel(self.chat_window)
-    elseif self.active_panel == self.chat_window and self.settings_open == true then
-      self:set_active_panel(self.settings_panel)
+    elseif self.active_panel == self.chat_window then
+      if #self.open_extra_panels > 0 then
+        self:set_active_panel(self.open_extra_panels[1])
+      else
+        self:set_active_panel(self.chat_input)
+      end
+    elseif in_table then
+      local next_index = (in_table + 1) % (#self.open_extra_panels + 1)
+      if next_index == 0 then
+        self:set_active_panel(self.chat_input)
+      else
+        self:set_active_panel(self.open_extra_panels[next_index])
+      end
     else
       self:set_active_panel(self.chat_input)
     end
