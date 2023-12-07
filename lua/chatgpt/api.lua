@@ -99,6 +99,7 @@ function Api.make_call(url, params, cb)
     :new({
       command = "curl",
       args = {
+        "--max-time", "10",
         url,
         "-H",
         "Content-Type: application/json",
