@@ -15,7 +15,7 @@
   "grammar_correction": {
     "type": "chat",
     "opts": {
-      "template": "Correct this to standard {{lang}}:\n\n{{input}}",
+      "template": "correct this to standard {{lang}}:\n\n{{input}}",
       "strategy": "replace",
       "params": {
         "model": "gpt-3.5-turbo"
@@ -43,7 +43,7 @@
       "lang": {
         "type": "string",
         "optional": "true",
-        "default": "english"
+        "default": "brazilian portuguese"
       }
     }
   },
@@ -125,7 +125,7 @@
     "type": "chat",
     "opts": {
       "title": " Explain Code",
-      "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nUse markdown format.\nHere's what the above code is doing:\n```",
+      "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nUse markdown format.\nTranslate to {{lang}}\nHere's what the above code is doing:\n```",
       "strategy": "display",
       "params": {
         "model": "gpt-3.5-turbo",
@@ -133,7 +133,15 @@
           "```"
         ]
       }
+    },
+    "args": {
+      "lang": {
+        "type": "string",
+        "optional": "true",
+        "default": "brazilian portuguese"
+      }
     }
+ 
   },
   "roxygen_edit": {
     "type": "chat",
