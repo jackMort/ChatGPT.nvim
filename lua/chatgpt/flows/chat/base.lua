@@ -258,6 +258,11 @@ function Chat:addAnswerPartial(text, state)
     local buffer = self.chat_window.bufnr
     local win = self.chat_window.winid
 
+    if vim.bo[buffer].modifiable == false then
+      vim.notify("Current query still running. Use <C-X> to cancel.", vim.log.levels.WARN)
+      return
+    end
+
     for i, line in ipairs(lines) do
       local currentLine = vim.api.nvim_buf_get_lines(buffer, -2, -1, false)[1]
       vim.api.nvim_buf_set_lines(buffer, -2, -1, false, { currentLine .. line })
