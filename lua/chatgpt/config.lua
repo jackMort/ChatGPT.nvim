@@ -58,7 +58,7 @@ function M.defaults()
         select_session = "<Space>",
         rename_session = "r",
         delete_session = "d",
-        draft_message = "<C-d>",
+        draft_message = "<C-r>",
         edit_message = "e",
         delete_message = "d",
         toggle_settings = "<C-o>",
