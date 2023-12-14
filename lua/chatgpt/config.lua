@@ -178,7 +178,7 @@ function M.defaults()
     highlights = {
       help_key = "@symbol",
       help_description = "@comment",
-    }
+    },
   }
   return defaults
 end
