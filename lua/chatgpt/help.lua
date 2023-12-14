@@ -1,6 +1,8 @@
 local M = {}
 M.vts = {}
 
+local NuiLine = require("nui.line")
+local NuiText = require("nui.text")
 local Popup = require("nui.popup")
 local Config = require("chatgpt.config")
 
@@ -8,7 +10,7 @@ M.get_help_panel = function(type)
   M.type = type
   M.panel = Popup(Config.options.help_window)
 
-  local line = 0
+  local line = 1
 
   local settings
   if M.type == "edit" then
@@ -28,13 +30,30 @@ M.get_help_panel = function(type)
   -- sort the keys
   table.sort(settings_keys)
 
+  -- find the longest setting value
+  local max_setting_value_length = 0
   for _, k in pairs(settings_keys) do
-    local line_text = k .. ": '" .. settings[k] .. "'"
-    vim.api.nvim_buf_set_lines(M.panel.bufnr, line, line + 1, false, { line_text })
+    if #settings[k] > max_setting_value_length then
+      max_setting_value_length = #settings[k]
+    end
+  end
+
+  for _, k in pairs(settings_keys) do
+    local key = NuiText(
+      " " .. settings[k] .. string.rep(" ", max_setting_value_length + 1 - #settings[k]),
+      Config.options.highlights.help_key
+    )
+
+    -- make desciption human readable by replacing _ with space
+    local description = k:gsub("_", " ")
+
+    local value = NuiText(description, Config.options.highlights.help_description)
+    local line_text = NuiLine({ key, value })
+
+    line_text:render(M.panel.bufnr, -1, line)
     line = line + 1
   end
 
-  vim.api.nvim_buf_set_option(M.panel.bufnr, "filetype", "conf")
   return M.panel
 end
 
