@@ -475,6 +475,16 @@ function Chat:toString()
   return str
 end
 
+local function createContent(line)
+  local extensions = { "%.jpeg", "%.jpg", "%.png", "%.gif", "%.bmp", "%.tif", "%.tiff", "%.webp" }
+  for _, ext in ipairs(extensions) do
+    if string.find(line:lower(), ext .. "$") then
+      return { type = "image_url", image_url = line }
+    end
+  end
+  return { type = "text", text = line }
+end
+
 function Chat:toMessages()
   local messages = {}
   if self.system_message ~= nil then
@@ -488,7 +498,15 @@ function Chat:toMessages()
     elseif msg.type == ANSWER then
       role = "assistant"
     end
-    table.insert(messages, { role = role, content = msg.text })
+    local content = {}
+    if self.params.model == "gpt-4-vision-preview" then
+      for _, line in ipairs(msg.lines) do
+        table.insert(content, createContent(line))
+      end
+    else
+      content = msg.text
+    end
+    table.insert(messages, { role = role, content = content })
   end
   return messages
 end
@@ -656,14 +674,17 @@ function Chat:get_layout_params()
 
   local box = Layout.Box({
     left_layout,
-    Layout.Box(self.chat_input, { size = 2 + self.prompt_lines }),
+    Layout.Box(self.chat_input, { size = (self.chat_input.border._.style == "none" and 0 or 2) + self.prompt_lines }),
   }, { dir = "col" })
 
   if self.settings_open then
     box = Layout.Box({
       Layout.Box({
         left_layout,
-        Layout.Box(self.chat_input, { size = 2 + self.prompt_lines }),
+        Layout.Box(
+          self.chat_input,
+          { size = (self.chat_input.border._.style == "none" and 0 or 2) + self.prompt_lines }
+        ),
       }, { dir = "col", grow = 1 }),
       Layout.Box({
         Layout.Box(self.settings_panel, { size = "30%" }),
