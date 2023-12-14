@@ -45,6 +45,8 @@ function Chat:init()
   self.settings_open = false
   self.system_role_open = false
 
+  self.is_streaming_response = false
+
   self.prompt_lines = 1
 
   self.display_mode = Config.options.popup_layout.default
@@ -150,7 +152,7 @@ function Chat:set_session(session)
 end
 
 function Chat:isBusy()
-  return self.spinner:is_running()
+  return self.spinner:is_running() or self.is_streaming_response
 end
 
 function Chat:add(type, text, usage)
@@ -247,9 +249,13 @@ function Chat:addAnswerPartial(text, state)
     self.selectedIndex = self.selectedIndex + 1
     vim.api.nvim_buf_set_lines(self.chat_window.bufnr, -1, -1, false, { "", "" })
     Signs.set_for_lines(self.chat_window.bufnr, start_line, end_line, "chat")
+
+    self.is_streaming_response = false
   end
 
   if state == "START" then
+    self.is_streaming_response = true
+
     self:stopSpinner()
     self:set_lines(-2, -1, false, { "" })
     vim.api.nvim_buf_set_option(self.chat_window.bufnr, "modifiable", true)
