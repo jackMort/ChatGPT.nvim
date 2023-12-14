@@ -671,9 +671,15 @@ function Chat:get_layout_params()
 
   if #self.open_extra_panels > 0 then
     local extra_boxes = function()
+      local box_size = (100 / #self.open_extra_panels) .. "%"
       local boxes = {}
-      for _, panel in ipairs(self.open_extra_panels) do
-        table.insert(boxes, Layout.Box(panel, { grow = 1 }))
+      for i, panel in ipairs(self.open_extra_panels) do
+        -- for the last panel, make it grow to fill the remaining space
+        if i == #self.open_extra_panels then
+          table.insert(boxes, Layout.Box(panel, { grow = 1 }))
+        else
+          table.insert(boxes, Layout.Box(panel, { size = box_size }))
+        end
       end
       return Layout.Box(boxes, { dir = "col", size = 40 })
     end
