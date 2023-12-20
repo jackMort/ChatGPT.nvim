@@ -82,10 +82,19 @@ local finder = function(opts)
       end
 
       if not job_started then
+
+        local load_file_command = ""
+        if string.match(opts.url, "^/") ~= nil then
+          load_file_command = "cat"
+        else
+          load_file_command = "curl"
+        end
+
         job_started = true
+
         job
           :new({
-            command = "curl",
+            command = load_file_command,
             args = {
               opts.url,
             },
