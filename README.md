@@ -72,7 +72,7 @@ use({
 
 `ChatGPT.nvim` comes with the following defaults, you can override them by passing config as setup param
 
-https://github.com/jackMort/ChatGPT.nvim/blob/9508429d514509b96d8ca9ec3f16933cfb30ac8a/lua/chatgpt/config.lua#L10-L157
+https://github.com/jackMort/ChatGPT.nvim/blob/f1453f588eb47e49e57fa34ac1776b795d71e2f1/lua/chatgpt/config.lua#L10-L182
 
 ### Secrets Management
 
@@ -205,9 +205,11 @@ keybindings are available:
 - `<C-Enter>` [Both] to submit.
 - `<C-y>` [Both] to copy/yank last answer.
 - `<C-o>` [Both] Toggle settings window.
+- `<C-h>` [Both] Toggle help window.
 - `<Tab>` [Both] Cycle over windows.
 - `<C-f>` [Chat] Cycle over modes (center, stick to right).
 - `<C-c>` [Both] to close chat window.
+- `<C-p>` [Chat] Toggle sessions list.
 - `<C-u>` [Chat] scroll up chat window.
 - `<C-d>` [Chat] scroll down chat window.
 - `<C-k>` [Chat] to copy/yank code from last answer.
