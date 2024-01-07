@@ -278,7 +278,7 @@ function Api.setup()
       loadAzureConfigs()
       Api.AUTHORIZATION_HEADER = "api-key: " .. Api.OPENAI_API_KEY
     else
-      Api.AUTHORIZATION_HEADER = "Authorization: Bearer " .. Api.OPENAI_API_KEY
+      Api.AUTHORIZATION_HEADER = "Authorization: Bearer " .. (Api.OPENAI_API_KEY or "")
     end
   end)
 end
