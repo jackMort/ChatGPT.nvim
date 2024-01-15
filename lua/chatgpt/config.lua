@@ -10,6 +10,7 @@ function M.defaults()
   local defaults = {
     api_key_cmd = nil,
     yank_register = "+",
+    extra_curl_params = nil,
     edit_with_instructions = {
       diff = false,
       keymaps = {

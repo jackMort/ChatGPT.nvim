@@ -18,20 +18,29 @@ function Api.chat_completions(custom_params, cb, should_stop)
 
     cb = vim.schedule_wrap(cb)
 
+    local extra_curl_params = Config.options.extra_curl_params
+    local args = {
+      "--silent",
+      "--show-error",
+      "--no-buffer",
+      Api.CHAT_COMPLETIONS_URL,
+      "-H",
+      "Content-Type: application/json",
+      "-H",
+      Api.AUTHORIZATION_HEADER,
+      "-d",
+      vim.json.encode(params),
+    }
+
+    if extra_curl_params ~= nil then
+      for _, param in ipairs(extra_curl_params) do
+        table.insert(args, param)
+      end
+    end
+
     Api.exec(
       "curl",
-      {
-        "--silent",
-        "--show-error",
-        "--no-buffer",
-        Api.CHAT_COMPLETIONS_URL,
-        "-H",
-        "Content-Type: application/json",
-        "-H",
-        Api.AUTHORIZATION_HEADER,
-        "-d",
-        vim.json.encode(params),
-      },
+      args,
       function(chunk)
         local ok, json = pcall(vim.json.decode, chunk)
         if ok and json ~= nil then
@@ -95,18 +104,28 @@ function Api.make_call(url, params, cb)
   end
   f:write(vim.fn.json_encode(params))
   f:close()
+
+  local args = {
+    url,
+    "-H",
+    "Content-Type: application/json",
+    "-H",
+    Api.AUTHORIZATION_HEADER,
+    "-d",
+    "@" .. TMP_MSG_FILENAME,
+  }
+
+  local extra_curl_params = Config.options.extra_curl_params
+  if extra_curl_params ~= nil then
+    for _, param in ipairs(extra_curl_params) do
+      table.insert(args, param)
+    end
+  end
+
   Api.job = job
     :new({
       command = "curl",
-      args = {
-        url,
-        "-H",
-        "Content-Type: application/json",
-        "-H",
-        Api.AUTHORIZATION_HEADER,
-        "-d",
-        "@" .. TMP_MSG_FILENAME,
-      },
+      args = args,
       on_exit = vim.schedule_wrap(function(response, exit_code)
         Api.handle_response(response, exit_code, cb)
       end),
