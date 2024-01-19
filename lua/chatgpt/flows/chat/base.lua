@@ -247,7 +247,9 @@ function Chat:addAnswerPartial(text, state)
       end_line = end_line,
     })
     self.selectedIndex = self.selectedIndex + 1
-    vim.api.nvim_buf_set_lines(self.chat_window.bufnr, -1, -1, false, { "", "" })
+    if vim.api.nvim_buf_get_option(self.chat_window.bufnr, "modifiable") then
+      vim.api.nvim_buf_set_lines(self.chat_window.bufnr, -1, -1, false, { "", "" })
+    end
     Signs.set_for_lines(self.chat_window.bufnr, start_line, end_line, "chat")
 
     self.is_streaming_response = false
@@ -269,12 +271,16 @@ function Chat:addAnswerPartial(text, state)
 
     for i, line in ipairs(lines) do
       local currentLine = vim.api.nvim_buf_get_lines(buffer, -2, -1, false)[1]
-      vim.api.nvim_buf_set_lines(buffer, -2, -1, false, { currentLine .. line })
+      if vim.api.nvim_buf_get_option(buffer, "modifiable") then
+        vim.api.nvim_buf_set_lines(buffer, -2, -1, false, { currentLine .. line })
+      end
 
       local last_line_num = vim.api.nvim_buf_line_count(buffer)
       Signs.set_for_lines(self.chat_window.bufnr, start_line, last_line_num - 1, "chat")
       if i == length and i > 1 then
-        vim.api.nvim_buf_set_lines(buffer, -1, -1, false, { "" })
+        if vim.api.nvim_buf_get_option(buffer, "modifiable") then
+          vim.api.nvim_buf_set_lines(buffer, -1, -1, false, { "" })
+        end
       end
       if self:is_buf_visiable() then
         vim.api.nvim_win_set_cursor(win, { last_line_num, 0 })
@@ -756,7 +762,9 @@ function Chat:open()
     end),
     on_submit = function(value)
       -- clear input
-      vim.api.nvim_buf_set_lines(self.chat_input.bufnr, 0, -1, false, { "" })
+      if vim.api.nvim_buf_get_option(self.chat_input.bufnr, "modifiable") then
+        vim.api.nvim_buf_set_lines(self.chat_input.bufnr, 0, -1, false, { "" })
+      end
 
       if self:isBusy() then
         vim.notify("I'm busy, please wait a moment...", vim.log.levels.WARN)
@@ -967,7 +975,9 @@ function Chat:open()
     local lines = vim.api.nvim_buf_get_lines(self.chat_input.bufnr, 0, -1, false)
     local text = table.concat(lines, "\n")
     if #text > 0 then
-      vim.api.nvim_buf_set_lines(self.chat_input.bufnr, 0, -1, false, { "" })
+      if vim.api.nvim_buf_get_option(self.chat_input.bufnr, "modifiable") then
+        vim.api.nvim_buf_set_lines(self.chat_input.bufnr, 0, -1, false, { "" })
+      end
       self:add(self.role == ROLE_USER and QUESTION or ANSWER, text)
       if self.role ~= ROLE_USER then
         self.role = ROLE_USER
