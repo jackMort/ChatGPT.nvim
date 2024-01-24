@@ -40,7 +40,7 @@ M.get_help_panel = function(type)
 
   for _, k in pairs(settings_keys) do
     local key = NuiText(
-      " " .. settings[k] .. string.rep(" ", max_setting_value_length + 1 - #settings[k]),
+      " " .. tostring(settings[k]) .. string.rep(" ", max_setting_value_length + 1 - #settings[k]),
       Config.options.highlights.help_key
     )
 
