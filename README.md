@@ -214,7 +214,7 @@ keybindings are available:
 - `<C-d>` [Chat] scroll down chat window.
 - `<C-k>` [Chat] to copy/yank code from last answer.
 - `<C-n>` [Chat] Start new session.
-- `<C-d>` [Chat] draft message (create message without submitting it to server)
+- `<C-r>` [Chat] draft message (create message without submitting it to server)
 - `<C-r>` [Chat] switch role (switch between user and assistant role to define a workflow)
 - `<C-s>` [Both] Toggle system message window.
 - `<C-i>` [Edit Window] use response as input.
