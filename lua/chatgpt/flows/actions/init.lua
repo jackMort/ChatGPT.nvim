@@ -54,6 +54,25 @@ function M.run_action(opts)
   local action_name = opts.fargs[1]
   local item = ACTIONS[action_name]
 
+  if item == nil then
+    if action_name == nil then
+      vim.notify("You need to specify an action", vim.log.levels.WARN)
+    else
+      vim.notify('Invalid input: "' .. action_name .. '"\n', vim.log.levels.WARN)
+    end
+
+    -- show the available valid actions
+    local keys = {}
+    for k, _ in pairs(ACTIONS) do
+      table.insert(keys, k)
+    end
+    local s = table.concat(keys, ", ")
+
+    vim.notify("Valid actions are: " .. s, vim.log.levels.WARN)
+
+    return
+  end
+
   -- parse args
   --
   if item.args then
