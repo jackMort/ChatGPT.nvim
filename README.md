@@ -32,6 +32,18 @@ Custom OpenAI API host with the configuration option `api_host_cmd` or
 environment variable called `$OPENAI_API_HOST`. It's useful if you can't access
 OpenAI directly
 
+Custom cURL parameters can be passed using the configuration option `extra_curl_params`.
+It can be useful if you need to include additional headers for requests:
+```lua
+{
+  ...,
+  extra_curl_params = {
+    "-H",
+    "Origin: https://example.com"
+  }
+}
+```
+
 For Azure deployments, you also need to set environment variables
 `$OPENAI_API_TYPE` to `azure`, `$OPENAI_API_BASE` to your own resource URL,
 e.g. `https://{your-resource-name}.openai.azure.com`, and `$OPENAI_API_AZURE_ENGINE`
