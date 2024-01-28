@@ -244,14 +244,14 @@ local function loadRequiredConfig(envName, configName, optionName, callback, def
 end
 
 local function loadAzureConfigs()
-  loadRequiredConfig("OPENAI_API_BASE", "OPENAI_API_BASE", "azure_api_base_cmd", function(value)
-    Api.OPENAI_API_BASE = value
+  loadRequiredConfig("OPENAI_API_BASE", "OPENAI_API_BASE", "azure_api_base_cmd", function(base)
+    Api.OPENAI_API_BASE = base
 
-    loadRequiredConfig("OPENAI_API_AZURE_ENGINE", "OPENAI_API_AZURE_ENGINE", "azure_api_engine_cmd", function(value)
-      Api.OPENAI_API_AZURE_ENGINE = value
+    loadRequiredConfig("OPENAI_API_AZURE_ENGINE", "OPENAI_API_AZURE_ENGINE", "azure_api_engine_cmd", function(engine)
+      Api.OPENAI_API_AZURE_ENGINE = engine
 
-      loadOptionalConfig("OPENAI_API_AZURE_VERSION", "OPENAI_API_AZURE_VERSION", "azure_api_version_cmd", function(value)
-        Api.OPENAI_API_AZURE_VERSION = value
+      loadOptionalConfig("OPENAI_API_AZURE_VERSION", "OPENAI_API_AZURE_VERSION", "azure_api_version_cmd", function(version)
+        Api.OPENAI_API_AZURE_VERSION = version
 
         if Api["OPENAI_API_BASE"] and Api["OPENAI_API_AZURE_ENGINE"] then
           Api.COMPLETIONS_URL = Api.OPENAI_API_BASE
@@ -283,18 +283,18 @@ local function ensureUrlProtocol(str)
 end
 
 function Api.setup()
-  loadOptionalConfig("OPENAI_API_HOST", "OPENAI_API_HOST", "api_host_cmd", function(value)
-    Api.OPENAI_API_HOST = value
+  loadOptionalConfig("OPENAI_API_HOST", "OPENAI_API_HOST", "api_host_cmd", function(host)
+    Api.OPENAI_API_HOST = host
     Api.COMPLETIONS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/completions")
     Api.CHAT_COMPLETIONS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/chat/completions")
     Api.EDITS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/edits")
   end, "api.openai.com")
 
-  loadRequiredConfig("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(value)
-    Api.OPENAI_API_KEY = value
+  loadRequiredConfig("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(key)
+    Api.OPENAI_API_KEY = key
 
-    loadOptionalConfig("OPENAI_API_TYPE", "OPENAI_API_TYPE", "api_type_cmd", function(value)
-      if value == "azure" then
+    loadOptionalConfig("OPENAI_API_TYPE", "OPENAI_API_TYPE", "api_type_cmd", function(type)
+      if type == "azure" then
         loadAzureConfigs()
         Api.AUTHORIZATION_HEADER = "api-key: " .. Api.OPENAI_API_KEY
       else
