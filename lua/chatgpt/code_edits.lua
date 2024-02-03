@@ -229,13 +229,15 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   end
 
   -- close
-  for _, mode in ipairs({ "n", "i" }) do
-    instructions_input:map(mode, Config.options.edit_with_instructions.keymaps.close, function()
-      if vim.fn.mode() == "i" then
-        vim.api.nvim_command("stopinsert")
-      end
-      vim.cmd("q")
-    end, { noremap = true })
+  for _, popup in ipairs({ input_window, output_window, settings_panel, help_panel, instructions_input }) do
+    for _, mode in ipairs({ "n", "i" }) do
+      popup:map(mode, Config.options.edit_with_instructions.keymaps.close, function()
+        if vim.fn.mode() == "i" then
+          vim.api.nvim_command("stopinsert")
+        end
+        vim.cmd("q")
+      end, { noremap = true })
+    end
   end
 
   local function inTable(tbl, item)
@@ -404,15 +406,6 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
           vim.api.nvim_set_current_win(instructions_input.winid)
         end
       end, {})
-    end
-  end
-
-  -- close
-  for _, popup in ipairs({ input_window, output_window, settings_panel, instructions_input }) do
-    for _, mode in ipairs({ "n", "i" }) do
-      popup:map(mode, Config.options.edit_with_instructions.keymaps.close, function()
-        layout:hide()
-      end)
     end
   end
 
