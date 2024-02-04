@@ -11,6 +11,7 @@ function M.defaults()
     api_key_cmd = nil,
     yank_register = "+",
     extra_curl_params = nil,
+    show_line_numbers = true,
     edit_with_instructions = {
       diff = false,
       keymaps = {
