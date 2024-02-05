@@ -352,6 +352,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
         goto continue
       end
       popup:map(mode, Config.options.edit_with_instructions.keymaps.cycle_windows, function()
+        active_panel = active_panel or instructions_input -- otherwise active_panel is nil when window opens
         local in_table = inTable(open_extra_panels, active_panel)
         if active_panel == instructions_input then
           vim.api.nvim_set_current_win(input_window.winid)
