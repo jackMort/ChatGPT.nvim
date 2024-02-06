@@ -351,9 +351,25 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
       if mode == "i" and (popup == input_window or popup == output_window) then
         goto continue
       end
+
       popup:map(mode, Config.options.edit_with_instructions.keymaps.cycle_windows, function()
-        active_panel = active_panel or instructions_input -- otherwise active_panel is nil when window opens
-        local in_table = inTable(open_extra_panels, active_panel)
+        -- #352 is a bug where active_panel is something not in here, maybe an
+        -- old window or something, lost amongst the global state
+        local possible_windows = {
+          input_window,
+          output_window,
+          settings_panel,
+          help_panel,
+          instructions_input,
+          unpack(open_extra_panels),
+        }
+
+        -- So if active_panel isn't something we expect it to be, make it do be.
+        if not inTable(possible_windows, active_panel) then
+          active_panel = instructions_input
+        end
+
+        local active_panel_is_in_extra_panels = inTable(open_extra_panels, active_panel)
         if active_panel == instructions_input then
           vim.api.nvim_set_current_win(input_window.winid)
           active_panel = input_window
@@ -370,9 +386,9 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
             vim.api.nvim_set_current_win(open_extra_panels[1].winid)
             active_panel = open_extra_panels[1]
           end
-        elseif in_table then
+        elseif active_panel_is_in_extra_panels then
           -- next index with wrap around and 0 for instructions_input
-          local next_index = (in_table + 1) % (#open_extra_panels + 1)
+          local next_index = (active_panel_is_in_extra_panels + 1) % (#open_extra_panels + 1)
           if next_index == 0 then
             vim.api.nvim_set_current_win(instructions_input.winid)
             active_panel = instructions_input
