@@ -229,13 +229,15 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   end
 
   -- close
-  for _, mode in ipairs({ "n", "i" }) do
-    instructions_input:map(mode, Config.options.edit_with_instructions.keymaps.close, function()
-      if vim.fn.mode() == "i" then
-        vim.api.nvim_command("stopinsert")
-      end
-      vim.cmd("q")
-    end, { noremap = true })
+  for _, popup in ipairs({ input_window, output_window, settings_panel, help_panel, instructions_input }) do
+    for _, mode in ipairs({ "n", "i" }) do
+      popup:map(mode, Config.options.edit_with_instructions.keymaps.close, function()
+        if vim.fn.mode() == "i" then
+          vim.api.nvim_command("stopinsert")
+        end
+        vim.cmd("q")
+      end, { noremap = true })
+    end
   end
 
   local function inTable(tbl, item)
@@ -350,6 +352,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
         goto continue
       end
       popup:map(mode, Config.options.edit_with_instructions.keymaps.cycle_windows, function()
+        active_panel = active_panel or instructions_input -- otherwise active_panel is nil when window opens
         local in_table = inTable(open_extra_panels, active_panel)
         if active_panel == instructions_input then
           vim.api.nvim_set_current_win(input_window.winid)

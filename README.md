@@ -39,7 +39,7 @@ a plugin showcase [video](https://www.youtube.com/watch?v=7k0KZsheLP4)
 
 - Make sure you have `curl` installed.
 
-- Get an API key from OpenAI, which you can [obtain here](https://beta.openai.com/account/api-keys).
+- Get an API key from OpenAI, which you can [obtain here](https://beta.openai.com/account/api-keys). (NOTE: a ChatGPT Plus subscription doesn't currently include the required API credits. You'll have to buy API credits [separately](https://platform.openai.com/account/billing/overview).)
 
 The OpenAI API key can be provided in one of the following two ways:
 

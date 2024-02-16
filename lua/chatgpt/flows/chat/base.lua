@@ -584,7 +584,7 @@ end
 
 function Chat:display_input_suffix(suffix)
   if self.chat_input.bufnr == nil then
-      return
+    return
   end
 
   if self.extmark_id then
