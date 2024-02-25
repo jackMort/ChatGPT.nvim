@@ -127,7 +127,9 @@ local setup_and_mount = vim.schedule_wrap(function(lines, output_lines, ...)
   -- set input and output settings
   for _, window in ipairs({ input_window, output_window }) do
     vim.api.nvim_buf_set_option(window.bufnr, "filetype", filetype)
-    vim.api.nvim_win_set_option(window.winid, "number", true)
+    if Config.options.show_line_numbers ~= false then
+      vim.api.nvim_win_set_option(window.winid, "number", true)
+    end
   end
 end)
 
