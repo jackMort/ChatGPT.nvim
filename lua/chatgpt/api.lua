@@ -250,22 +250,28 @@ local function loadAzureConfigs()
     loadRequiredConfig("OPENAI_API_AZURE_ENGINE", "OPENAI_API_AZURE_ENGINE", "azure_api_engine_cmd", function(engine)
       Api.OPENAI_API_AZURE_ENGINE = engine
 
-      loadOptionalConfig("OPENAI_API_AZURE_VERSION", "OPENAI_API_AZURE_VERSION", "azure_api_version_cmd", function(version)
-        Api.OPENAI_API_AZURE_VERSION = version
+      loadOptionalConfig(
+        "OPENAI_API_AZURE_VERSION",
+        "OPENAI_API_AZURE_VERSION",
+        "azure_api_version_cmd",
+        function(version)
+          Api.OPENAI_API_AZURE_VERSION = version
 
-        if Api["OPENAI_API_BASE"] and Api["OPENAI_API_AZURE_ENGINE"] then
-          Api.COMPLETIONS_URL = Api.OPENAI_API_BASE
-            .. "/openai/deployments/"
-            .. Api.OPENAI_API_AZURE_ENGINE
-            .. "/completions?api-version="
-            .. Api.OPENAI_API_AZURE_VERSION
-          Api.CHAT_COMPLETIONS_URL = Api.OPENAI_API_BASE
-            .. "/openai/deployments/"
-            .. Api.OPENAI_API_AZURE_ENGINE
-            .. "/chat/completions?api-version="
-            .. Api.OPENAI_API_AZURE_VERSION
-        end
-      end, "2023-05-15")
+          if Api["OPENAI_API_BASE"] and Api["OPENAI_API_AZURE_ENGINE"] then
+            Api.COMPLETIONS_URL = Api.OPENAI_API_BASE
+              .. "/openai/deployments/"
+              .. Api.OPENAI_API_AZURE_ENGINE
+              .. "/completions?api-version="
+              .. Api.OPENAI_API_AZURE_VERSION
+            Api.CHAT_COMPLETIONS_URL = Api.OPENAI_API_BASE
+              .. "/openai/deployments/"
+              .. Api.OPENAI_API_AZURE_ENGINE
+              .. "/chat/completions?api-version="
+              .. Api.OPENAI_API_AZURE_VERSION
+          end
+        end,
+        "2023-05-15"
+      )
     end)
   end)
 end
