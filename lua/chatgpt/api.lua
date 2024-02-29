@@ -220,54 +220,60 @@ local function loadConfigFromEnv(envName, configName, callback)
   end
 end
 
-local function loadApiHost(envName, configName, optionName, callback, defaultValue)
+local function loadOptionalConfig(envName, configName, optionName, callback, defaultValue)
   loadConfigFromEnv(envName, configName)
   if Api[configName] then
     callback(Api[configName])
+  elseif Config.options[optionName] ~= nil and Config.options[optionName] ~= "" then
+    loadConfigFromCommand(Config.options[optionName], optionName, callback, defaultValue)
   else
-    if Config.options[optionName] ~= nil and Config.options[optionName] ~= "" then
-      loadConfigFromCommand(Config.options[optionName], optionName, callback, defaultValue)
-    else
-      callback(defaultValue)
-    end
+    callback(defaultValue)
   end
 end
 
-local function loadApiKey(envName, configName, optionName, callback, defaultValue)
+local function loadRequiredConfig(envName, configName, optionName, callback, defaultValue)
   loadConfigFromEnv(envName, configName, callback)
   if not Api[configName] then
     if Config.options[optionName] ~= nil and Config.options[optionName] ~= "" then
       loadConfigFromCommand(Config.options[optionName], optionName, callback, defaultValue)
     else
-      logger.warn(envName .. " environment variable not set")
+      logger.warn(configName .. " variable not set")
       return
     end
   end
 end
 
 local function loadAzureConfigs()
-  loadApiKey("OPENAI_API_BASE", "OPENAI_API_BASE", "azure_api_base_cmd", function(value)
-    Api.OPENAI_API_BASE = value
-  end)
-  loadApiKey("OPENAI_API_AZURE_ENGINE", "OPENAI_API_AZURE_ENGINE", "azure_api_engine_cmd", function(value)
-    Api.OPENAI_API_AZURE_ENGINE = value
-  end)
-  loadApiHost("OPENAI_API_AZURE_VERSION", "OPENAI_API_AZURE_VERSION", "azure_api_version_cmd", function(value)
-    Api.OPENAI_API_AZURE_VERSION = value
-  end, "2023-05-15")
+  loadRequiredConfig("OPENAI_API_BASE", "OPENAI_API_BASE", "azure_api_base_cmd", function(base)
+    Api.OPENAI_API_BASE = base
 
-  if Api["OPENAI_API_BASE"] and Api["OPENAI_API_AZURE_ENGINE"] then
-    Api.COMPLETIONS_URL = Api.OPENAI_API_BASE
-      .. "/openai/deployments/"
-      .. Api.OPENAI_API_AZURE_ENGINE
-      .. "/completions?api-version="
-      .. Api.OPENAI_API_AZURE_VERSION
-    Api.CHAT_COMPLETIONS_URL = Api.OPENAI_API_BASE
-      .. "/openai/deployments/"
-      .. Api.OPENAI_API_AZURE_ENGINE
-      .. "/chat/completions?api-version="
-      .. Api.OPENAI_API_AZURE_VERSION
-  end
+    loadRequiredConfig("OPENAI_API_AZURE_ENGINE", "OPENAI_API_AZURE_ENGINE", "azure_api_engine_cmd", function(engine)
+      Api.OPENAI_API_AZURE_ENGINE = engine
+
+      loadOptionalConfig(
+        "OPENAI_API_AZURE_VERSION",
+        "OPENAI_API_AZURE_VERSION",
+        "azure_api_version_cmd",
+        function(version)
+          Api.OPENAI_API_AZURE_VERSION = version
+
+          if Api["OPENAI_API_BASE"] and Api["OPENAI_API_AZURE_ENGINE"] then
+            Api.COMPLETIONS_URL = Api.OPENAI_API_BASE
+              .. "/openai/deployments/"
+              .. Api.OPENAI_API_AZURE_ENGINE
+              .. "/completions?api-version="
+              .. Api.OPENAI_API_AZURE_VERSION
+            Api.CHAT_COMPLETIONS_URL = Api.OPENAI_API_BASE
+              .. "/openai/deployments/"
+              .. Api.OPENAI_API_AZURE_ENGINE
+              .. "/chat/completions?api-version="
+              .. Api.OPENAI_API_AZURE_VERSION
+          end
+        end,
+        "2023-05-15"
+      )
+    end)
+  end)
 end
 
 local function startsWith(str, start)
@@ -283,22 +289,24 @@ local function ensureUrlProtocol(str)
 end
 
 function Api.setup()
-  loadApiHost("OPENAI_API_HOST", "OPENAI_API_HOST", "api_host_cmd", function(value)
-    Api.OPENAI_API_HOST = value
+  loadOptionalConfig("OPENAI_API_HOST", "OPENAI_API_HOST", "api_host_cmd", function(host)
+    Api.OPENAI_API_HOST = host
     Api.COMPLETIONS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/completions")
     Api.CHAT_COMPLETIONS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/chat/completions")
     Api.EDITS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/edits")
   end, "api.openai.com")
 
-  loadApiKey("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(value)
-    Api.OPENAI_API_KEY = value
-    loadConfigFromEnv("OPENAI_API_TYPE", "OPENAI_API_TYPE")
-    if Api["OPENAI_API_TYPE"] == "azure" then
-      loadAzureConfigs()
-      Api.AUTHORIZATION_HEADER = "api-key: " .. Api.OPENAI_API_KEY
-    else
-      Api.AUTHORIZATION_HEADER = "Authorization: Bearer " .. Api.OPENAI_API_KEY
-    end
+  loadRequiredConfig("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(key)
+    Api.OPENAI_API_KEY = key
+
+    loadOptionalConfig("OPENAI_API_TYPE", "OPENAI_API_TYPE", "api_type_cmd", function(type)
+      if type == "azure" then
+        loadAzureConfigs()
+        Api.AUTHORIZATION_HEADER = "api-key: " .. Api.OPENAI_API_KEY
+      else
+        Api.AUTHORIZATION_HEADER = "Authorization: Bearer " .. Api.OPENAI_API_KEY
+      end
+    end, "")
   end)
 end
 

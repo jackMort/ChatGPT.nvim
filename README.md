@@ -3,29 +3,49 @@
 ![GitHub Workflow Status](http://img.shields.io/github/actions/workflow/status/jackMort/ChatGPT.nvim/default.yml?branch=main&style=for-the-badge)
 ![Lua](https://img.shields.io/badge/Made%20with%20Lua-blueviolet.svg?style=for-the-badge&logo=lua)
 
-`ChatGPT` is a Neovim plugin that allows you to effortlessly utilize the OpenAI ChatGPT API,
-empowering you to generate natural language responses from OpenAI's ChatGPT directly within the editor in response to your inquiries.
+`ChatGPT` is a Neovim plugin that allows you to effortlessly utilize the OpenAI
+ChatGPT API, empowering you to generate natural language responses from
+OpenAI's ChatGPT directly within the editor in response to your inquiries.
 
 ![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview-2.png?raw=true)
 
 ## Features
-- **Interactive Q&A**: Engage in interactive question-and-answer sessions with the powerful gpt model (ChatGPT) using an intuitive interface.
-- **Persona-based Conversations**: Explore various perspectives and have conversations with different personas by selecting prompts from Awesome ChatGPT Prompts.
-- **Code Editing Assistance**: Enhance your coding experience with an interactive editing window powered by the gpt model, offering instructions tailored for coding tasks.
-- **Code Completion**: Enjoy the convenience of code completion similar to GitHub Copilot, leveraging the capabilities of the gpt model to suggest code snippets and completions based on context and programming patterns.
-- **Customizable Actions**: Execute a range of actions utilizing the gpt model, such as grammar correction, translation, keyword generation, docstring creation, test addition, code optimization, summarization, bug fixing, code explanation, Roxygen editing, and code readability analysis. Additionally, you can define your own custom actions using a JSON file.
 
-For a comprehensive understanding of the extension's functionality, you can watch a plugin showcase [video](https://www.youtube.com/watch?v=7k0KZsheLP4)
+- **Interactive Q&A**: Engage in interactive question-and-answer sessions with
+the powerful gpt model (ChatGPT) using an intuitive interface.
+
+- **Persona-based Conversations**: Explore various perspectives and have
+conversations with different personas by selecting prompts from Awesome ChatGPT
+Prompts.
+
+- **Code Editing Assistance**: Enhance your coding experience with an interactive
+editing window powered by the gpt model, offering instructions tailored for
+coding tasks.
+
+- **Code Completion**: Enjoy the convenience of code completion similar to GitHub
+Copilot, leveraging the capabilities of the gpt model to suggest code snippets
+and completions based on context and programming patterns.
+
+- **Customizable Actions**: Execute a range of actions utilizing the gpt model,
+such as grammar correction, translation, keyword generation, docstring creation,
+test addition, code optimization, summarization, bug fixing, code explanation,
+Roxygen editing, and code readability analysis. Additionally, you can define
+your own custom actions using a JSON file.
+
+For a comprehensive understanding of the extension's functionality, you can watch
+a plugin showcase [video](https://www.youtube.com/watch?v=7k0KZsheLP4)
 
 ## Installation
 
 - Make sure you have `curl` installed.
+
 - Get an API key from OpenAI, which you can [obtain here](https://beta.openai.com/account/api-keys). (NOTE: a ChatGPT Plus subscription doesn't currently include the required API credits. You'll have to buy API credits [separately](https://platform.openai.com/account/billing/overview).)
 
 The OpenAI API key can be provided in one of the following two ways:
 
 1. In the configuration option `api_key_cmd`, provide the path and arguments to
    an executable that returns the API key via stdout.
+
 1. Setting it via an environment variable called `$OPENAI_API_KEY`.
 
 Custom OpenAI API host with the configuration option `api_host_cmd` or
@@ -34,6 +54,7 @@ OpenAI directly
 
 Custom cURL parameters can be passed using the configuration option `extra_curl_params`.
 It can be useful if you need to include additional headers for requests:
+
 ```lua
 {
   ...,
@@ -44,12 +65,45 @@ It can be useful if you need to include additional headers for requests:
 }
 ```
 
-For Azure deployments, you also need to set environment variables
-`$OPENAI_API_TYPE` to `azure`, `$OPENAI_API_BASE` to your own resource URL,
-e.g. `https://{your-resource-name}.openai.azure.com`, and `$OPENAI_API_AZURE_ENGINE`
-to your deployment ID. Optionally, if you need a different API version,
-set `$OPENAI_API_AZURE_VERSION` as well. Note that edit models have been deprecated
-so they might not work.
+For Azure deployments, you need to specify the URL base, the engine, and the API
+type. You can accomplish this in one of two ways:
+
+1. Use the configuration options `api_type_cmd`, `azure_api_base`,
+`azure_api_engine_cmd`, and `azure_api_version_cmd`. Each of these should be
+an executable command that returns the corresponding value.
+
+For example:
+
+```lua
+  local config = {
+    api_host_cmd = 'echo -n ""',
+    api_key_cmd = 'pass azure-openai-key',
+    api_type_cmd = 'echo azure',
+    azure_api_base_cmd = 'echo https://{your-resource-name}.openai.azure.com',
+    azure_api_engine_cmd = 'echo chat',
+    azure_api_version_cmd = 'echo 2023-05-15'
+  }
+
+  require("chatgpt").setup(config)
+```
+
+1. Set the values via the environment variables `$OPENAI_API_TYPE`,
+`$OPENAI_API_BASE`, `$OPENAI_API_AZURE_ENGINE`, and `$OPENAI_API_AZURE_VERSION`.
+
+For example:
+
+```bash
+export OPENAI_API_TYPE="azure"
+export OPENAI_API_BASE="https://{your-resource-name}.openai.azure.com"
+export OPENAI_API_AZURE_ENGINE="chat"
+export OPENAI_API_AZURE_VERSION="2023-05-15"
+```
+
+Please note that edit models have been deprecated and may not function as
+expected.
+
+If you are using [packer.nvim](https://github.com/wbthomason/packer.nvim) as
+plugin manager:
 
 ```lua
 -- Packer
@@ -65,6 +119,8 @@ use({
       "nvim-telescope/telescope.nvim"
     }
 })
+
+or if you are using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
 -- Lazy
 {
@@ -84,7 +140,8 @@ use({
 
 ## Configuration
 
-`ChatGPT.nvim` comes with the following defaults, you can override them by passing config as setup param
+`ChatGPT.nvim` comes with the following defaults, you can override them by
+passing config as setup param
 
 https://github.com/jackMort/ChatGPT.nvim/blob/f1453f588eb47e49e57fa34ac1776b795d71e2f1/lua/chatgpt/config.lua#L10-L182
 
@@ -119,26 +176,36 @@ require("chatgpt").setup({
 })
 ```
 
-Note that the `api_key_cmd` arguments are split by whitespace. If you need whitespace inside an argument (for example to reference a path with spaces), you can wrap it in a separate script.
+Note that the `api_key_cmd` arguments are split by whitespace. If you need
+whitespace inside an argument (for example to reference a path with spaces),
+you can wrap it in a separate script.
 
 ## Usage
 
 Plugin exposes following commands:
 
-#### `ChatGPT`
+### `ChatGPT`
+
 `ChatGPT` command which opens interactive window using the `gpt-3.5-turbo`
 model.
 (also known as `ChatGPT`)
 
-#### `ChatGPTActAs`
-`ChatGPTActAs` command which opens a prompt selection from [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts) to be used with the `gpt-3.5-turbo` model.
+### `ChatGPTActAs`
+
+`ChatGPTActAs` command which opens a prompt selection from
+[Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts)
+to be used with the `gpt-3.5-turbo` model.
 
 ![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview-3.png?raw=true)
 
-#### `ChatGPTEditWithInstructions`
-`ChatGPTEditWithInstructions` command which opens interactive window to edit selected text or whole window using the `code-davinci-edit-001` model (GPT 3.5 fine-tuned for coding).
+### `ChatGPTEditWithInstructions`
+
+`ChatGPTEditWithInstructions` command which opens interactive window to edit
+selected text or whole window using the `code-davinci-edit-001` model (GPT 3.5
+fine-tuned for coding).
 
 You can map it using the Lua API, e.g. using `which-key.nvim`:
+
 ```lua
 local chatgpt = require("chatgpt")
 wk.register({
@@ -163,7 +230,10 @@ wk.register({
 
 #### `ChatGPTRun`
 
-`ChatGPTRun [action]` command which runs specific actions -- see [`actions.json`](./lua/chatgpt/flows/actions/actions.json) file for a detailed list. Available actions are:
+`ChatGPTRun [action]` command which runs specific actions -- See
+[`actions.json`](./lua/chatgpt/flows/actions/actions.json) file for a detailed
+list. Available actions are:
+
   1. `grammar_correction`
   2. `translate`
   3. `keywords`
@@ -181,6 +251,7 @@ All the above actions are using `gpt-3.5-turbo` model.
 It is possible to define custom actions with a JSON file. See [`actions.json`](./lua/chatgpt/flows/actions/actions.json) for an example. The path of custom actions can be set in the config (see `actions_paths` field in the config example above).
 
 An example of custom action may look like this: (`#` marks comments)
+
 ```python
 {
   "action_name": {
@@ -205,6 +276,7 @@ An example of custom action may look like this: (`#` marks comments)
   }
 }
 ```
+
 The `edit` strategy consists in showing the output side by side with the input and
 available for further editing requests.
 For now, `edit` strategy is implemented for `chat` type only.
@@ -214,8 +286,10 @@ The `display` strategy shows the output in a float window.
 `append` and `replace` modify the text directly in the buffer.
 
 ### Interactive popup
+
 When using `ChatGPT` and `ChatGPTEditWithInstructions`, the following
 keybindings are available:
+
 - `<C-Enter>` [Both] to submit.
 - `<C-y>` [Both] to copy/yank last answer.
 - `<C-o>` [Both] Toggle settings window.
@@ -239,7 +313,9 @@ When the setting window is opened (with `<C-o>`), settings can be modified by
 pressing `Enter` on the related config. Settings are saved across sections
 
 ### Whichkey plugin mappings
-Add these to your [whichkey](https://github.com/folke/which-key.nvim) plugin mappings for convenient binds
+
+Add these to your [whichkey](https://github.com/folke/which-key.nvim) plugin
+mappings for convenient binds
 
 ```lua
 c = {
