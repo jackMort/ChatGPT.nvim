@@ -87,7 +87,7 @@ For example:
   require("chatgpt").setup(config)
 ```
 
-1. Set the values via the environment variables `$OPENAI_API_TYPE`,
+2. Set the values via the environment variables `$OPENAI_API_TYPE`,
 `$OPENAI_API_BASE`, `$OPENAI_API_AZURE_ENGINE`, and `$OPENAI_API_AZURE_VERSION`.
 
 For example:
