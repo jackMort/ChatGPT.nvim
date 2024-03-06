@@ -54,7 +54,12 @@ function Api.chat_completions(custom_params, cb, should_stop)
           if raw_json == "[DONE]" then
             cb(raw_chunks, "END")
           else
-            ok, json = pcall(vim.json.decode, raw_json)
+            ok, json = pcall(vim.json.decode, raw_json, {
+              luanil = {
+                object = true,
+                array = true,
+              },
+            })
             if ok and json ~= nil then
               if
                 json
