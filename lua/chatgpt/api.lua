@@ -4,17 +4,125 @@ local logger = require("chatgpt.common.logger")
 
 local Api = {}
 
+local key_expiry_timestamp = nil
+
+local function updateAuthenticationKey(key, timeout_in_secs)
+  if not key then
+    logger.warn("OPENAI_API_KEY callback is nil")
+    return
+  end
+
+  if timeout_in_secs then
+    key_expiry_timestamp = os.time() + timeout_in_secs
+  end
+
+  Api.OPENAI_API_KEY = key
+  if Api["OPENAI_API_TYPE"] == "azure" then
+    Api.AUTHORIZATION_HEADER = "api-key: " .. Api.OPENAI_API_KEY
+  else
+    Api.AUTHORIZATION_HEADER = "Authorization: Bearer " .. Api.OPENAI_API_KEY
+  end
+end
+
+local splitCommandIntoTable = function(command)
+  local cmd = {}
+  for word in command:gmatch("%S+") do
+    table.insert(cmd, word)
+  end
+  return cmd
+end
+
+local function loadConfigFromCommand(command, optionName, callback, defaultValue)
+  if (type(command) == "function") then
+    return command(callback) -- or callback(defaultValue)
+  else
+    local cmd = splitCommandIntoTable(command)
+    job
+      :new({
+        command = cmd[1],
+        args = vim.list_slice(cmd, 2, #cmd),
+        on_exit = function(j, exit_code)
+          if exit_code ~= 0 then
+            logger.warn("Config '" .. optionName .. "' did not return a value when executed")
+            return
+          end
+          local value = j:result()[1]:gsub("%s+$", "")
+          if value ~= nil and value ~= "" then
+            callback(value)
+          elseif defaultValue ~= nil and defaultValue ~= "" then
+            callback(defaultValue)
+          end
+        end,
+      })
+      :start()
+      return
+  end
+end
+
+local function loadConfigFromEnv(envName, configName, callback)
+  local variable = os.getenv(envName)
+  if not variable then
+    return
+  end
+  local value = variable:gsub("%s+$", "")
+  Api[configName] = value
+  if callback then
+    callback(value)
+  end
+end
+
+local function loadOptionalConfig(envName, configName, optionName, callback, defaultValue)
+  loadConfigFromEnv(envName, configName)
+  if Api[configName] then
+    callback(Api[configName])
+  elseif Config.options[optionName] ~= nil and Config.options[optionName] ~= "" then
+    loadConfigFromCommand(Config.options[optionName], optionName, callback, defaultValue)
+  else
+    callback(defaultValue)
+  end
+end
+
+local function loadRequiredConfig(envName, configName, optionName, callback, defaultValue)
+  loadConfigFromEnv(envName, configName, callback)
+  if not Api[configName] then
+    if Config.options[optionName] ~= nil and Config.options[optionName] ~= "" then
+      loadConfigFromCommand(Config.options[optionName], optionName, callback, defaultValue)
+    else
+      logger.warn(configName .. " variable not set")
+      return
+    end
+  end
+end
+
+-- Check if the key is valid and start the job
+local function startJobWithKeyValidation(cb)
+  if not Api["OPENAI_API_KEY"] or (key_expiry_timestamp and os.time() > key_expiry_timestamp) then
+    if key_expiry_timestamp then
+      logger.info("startJobWithKeyValidation: Key expired at " .. key_expiry_timestamp)
+    end
+    Api["OPENAI_API_KEY"] = nil
+    loadRequiredConfig("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", vim.schedule_wrap(function(value, timeout)
+      updateAuthenticationKey(value, timeout)
+      cb()
+    end))
+  else
+    cb()
+  end
+  return 0
+end
+
 function Api.completions(custom_params, cb)
   local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
   Api.make_call(Api.COMPLETIONS_URL, params, cb)
 end
 
-function Api.chat_completions(custom_params, cb, should_stop)
+local function doChatCompletions(custom_params, cb, should_stop)
   local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
   local stream = params.stream or false
   if stream then
     local raw_chunks = ""
     local state = "START"
+    local prev_chunk  -- store incomplete line from previous chunk
 
     cb = vim.schedule_wrap(cb)
 
@@ -42,6 +150,10 @@ function Api.chat_completions(custom_params, cb, should_stop)
       "curl",
       args,
       function(chunk)
+        if prev_chunk ~= nil then
+          chunk = prev_chunk .. chunk
+          prev_chunk = nil
+        end
         local ok, json = pcall(vim.json.decode, chunk)
         if ok and json ~= nil then
           if json.error ~= nil then
@@ -72,6 +184,8 @@ function Api.chat_completions(custom_params, cb, should_stop)
                 raw_chunks = raw_chunks .. json.choices[1].delta.content
                 state = "CONTINUE"
               end
+            else
+              prev_chunk = line
             end
           end
         end
@@ -87,6 +201,12 @@ function Api.chat_completions(custom_params, cb, should_stop)
   else
     Api.make_call(Api.CHAT_COMPLETIONS_URL, params, cb)
   end
+end
+
+function Api.chat_completions(custom_params, cb, should_stop)
+  startJobWithKeyValidation(function()
+    doChatCompletions(custom_params, cb, should_stop)
+  end)
 end
 
 function Api.edits(custom_params, cb)
@@ -127,15 +247,17 @@ function Api.make_call(url, params, cb)
     end
   end
 
-  Api.job = job
-    :new({
-      command = "curl",
-      args = args,
-      on_exit = vim.schedule_wrap(function(response, exit_code)
-        Api.handle_response(response, exit_code, cb)
-      end),
-    })
-    :start()
+  startJobWithKeyValidation(function()
+    Api.job = job
+      :new({
+        command = "curl",
+        args = args,
+        on_exit = vim.schedule_wrap(function(response, exit_code)
+          Api.handle_response(response, exit_code, cb)
+        end),
+      })
+      :start()
+  end)
 end
 
 Api.handle_response = vim.schedule_wrap(function(response, exit_code, cb)
@@ -180,71 +302,6 @@ end)
 function Api.close()
   if Api.job then
     job:shutdown()
-  end
-end
-
-local splitCommandIntoTable = function(command)
-  local cmd = {}
-  for word in command:gmatch("%S+") do
-    table.insert(cmd, word)
-  end
-  return cmd
-end
-
-local function loadConfigFromCommand(command, optionName, callback, defaultValue)
-  local cmd = splitCommandIntoTable(command)
-  job
-    :new({
-      command = cmd[1],
-      args = vim.list_slice(cmd, 2, #cmd),
-      on_exit = function(j, exit_code)
-        if exit_code ~= 0 then
-          logger.warn("Config '" .. optionName .. "' did not return a value when executed")
-          return
-        end
-        local value = j:result()[1]:gsub("%s+$", "")
-        if value ~= nil and value ~= "" then
-          callback(value)
-        elseif defaultValue ~= nil and defaultValue ~= "" then
-          callback(defaultValue)
-        end
-      end,
-    })
-    :start()
-end
-
-local function loadConfigFromEnv(envName, configName, callback)
-  local variable = os.getenv(envName)
-  if not variable then
-    return
-  end
-  local value = variable:gsub("%s+$", "")
-  Api[configName] = value
-  if callback then
-    callback(value)
-  end
-end
-
-local function loadOptionalConfig(envName, configName, optionName, callback, defaultValue)
-  loadConfigFromEnv(envName, configName)
-  if Api[configName] then
-    callback(Api[configName])
-  elseif Config.options[optionName] ~= nil and Config.options[optionName] ~= "" then
-    loadConfigFromCommand(Config.options[optionName], optionName, callback, defaultValue)
-  else
-    callback(defaultValue)
-  end
-end
-
-local function loadRequiredConfig(envName, configName, optionName, callback, defaultValue)
-  loadConfigFromEnv(envName, configName, callback)
-  if not Api[configName] then
-    if Config.options[optionName] ~= nil and Config.options[optionName] ~= "" then
-      loadConfigFromCommand(Config.options[optionName], optionName, callback, defaultValue)
-    else
-      logger.warn(configName .. " variable not set")
-      return
-    end
   end
 end
 
@@ -301,16 +358,12 @@ function Api.setup()
     Api.EDITS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/edits")
   end, "api.openai.com")
 
-  loadRequiredConfig("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(key)
-    Api.OPENAI_API_KEY = key
-
+  loadRequiredConfig("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(key, timeout)
     loadOptionalConfig("OPENAI_API_TYPE", "OPENAI_API_TYPE", "api_type_cmd", function(type)
       if type == "azure" then
         loadAzureConfigs()
-        Api.AUTHORIZATION_HEADER = "api-key: " .. Api.OPENAI_API_KEY
-      else
-        Api.AUTHORIZATION_HEADER = "Authorization: Bearer " .. Api.OPENAI_API_KEY
       end
+      updateAuthenticationKey(key, timeout)
     end, "")
   end)
 end
