@@ -14,6 +14,11 @@ end
 function Api.chat_completions(custom_params, cb, should_stop)
   local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
   local params = vim.tbl_extend("keep", custom_params, openai_params)
+  -- the custom params contains <dynamic> if model is not constant but function
+  -- therefore, use collapsed openai params (with function evaluated to get model) if that is the case
+  if params.model == "<dynamic>" then
+    params.model = openai_params.model
+  end
   local stream = params.stream or false
   if stream then
     local raw_chunks = ""

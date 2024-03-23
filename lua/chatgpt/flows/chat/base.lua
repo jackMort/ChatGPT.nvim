@@ -736,10 +736,20 @@ function Chat:get_layout_params()
 end
 
 function Chat:open()
-  local openai_params = Utils.collapsed_openai_params(self.params)
-  vim.notify(vim.inspect(self.params))
-  vim.notify(vim.inspect(openai_params))
-  self.settings_panel = Settings.get_settings_panel("chat_completions", openai_params)
+  -- local openai_params = Utils.collapsed_openai_params(self.params)
+  -- vim.notify(vim.inspect(self.params))
+  -- vim.notify(vim.inspect(openai_params))
+  local displayed_params = Utils.table_shallow_copy(self.params)
+  -- if the param is decided by a function and not constant, write <dynamic> for now
+  -- TODO: if the current model should be displayed, the settings_panel would
+  -- have to be constantly modified or rewritten to be able to manage a function
+  -- returning the model as well
+  for value, key in pairs(displayed_params) do
+    if type(value) == "function" then
+      displayed_params[key] = "<dynamic>"
+    end
+  end
+  self.settings_panel = Settings.get_settings_panel("chat_completions", displayed_params)
   self.help_panel = Help.get_help_panel("chat")
   self.sessions_panel = Sessions.get_panel(function(session)
     self:set_session(session)
@@ -1029,8 +1039,6 @@ function Chat:open_system_panel()
 end
 
 function Chat:redraw(noinit)
-  local openai_params = Utils.collapsed_openai_params(self.params)
-  self.settings_panel = Settings.get_settings_panel("chat_completions", openai_params)
   noinit = noinit or false
   self.layout:update(self:get_layout_params())
   if not noinit then
