@@ -737,6 +737,7 @@ end
 
 function Chat:open()
   local openai_params = Utils.collapsed_openai_params(self.params)
+  vim.notify(vim.inspect(openai_params))
   self.settings_panel = Settings.get_settings_panel("chat_completions", openai_params)
   self.help_panel = Help.get_help_panel("chat")
   self.sessions_panel = Sessions.get_panel(function(session)
