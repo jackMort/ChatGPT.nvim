@@ -736,21 +736,16 @@ function Chat:get_layout_params()
 end
 
 function Chat:open()
-  -- local openai_params = Utils.collapsed_openai_params(self.params)
-  -- vim.notify(vim.inspect(self.params))
-  -- vim.notify(vim.inspect(openai_params))
   local displayed_params = Utils.table_shallow_copy(self.params)
   -- if the param is decided by a function and not constant, write <dynamic> for now
   -- TODO: if the current model should be displayed, the settings_panel would
   -- have to be constantly modified or rewritten to be able to manage a function
   -- returning the model as well
-  vim.notify("Chat.params are " .. vim.inspect(displayed_params) .. " and should equal " .. vim.inspect(self.params))
   for key, value in pairs(self.params) do
     if type(value) == "function" then
       displayed_params[key] = "<dynamic>"
     end
   end
-  vim.notify("processed displayed_params are " .. vim.inspect(displayed_params))
   self.settings_panel = Settings.get_settings_panel("chat_completions", displayed_params)
   self.help_panel = Help.get_help_panel("chat")
   self.sessions_panel = Sessions.get_panel(function(session)

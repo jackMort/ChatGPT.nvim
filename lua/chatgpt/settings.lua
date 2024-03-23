@@ -70,7 +70,6 @@ M.get_settings_panel = function(type, default_params)
   M.type = type
   local custom_params = M.read_config()
   M.params = vim.tbl_deep_extend("force", {}, default_params, custom_params or {})
-  vim.notify("Settings.params are " .. vim.inspect(M.params))
 
   M.panel = Popup(Config.options.settings_window)
 
