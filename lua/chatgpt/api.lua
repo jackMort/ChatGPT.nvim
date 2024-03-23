@@ -1,41 +1,18 @@
 local job = require("plenary.job")
 local Config = require("chatgpt.config")
 local logger = require("chatgpt.common.logger")
+local Utils = require("chatgpt.utils")
 
 local Api = {}
 
----@param tbl table
----@return table
-local function table_shallow_copy(tbl)
-  local copy = {}
-  for key, value in pairs(tbl) do
-    copy[key] = value
-  end
-  return copy
-end
-
---- A function that collapses the openai params.
---- This means all the parameters of the openai_params that can be either constants or functions
---- will be set to constants by evaluating the functions.
----@param openai_params table
----@return table
-local function collapsed_openai_params(openai_params)
-  local collapsed = table_shallow_copy(openai_params)
-  -- use copied version of table so the original model value remains a function and can still change
-  if type(collapsed.model) == "function" then
-    collapsed.model = collapsed.model()
-  end
-  return collapsed
-end
-
 function Api.completions(custom_params, cb)
-  local openai_params = collapsed_openai_params(Config.options.openai_params)
+  local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
   local params = vim.tbl_extend("keep", custom_params, openai_params)
   Api.make_call(Api.COMPLETIONS_URL, params, cb)
 end
 
 function Api.chat_completions(custom_params, cb, should_stop)
-  local openai_params = collapsed_openai_params(Config.options.openai_params)
+  local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
   local params = vim.tbl_extend("keep", custom_params, openai_params)
   local stream = params.stream or false
   if stream then
@@ -116,7 +93,7 @@ function Api.chat_completions(custom_params, cb, should_stop)
 end
 
 function Api.edits(custom_params, cb)
-  local openai_params = collapsed_openai_params(Config.options.openai_params)
+  local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
   local params = vim.tbl_extend("keep", custom_params, openai_params)
   if params.model == "text-davinci-edit-001" or params.model == "code-davinci-edit-001" then
     vim.notify("Edit models are deprecated", vim.log.levels.WARN)

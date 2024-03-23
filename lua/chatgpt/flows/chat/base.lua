@@ -736,7 +736,8 @@ function Chat:get_layout_params()
 end
 
 function Chat:open()
-  self.settings_panel = Settings.get_settings_panel("chat_completions", self.params)
+  local openai_params = Utils.collapsed_openai_params(self.params)
+  self.settings_panel = Settings.get_settings_panel("chat_completions", openai_params)
   self.help_panel = Help.get_help_panel("chat")
   self.sessions_panel = Sessions.get_panel(function(session)
     self:set_session(session)
