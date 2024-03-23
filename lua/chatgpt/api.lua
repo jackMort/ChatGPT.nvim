@@ -19,7 +19,7 @@ function Api.chat_completions(custom_params, cb, should_stop)
   if params.model == "<dynamic>" then
     params.model = openai_params.model
   end
-  vim.notify("Sending request with model " .. params.model)
+  vim.notify("Sending request with model " .. params.model .. " (openai model is " .. openai_params.model .. ")")
   local stream = params.stream or false
   if stream then
     local raw_chunks = ""
