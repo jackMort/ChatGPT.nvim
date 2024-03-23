@@ -744,7 +744,7 @@ function Chat:open()
   -- TODO: if the current model should be displayed, the settings_panel would
   -- have to be constantly modified or rewritten to be able to manage a function
   -- returning the model as well
-  for value, key in pairs(displayed_params) do
+  for value, key in pairs(self.params) do
     if type(value) == "function" then
       displayed_params[key] = "<dynamic>"
     end
