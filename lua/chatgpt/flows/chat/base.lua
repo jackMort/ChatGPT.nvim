@@ -744,11 +744,13 @@ function Chat:open()
   -- TODO: if the current model should be displayed, the settings_panel would
   -- have to be constantly modified or rewritten to be able to manage a function
   -- returning the model as well
+  vim.notify("Chat.params are " .. vim.inspect(displayed_params) .. " and should equal " .. vim.inspect(self.params))
   for value, key in pairs(self.params) do
     if type(value) == "function" then
       displayed_params[key] = "<dynamic>"
     end
   end
+  vim.notify("processed displayed_params are " .. vim.inspect(displayed_params))
   self.settings_panel = Settings.get_settings_panel("chat_completions", displayed_params)
   self.help_panel = Help.get_help_panel("chat")
   self.sessions_panel = Sessions.get_panel(function(session)
