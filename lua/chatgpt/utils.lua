@@ -20,9 +20,12 @@ end
 function M.collapsed_openai_params(openai_params)
   local collapsed = M.table_shallow_copy(openai_params)
   -- use copied version of table so the original model value remains a function and can still change
+  vim.notify("collapsing openai params: params " .. openai_params)
   if type(collapsed.model) == "function" then
     collapsed.model = collapsed.model()
   end
+  vim.notify("collapsing openai params: collapsed" .. collapsed)
+  vim.notify("collapsing openai params: params now" .. openai_params)
   return collapsed
 end
 
