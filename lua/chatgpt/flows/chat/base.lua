@@ -745,7 +745,7 @@ function Chat:open()
   -- have to be constantly modified or rewritten to be able to manage a function
   -- returning the model as well
   vim.notify("Chat.params are " .. vim.inspect(displayed_params) .. " and should equal " .. vim.inspect(self.params))
-  for value, key in pairs(self.params) do
+  for key, value in pairs(self.params) do
     if type(value) == "function" then
       displayed_params[key] = "<dynamic>"
     end
