@@ -517,7 +517,7 @@ function Chat:toMessages()
       role = "assistant"
     end
     local content = {}
-    if self.params.model == "gpt-4-vision-preview" then
+    if Utils.collapsed_openai_params(self.params.model) == "gpt-4-vision-preview" then
       for _, line in ipairs(msg.lines) do
         table.insert(content, createContent(line))
       end
@@ -1029,6 +1029,8 @@ function Chat:open_system_panel()
 end
 
 function Chat:redraw(noinit)
+  local openai_params = Utils.collapsed_openai_params(self.params)
+  self.settings_panel = Settings.get_settings_panel("chat_completions", openai_params)
   noinit = noinit or false
   self.layout:update(self:get_layout_params())
   if not noinit then
