@@ -181,6 +181,7 @@ function M.defaults()
       help_key = "@symbol",
       help_description = "@comment",
       params_value = "@identifier",
+      input_title = 'FloatBorder',
     },
   }
   return defaults
