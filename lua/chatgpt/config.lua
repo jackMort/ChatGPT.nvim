@@ -180,6 +180,7 @@ function M.defaults()
     highlights = {
       help_key = "@symbol",
       help_description = "@comment",
+      params_value = "@identifier",
     },
   }
   return defaults
