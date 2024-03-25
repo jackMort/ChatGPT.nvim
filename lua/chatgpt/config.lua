@@ -180,8 +180,8 @@ function M.defaults()
     highlights = {
       help_key = "@symbol",
       help_description = "@comment",
-      params_value = "@identifier",
-      input_title = 'FloatBorder',
+      params_value = "Identifier",
+      input_title = "FloatBorder",
     },
   }
   return defaults
