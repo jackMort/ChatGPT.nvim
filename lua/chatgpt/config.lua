@@ -182,6 +182,7 @@ function M.defaults()
       help_description = "@comment",
       params_value = "Identifier",
       input_title = "FloatBorder",
+      active_session = "ErrorMsg",
     },
   }
   return defaults
