@@ -58,7 +58,7 @@ M.render_list = function()
   for i, session in pairs(M.sessions) do
     local icon = i == M.active_line and Config.options.chat.sessions_window.active_sign
       or Config.options.chat.sessions_window.inactive_sign
-    local cls = i == M.active_line and "ErrorMsg" or "Comment"
+    local cls = i == M.active_line and Config.options.highlights.active_session or "Comment"
     local name = Utils.trimText(session.name, 30)
     local vt = {
       { (M.current_line == i and Config.options.chat.sessions_window.current_line_sign or " ") .. icon .. name, cls },
