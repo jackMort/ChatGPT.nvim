@@ -70,11 +70,11 @@ function Api.chat_completions(custom_params, cb, should_stop)
             })
             if ok and json ~= nil then
               if
-                  json
-                  and json.choices
-                  and json.choices[1]
-                  and json.choices[1].delta
-                  and json.choices[1].delta.content
+                json
+                and json.choices
+                and json.choices[1]
+                and json.choices[1].delta
+                and json.choices[1].delta.content
               then
                 cb(json.choices[1].delta.content, state)
                 raw_chunks = raw_chunks .. json.choices[1].delta.content
@@ -137,14 +137,14 @@ function Api.make_call(url, params, cb)
   end
 
   Api.job = job
-      :new({
-        command = "curl",
-        args = args,
-        on_exit = vim.schedule_wrap(function(response, exit_code)
-          Api.handle_response(response, exit_code, cb)
-        end),
-      })
-      :start()
+    :new({
+      command = "curl",
+      args = args,
+      on_exit = vim.schedule_wrap(function(response, exit_code)
+        Api.handle_response(response, exit_code, cb)
+      end),
+    })
+    :start()
 end
 
 Api.handle_response = vim.schedule_wrap(function(response, exit_code, cb)
@@ -203,23 +203,23 @@ end
 local function loadConfigFromCommand(command, optionName, callback, defaultValue)
   local cmd = splitCommandIntoTable(command)
   job
-      :new({
-        command = cmd[1],
-        args = vim.list_slice(cmd, 2, #cmd),
-        on_exit = function(j, exit_code)
-          if exit_code ~= 0 then
-            logger.warn("Config '" .. optionName .. "' did not return a value when executed")
-            return
-          end
-          local value = j:result()[1]:gsub("%s+$", "")
-          if value ~= nil and value ~= "" then
-            callback(value)
-          elseif defaultValue ~= nil and defaultValue ~= "" then
-            callback(defaultValue)
-          end
-        end,
-      })
-      :start()
+    :new({
+      command = cmd[1],
+      args = vim.list_slice(cmd, 2, #cmd),
+      on_exit = function(j, exit_code)
+        if exit_code ~= 0 then
+          logger.warn("Config '" .. optionName .. "' did not return a value when executed")
+          return
+        end
+        local value = j:result()[1]:gsub("%s+$", "")
+        if value ~= nil and value ~= "" then
+          callback(value)
+        elseif defaultValue ~= nil and defaultValue ~= "" then
+          callback(defaultValue)
+        end
+      end,
+    })
+    :start()
 end
 
 local function loadConfigFromEnv(envName, configName, callback)
@@ -273,15 +273,15 @@ local function loadAzureConfigs()
 
           if Api["OPENAI_API_BASE"] and Api["OPENAI_API_AZURE_ENGINE"] then
             Api.COMPLETIONS_URL = Api.OPENAI_API_BASE
-                .. "/openai/deployments/"
-                .. Api.OPENAI_API_AZURE_ENGINE
-                .. "/completions?api-version="
-                .. Api.OPENAI_API_AZURE_VERSION
+              .. "/openai/deployments/"
+              .. Api.OPENAI_API_AZURE_ENGINE
+              .. "/completions?api-version="
+              .. Api.OPENAI_API_AZURE_VERSION
             Api.CHAT_COMPLETIONS_URL = Api.OPENAI_API_BASE
-                .. "/openai/deployments/"
-                .. Api.OPENAI_API_AZURE_ENGINE
-                .. "/chat/completions?api-version="
-                .. Api.OPENAI_API_AZURE_VERSION
+              .. "/openai/deployments/"
+              .. Api.OPENAI_API_AZURE_ENGINE
+              .. "/chat/completions?api-version="
+              .. Api.OPENAI_API_AZURE_VERSION
           end
         end,
         "2023-05-15"
