@@ -517,7 +517,7 @@ function Chat:toMessages()
       role = "assistant"
     end
     local content = {}
-    if self.params.model == "gpt-4-vision-preview" then
+    if Utils.collapsed_openai_params(self.params).model == "gpt-4-vision-preview" then
       for _, line in ipairs(msg.lines) do
         table.insert(content, createContent(line))
       end
@@ -736,7 +736,17 @@ function Chat:get_layout_params()
 end
 
 function Chat:open()
-  self.settings_panel = Settings.get_settings_panel("chat_completions", self.params)
+  local displayed_params = Utils.table_shallow_copy(self.params)
+  -- if the param is decided by a function and not constant, write <dynamic> for now
+  -- TODO: if the current model should be displayed, the settings_panel would
+  -- have to be constantly modified or rewritten to be able to manage a function
+  -- returning the model as well
+  for key, value in pairs(self.params) do
+    if type(value) == "function" then
+      displayed_params[key] = "<dynamic>"
+    end
+  end
+  self.settings_panel = Settings.get_settings_panel("chat_completions", displayed_params)
   self.help_panel = Help.get_help_panel("chat")
   self.sessions_panel = Sessions.get_panel(function(session)
     self:set_session(session)

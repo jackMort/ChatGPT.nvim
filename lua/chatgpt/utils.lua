@@ -2,6 +2,30 @@ local M = {}
 
 local ESC_FEEDKEY = vim.api.nvim_replace_termcodes("<ESC>", true, false, true)
 
+---@param tbl table
+---@return table
+function M.table_shallow_copy(tbl)
+  local copy = {}
+  for key, value in pairs(tbl) do
+    copy[key] = value
+  end
+  return copy
+end
+
+--- A function that collapses the openai params.
+--- This means all the parameters of the openai_params that can be either constants or functions
+--- will be set to constants by evaluating the functions.
+---@param openai_params table
+---@return table
+function M.collapsed_openai_params(openai_params)
+  local collapsed = M.table_shallow_copy(openai_params)
+  -- use copied version of table so the original model value remains a function and can still change
+  if type(collapsed.model) == "function" then
+    collapsed.model = collapsed.model()
+  end
+  return collapsed
+end
+
 function M.split(text)
   local t = {}
   for str in string.gmatch(text, "%S+") do
