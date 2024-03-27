@@ -154,6 +154,9 @@ to store the credential in clear-text in a configuration file.
 
 As an alternative to providing the API key via the `OPENAI_API_KEY` environment
 variable, the user is encouraged to use the `api_key_cmd` configuration option.
+
+
+#### api_key_cmd using script
 The `api_key_cmd` configuration option takes a string, which is executed at
 startup, and whose output is used as the API key.
 
@@ -179,6 +182,71 @@ require("chatgpt").setup({
 Note that the `api_key_cmd` arguments are split by whitespace. If you need
 whitespace inside an argument (for example to reference a path with spaces),
 you can wrap it in a separate script.
+
+#### api_key_cmd using lua function
+
+Here is another way to provide the key by using Lua function
+
+```lua
+local get_api_key = function (callback)
+  local job = require("plenary.job")
+  local url = "https://my-enterprise.com/key/management.url"
+  local value = "some-world-readable-client-id"
+
+  job:new({
+    command = "curl",
+    args = {
+      url,
+      "--silent", "-X", "POST",
+      "-H", "Accept: */*",
+      "-H", "Content-Type: application/x-www-form-urlencoded",
+      "-H", "Authorization: Basic " .. value,
+      "-d", "grant_type=client_credentials",
+    },
+    on_exit = vim.schedule_wrap(function(response, exit_code)
+      vim.notify("Key job: exitcode " .. vim.inspect(exit_code) .. ", Key: " .. vim.inspect(response:result()), vim.log.levels.INFO)
+
+      if exit_code ~= 0 then
+        -- curl failed
+        vim.notify("Key: failed to obtain key" .. vim.inspect(response), vim.log.levels.ERROR)
+        return
+      end
+
+      -- Get stdout which is a json string
+      local result = table.concat(response:result(), "\n")
+
+      local ok, json = pcall(vim.json.decode, result)
+      if not ok or not json then
+        vim.notify("Key: error decoding response " .. vim.inspect(result), vim.log.levels.ERROR)
+        return
+      end
+
+      if json and json["access_token"] then
+        -- Notify the callback with the key and the valid duration
+        if callback then
+          callback(json["access_token"], json["expires_in"] or nil)
+        else
+          vim.env.OPENAI_API_KEY = json["access_token"]
+          if json["expires_in"] then
+            vim.env.OPENAI_API_KEY_EXPIRES = json["expires_in"]
+          end
+        end
+        return json["access_token"], json["expires_in"] or nil
+      end
+    end),
+  })
+  :start()
+end
+
+require("chatgpt").setup({
+    api_key_cmd = 'get_api_key'
+})
+```
+
+### limited time key support
+When "api_key_cmd" is run to obtain the key, it could optionally provide the key validity time.
+ChatGPT plugin will automatically re-request "api_key_cmd" when time exceeds the validity time
+when the next time ChatGPT is invoked. See the lua function section above for example.
 
 ## Usage
 
