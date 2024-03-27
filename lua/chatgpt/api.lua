@@ -33,7 +33,7 @@ local splitCommandIntoTable = function(command)
 end
 
 local function loadConfigFromCommand(command, optionName, callback, defaultValue)
-  if (type(command) == "function") then
+  if type(command) == "function" then
     return command(callback) -- or callback(defaultValue)
   else
     local cmd = splitCommandIntoTable(command)
@@ -55,7 +55,7 @@ local function loadConfigFromCommand(command, optionName, callback, defaultValue
         end,
       })
       :start()
-      return
+    return
   end
 end
 
@@ -101,10 +101,15 @@ local function startJobWithKeyValidation(cb)
       logger.info("startJobWithKeyValidation: Key expired at " .. key_expiry_timestamp)
     end
     Api["OPENAI_API_KEY"] = nil
-    loadRequiredConfig("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", vim.schedule_wrap(function(value, timeout)
-      updateAuthenticationKey(value, timeout)
-      cb()
-    end))
+    loadRequiredConfig(
+      "OPENAI_API_KEY",
+      "OPENAI_API_KEY",
+      "api_key_cmd",
+      vim.schedule_wrap(function(value, timeout)
+        updateAuthenticationKey(value, timeout)
+        cb()
+      end)
+    )
   else
     cb()
   end
@@ -122,7 +127,7 @@ local function doChatCompletions(custom_params, cb, should_stop)
   if stream then
     local raw_chunks = ""
     local state = "START"
-    local prev_chunk  -- store incomplete line from previous chunk
+    local prev_chunk -- store incomplete line from previous chunk
 
     cb = vim.schedule_wrap(cb)
 
