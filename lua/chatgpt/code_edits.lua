@@ -221,6 +221,16 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
     end, { noremap = true })
   end
 
+  -- yank output window
+  for _, mode in ipairs({ "n", "i" }) do
+    instructions_input:map(mode, Config.options.edit_with_instructions.keymaps.yank, function()
+      instructions_input.input_props.on_close()
+      local lines = vim.api.nvim_buf_get_lines(output_window.bufnr, 0, -1, false)
+      vim.fn.setreg(Config.options.yank_register, lines)
+      vim.notify("Successfully copied to yank register!", vim.log.levels.INFO)
+    end, { noremap = true })
+  end
+
   -- use output as input
   for _, mode in ipairs({ "n", "i" }) do
     instructions_input:map(mode, Config.options.edit_with_instructions.keymaps.use_output_as_input, function()
