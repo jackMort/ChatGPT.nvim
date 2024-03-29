@@ -183,6 +183,7 @@ function M.defaults()
       params_value = "Identifier",
       input_title = "FloatBorder",
       active_session = "ErrorMsg",
+      code_edit_result_title = "FloatBorder",
     },
   }
   return defaults
