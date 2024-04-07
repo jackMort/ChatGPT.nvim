@@ -32,6 +32,11 @@ function BaseAction:get_filetype()
   return vim.api.nvim_buf_get_option(bufnr, "filetype")
 end
 
+function BaseAction:get_filepath()
+  local bufnr = self:get_bufnr()
+  return vim.api.nvim_buf_get_name(bufnr)
+end
+
 function BaseAction:get_visual_selection()
   -- return lines and selection, but caches them, so they always are the ones used
   -- when the action was started, even if the user has changed buffer/selection
