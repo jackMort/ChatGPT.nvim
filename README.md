@@ -32,6 +32,9 @@ test addition, code optimization, summarization, bug fixing, code explanation,
 Roxygen editing, and code readability analysis. Additionally, you can define
 your own custom actions using a JSON file.
 
+- **Partial Vision Support**: Any url linking to an image will be sent as an
+image if the model supports vision.
+
 For a comprehensive understanding of the extension's functionality, you can watch
 a plugin showcase [video](https://www.youtube.com/watch?v=7k0KZsheLP4)
 

@@ -497,7 +497,7 @@ local function createContent(line)
   local extensions = { "%.jpeg", "%.jpg", "%.png", "%.gif", "%.bmp", "%.tif", "%.tiff", "%.webp" }
   for _, ext in ipairs(extensions) do
     if string.find(line:lower(), ext .. "$") then
-      return { type = "image_url", image_url = line }
+      return { type = "image_url", image_url = { url = line } }
     end
   end
   return { type = "text", text = line }
@@ -505,8 +505,16 @@ end
 
 function Chat:toMessages()
   local messages = {}
+  local use_vision = false
   if self.system_message ~= nil then
     table.insert(messages, { role = "system", content = self.system_message })
+  end
+
+  if string.find(self.params.model, "vision", 1, true) or
+        string.find(self.params.model, "gpt-4-turbo", 1, true) or
+        string.find(Settings.params.model, "vision", 1, true) or
+        string.find(Settings.params.model, "gpt-4-turbo", 1, true) then
+      use_vision = true
   end
 
   for _, msg in pairs(self.messages) do
@@ -517,7 +525,7 @@ function Chat:toMessages()
       role = "assistant"
     end
     local content = {}
-    if self.params.model == "gpt-4-vision-preview" then
+    if use_vision then
       for _, line in ipairs(msg.lines) do
         table.insert(content, createContent(line))
       end
