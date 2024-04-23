@@ -86,7 +86,7 @@ use({
 
 `ChatGPT.nvim` comes with the following defaults, you can override them by passing config as setup param
 
-https://github.com/jackMort/ChatGPT.nvim/blob/f1453f588eb47e49e57fa34ac1776b795d71e2f1/lua/chatgpt/config.lua#L10-L182
+https://github.com/jackMort/ChatGPT.nvim/blob/main/lua/chatgpt/config.lua
 
 ### Secrets Management
 
