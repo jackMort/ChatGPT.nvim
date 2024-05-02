@@ -30,6 +30,8 @@ function Api.chat_completions(custom_params, cb, should_stop)
 
     cb = vim.schedule_wrap(cb)
 
+    local TMP_MSG_FILENAME = tmpMsgFileName(params)
+
     local extra_curl_params = Config.options.extra_curl_params
     local args = {
       "--silent",
