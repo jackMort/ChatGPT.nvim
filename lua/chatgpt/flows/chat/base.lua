@@ -736,6 +736,12 @@ function Chat:get_layout_params()
 end
 
 function Chat:open()
+  local editor_bufnr = vim.api.nvim_get_current_buf()
+  local visual_lines = {}
+  -- if in visual, visual line, visual block modes
+  if vim.fn.mode() == "v" or vim.fn.mode() == "V" or vim.fn.mode() == "\22" then
+    visual_lines, _, _, _, _ = Utils.get_visual_lines(editor_bufnr)
+  end
   self.settings_panel = Settings.get_settings_panel("chat_completions", self.params)
   self.help_panel = Help.get_help_panel("chat")
   self.sessions_panel = Sessions.get_panel(function(session)
@@ -1017,6 +1023,8 @@ function Chat:open()
   self.chat_input:on(event.QuitPre, function()
     self.active = false
   end)
+
+  vim.api.nvim_buf_set_lines(self.chat_input.bufnr, -1, -1, false, visual_lines)
 end
 
 function Chat:open_system_panel()
@@ -1038,6 +1046,14 @@ function Chat:hide()
 end
 
 function Chat:show()
+  local editor_bufnr = vim.api.nvim_get_current_buf()
+  local visual_lines = {}
+  -- if in visual, visual line, visual block modes
+  if vim.fn.mode() == "v" or vim.fn.mode() == "V" or vim.fn.mode() == "\22" then
+    visual_lines, _, _, _, _ = Utils.get_visual_lines(editor_bufnr)
+  end
+  vim.api.nvim_buf_set_lines(self.chat_input.bufnr, -1, -1, false, visual_lines)
+
   self:redraw(true)
   self.layout:show()
 end
