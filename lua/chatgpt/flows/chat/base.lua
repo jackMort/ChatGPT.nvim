@@ -30,8 +30,6 @@ function Chat:init()
   -- quit indicator
   self.active = true
 
-  self.editor_bufnr = nil
-
   -- UI ELEMENTS
   self.layout = nil
   self.chat_panel = nil
@@ -739,7 +737,6 @@ end
 
 function Chat:open()
   local editor_bufnr = vim.api.nvim_get_current_buf()
-  self.editor_bufnr = editor_bufnr
   local visual_lines = {}
   -- if in visual, visual line, visual block modes
   if vim.fn.mode() == "v" or vim.fn.mode() == "V" or vim.fn.mode() == "\22" then
@@ -1050,7 +1047,6 @@ end
 
 function Chat:show()
   local editor_bufnr = vim.api.nvim_get_current_buf()
-  self.editor_bufnr = editor_bufnr
   local visual_lines = {}
   -- if in visual, visual line, visual block modes
   if vim.fn.mode() == "v" or vim.fn.mode() == "V" or vim.fn.mode() == "\22" then
