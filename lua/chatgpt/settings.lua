@@ -79,7 +79,7 @@ M.get_settings_panel = function(type, default_params)
     if M.params[key] ~= nil then
       local vt = {
         { Config.options.settings_window.setting_sign .. key .. ": ", "ErrorMsg" },
-        { M.params[key] .. "", "Identifier" },
+        { M.params[key] .. "", Config.options.highlights.params_value },
       }
       table.insert(details, vt)
     end

@@ -91,7 +91,11 @@ end
 local spinner = Spinner:new(function(state)
   vim.schedule(function()
     if input_window.bufnr ~= nil then
-      output_window.border:set_text("top", " " .. state .. " ", "center")
+      output_window.border:set_text(
+        "top",
+        { { " " .. state .. " ", Config.options.highlights.code_edit_result_title } },
+        "center"
+      )
     end
     display_input_suffix(state)
   end)
@@ -108,7 +112,11 @@ local hide_progress = function()
   display_input_suffix()
 
   if output_window.bufnr ~= nil then
-    output_window.border:set_text("top", " Result ", "center")
+    output_window.border:set_text(
+      "top",
+      { { " Result ", Config.options.highlights.code_edit_result_title } },
+      "center"
+    )
   end
 end
 
