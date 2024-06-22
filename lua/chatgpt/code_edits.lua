@@ -183,8 +183,20 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
         local output_txt = response
         if use_functions_for_edits then
           output_txt = Utils.match_indentation(input, response.changed_code)
+
           if response.applied_changes then
-            vim.notify(response.applied_changes, vim.log.levels.INFO)
+            local applied_changes = response.applied_changes
+
+            -- ChatGPT 4 returns a table of changes, but ChatGPT 3 returns a string.
+            -- For ChatGPT 4, format the changes as a bullet list.
+            if type(applied_changes) == "table" then
+              for i, change in ipairs(applied_changes) do
+                applied_changes[i] = " - " .. change
+              end
+              applied_changes = table.concat(applied_changes, "\n")
+            end
+
+            vim.notify(applied_changes, vim.log.levels.INFO)
           end
         end
         local output_txt_nlfixed = Utils.replace_newlines_at_end(output_txt, nlcount)
