@@ -296,7 +296,7 @@ An example of custom action may look like this: (`#` marks comments)
   "action_name": {
     "type": "chat", # or "completion" or "edit"
     "opts": {
-      "template": "A template using possible variable: {{filetype}} (neovim filetype), {{input}} (the selected text) an {{argument}} (provided on the command line)",
+      "template": "A template using possible variable: {{filetype}} (neovim filetype), {{input}} (the selected text) an {{argument}} (provided on the command line), {{filepath}} (the relative path to the file)",
       "strategy": "replace", # or "display" or "append" or "edit"
       "params": { # parameters according to the official OpenAI API
         "model": "gpt-3.5-turbo", # or any other model supported by `"type"` in the OpenAI API, use the playground for reference
