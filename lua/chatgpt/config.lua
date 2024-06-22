@@ -26,6 +26,7 @@ function M.defaults()
       },
     },
     chat = {
+      default_system_prompt = nil,
       welcome_message = WELCOME_MESSAGE,
       loading_text = "Loading, please wait ...",
       question_sign = "", -- 🙂
