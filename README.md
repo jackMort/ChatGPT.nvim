@@ -119,9 +119,11 @@ use({
       "nvim-telescope/telescope.nvim"
     }
 })
+```
 
 or if you are using [lazy.nvim](https://github.com/folke/lazy.nvim):
 
+```lua
 -- Lazy
 {
   "jackMort/ChatGPT.nvim",
