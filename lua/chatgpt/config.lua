@@ -17,6 +17,7 @@ function M.defaults()
       keymaps = {
         close = "<C-c>",
         accept = "<C-y>",
+        yank = "<C-u>",
         toggle_diff = "<C-d>",
         toggle_settings = "<C-o>",
         toggle_help = "<C-h>",
@@ -180,6 +181,10 @@ function M.defaults()
     highlights = {
       help_key = "@symbol",
       help_description = "@comment",
+      params_value = "Identifier",
+      input_title = "FloatBorder",
+      active_session = "ErrorMsg",
+      code_edit_result_title = "FloatBorder",
     },
   }
   return defaults

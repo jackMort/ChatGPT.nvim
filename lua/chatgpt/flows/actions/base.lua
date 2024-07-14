@@ -32,6 +32,20 @@ function BaseAction:get_filetype()
   return vim.api.nvim_buf_get_option(bufnr, "filetype")
 end
 
+function BaseAction:get_filepath()
+  local bufnr = self:get_bufnr()
+  local full_path = vim.api.nvim_buf_get_name(bufnr)
+  -- Get relative path
+  local cwd = vim.fn.getcwd()
+  local rel_path = vim.fn.fnamemodify(full_path, ":~:.")
+
+  if string.find(rel_path, cwd, 1, true) == 1 then
+    return string.sub(rel_path, #cwd + 2)
+  end
+
+  return rel_path
+end
+
 function BaseAction:get_visual_selection()
   -- return lines and selection, but caches them, so they always are the ones used
   -- when the action was started, even if the user has changed buffer/selection

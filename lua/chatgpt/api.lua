@@ -1,6 +1,7 @@
 local job = require("plenary.job")
 local Config = require("chatgpt.config")
 local logger = require("chatgpt.common.logger")
+local Utils = require("chatgpt.utils")
 
 local Api = {}
 
@@ -38,23 +39,23 @@ local function loadConfigFromCommand(command, optionName, callback, defaultValue
   else
     local cmd = splitCommandIntoTable(command)
     job
-      :new({
-        command = cmd[1],
-        args = vim.list_slice(cmd, 2, #cmd),
-        on_exit = function(j, exit_code)
-          if exit_code ~= 0 then
-            logger.warn("Config '" .. optionName .. "' did not return a value when executed")
-            return
-          end
-          local value = j:result()[1]:gsub("%s+$", "")
-          if value ~= nil and value ~= "" then
-            callback(value)
-          elseif defaultValue ~= nil and defaultValue ~= "" then
-            callback(defaultValue)
-          end
-        end,
-      })
-      :start()
+        :new({
+          command = cmd[1],
+          args = vim.list_slice(cmd, 2, #cmd),
+          on_exit = function(j, exit_code)
+            if exit_code ~= 0 then
+              logger.warn("Config '" .. optionName .. "' did not return a value when executed")
+              return
+            end
+            local value = j:result()[1]:gsub("%s+$", "")
+            if value ~= nil and value ~= "" then
+              callback(value)
+            elseif defaultValue ~= nil and defaultValue ~= "" then
+              callback(defaultValue)
+            end
+          end,
+        })
+        :start()
     return
   end
 end
@@ -117,12 +118,19 @@ local function startJobWithKeyValidation(cb)
 end
 
 function Api.completions(custom_params, cb)
-  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
+  local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
+  local params = vim.tbl_extend("keep", custom_params, openai_params)
   Api.make_call(Api.COMPLETIONS_URL, params, cb)
 end
 
 local function doChatCompletions(custom_params, cb, should_stop)
-  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
+  local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
+  local params = vim.tbl_extend("keep", custom_params, openai_params)
+  -- the custom params contains <dynamic> if model is not constant but function
+  -- therefore, use collapsed openai params (with function evaluated to get model) if that is the case
+  if params.model == "<dynamic>" then
+    params.model = openai_params.model
+  end
   local stream = params.stream or false
   if stream then
     local raw_chunks = ""
@@ -179,11 +187,11 @@ local function doChatCompletions(custom_params, cb, should_stop)
             })
             if ok and json ~= nil then
               if
-                json
-                and json.choices
-                and json.choices[1]
-                and json.choices[1].delta
-                and json.choices[1].delta.content
+                  json
+                  and json.choices
+                  and json.choices[1]
+                  and json.choices[1].delta
+                  and json.choices[1].delta.content
               then
                 cb(json.choices[1].delta.content, state)
                 raw_chunks = raw_chunks .. json.choices[1].delta.content
@@ -215,7 +223,8 @@ function Api.chat_completions(custom_params, cb, should_stop)
 end
 
 function Api.edits(custom_params, cb)
-  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_edit_params)
+  local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
+  local params = vim.tbl_extend("keep", custom_params, openai_params)
   if params.model == "text-davinci-edit-001" or params.model == "code-davinci-edit-001" then
     vim.notify("Edit models are deprecated", vim.log.levels.WARN)
     Api.make_call(Api.EDITS_URL, params, cb)
@@ -254,14 +263,14 @@ function Api.make_call(url, params, cb)
 
   startJobWithKeyValidation(function()
     Api.job = job
-      :new({
-        command = "curl",
-        args = args,
-        on_exit = vim.schedule_wrap(function(response, exit_code)
-          Api.handle_response(response, exit_code, cb)
-        end),
-      })
-      :start()
+        :new({
+          command = "curl",
+          args = args,
+          on_exit = vim.schedule_wrap(function(response, exit_code)
+            Api.handle_response(response, exit_code, cb)
+          end),
+        })
+        :start()
   end)
 end
 
@@ -326,15 +335,15 @@ local function loadAzureConfigs()
 
           if Api["OPENAI_API_BASE"] and Api["OPENAI_API_AZURE_ENGINE"] then
             Api.COMPLETIONS_URL = Api.OPENAI_API_BASE
-              .. "/openai/deployments/"
-              .. Api.OPENAI_API_AZURE_ENGINE
-              .. "/completions?api-version="
-              .. Api.OPENAI_API_AZURE_VERSION
+                .. "/openai/deployments/"
+                .. Api.OPENAI_API_AZURE_ENGINE
+                .. "/completions?api-version="
+                .. Api.OPENAI_API_AZURE_VERSION
             Api.CHAT_COMPLETIONS_URL = Api.OPENAI_API_BASE
-              .. "/openai/deployments/"
-              .. Api.OPENAI_API_AZURE_ENGINE
-              .. "/chat/completions?api-version="
-              .. Api.OPENAI_API_AZURE_VERSION
+                .. "/openai/deployments/"
+                .. Api.OPENAI_API_AZURE_ENGINE
+                .. "/chat/completions?api-version="
+                .. Api.OPENAI_API_AZURE_VERSION
           end
         end,
         "2023-05-15"
