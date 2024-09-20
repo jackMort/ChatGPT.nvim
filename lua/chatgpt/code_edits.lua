@@ -91,7 +91,11 @@ end
 local spinner = Spinner:new(function(state)
   vim.schedule(function()
     if input_window.bufnr ~= nil then
-      output_window.border:set_text("top", " " .. state .. " ", "center")
+      output_window.border:set_text(
+        "top",
+        { { " " .. state .. " ", Config.options.highlights.code_edit_result_title } },
+        "center"
+      )
     end
     display_input_suffix(state)
   end)
@@ -108,7 +112,7 @@ local hide_progress = function()
   display_input_suffix()
 
   if output_window.bufnr ~= nil then
-    output_window.border:set_text("top", " Result ", "center")
+    output_window.border:set_text("top", { { " Result ", Config.options.highlights.code_edit_result_title } }, "center")
   end
 end
 
@@ -175,8 +179,20 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
         local output_txt = response
         if use_functions_for_edits then
           output_txt = Utils.match_indentation(input, response.changed_code)
+
           if response.applied_changes then
-            vim.notify(response.applied_changes, vim.log.levels.INFO)
+            local applied_changes = response.applied_changes
+
+            -- ChatGPT 4 returns a table of changes, but ChatGPT 3 returns a string.
+            -- For ChatGPT 4, format the changes as a bullet list.
+            if type(applied_changes) == "table" then
+              for i, change in ipairs(applied_changes) do
+                applied_changes[i] = " - " .. change
+              end
+              applied_changes = table.concat(applied_changes, "\n")
+            end
+
+            vim.notify(applied_changes, vim.log.levels.INFO)
           end
         end
         local output_txt_nlfixed = Utils.replace_newlines_at_end(output_txt, nlcount)
@@ -218,6 +234,16 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
       local lines = vim.api.nvim_buf_get_lines(output_window.bufnr, 0, -1, false)
       vim.api.nvim_buf_set_text(bufnr, start_row - 1, start_col - 1, end_row - 1, end_col, lines)
       vim.notify("Successfully applied the change!", vim.log.levels.INFO)
+    end, { noremap = true })
+  end
+
+  -- yank output window
+  for _, mode in ipairs({ "n", "i" }) do
+    instructions_input:map(mode, Config.options.edit_with_instructions.keymaps.yank, function()
+      instructions_input.input_props.on_close()
+      local lines = vim.api.nvim_buf_get_lines(output_window.bufnr, 0, -1, false)
+      vim.fn.setreg(Config.options.yank_register, lines)
+      vim.notify("Successfully copied to yank register!", vim.log.levels.INFO)
     end, { noremap = true })
   end
 
@@ -350,57 +376,54 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
   -- cycle windows
   for _, popup in ipairs({ input_window, output_window, settings_panel, help_panel, instructions_input }) do
     for _, mode in ipairs({ "n", "i" }) do
-      if mode == "i" and (popup == input_window or popup == output_window) then
-        goto continue
+      if not (mode == "i" and (popup == input_window or popup == output_window)) then
+        popup:map(mode, Config.options.edit_with_instructions.keymaps.cycle_windows, function()
+          -- #352 is a bug where active_panel is something not in here, maybe an
+          -- old window or something, lost amongst the global state
+          local possible_windows = {
+            input_window,
+            output_window,
+            settings_panel,
+            help_panel,
+            instructions_input,
+            unpack(open_extra_panels),
+          }
+
+          -- So if active_panel isn't something we expect it to be, make it do be.
+          if not inTable(possible_windows, active_panel) then
+            active_panel = instructions_input
+          end
+
+          local active_panel_is_in_extra_panels = inTable(open_extra_panels, active_panel)
+          if active_panel == instructions_input then
+            vim.api.nvim_set_current_win(input_window.winid)
+            active_panel = input_window
+            vim.api.nvim_command("stopinsert")
+          elseif active_panel == input_window and mode ~= "i" then
+            vim.api.nvim_set_current_win(output_window.winid)
+            active_panel = output_window
+            vim.api.nvim_command("stopinsert")
+          elseif active_panel == output_window and mode ~= "i" then
+            if #open_extra_panels == 0 then
+              vim.api.nvim_set_current_win(instructions_input.winid)
+              active_panel = instructions_input
+            else
+              vim.api.nvim_set_current_win(open_extra_panels[1].winid)
+              active_panel = open_extra_panels[1]
+            end
+          elseif active_panel_is_in_extra_panels then
+            -- next index with wrap around and 0 for instructions_input
+            local next_index = (active_panel_is_in_extra_panels + 1) % (#open_extra_panels + 1)
+            if next_index == 0 then
+              vim.api.nvim_set_current_win(instructions_input.winid)
+              active_panel = instructions_input
+            else
+              vim.api.nvim_set_current_win(open_extra_panels[next_index].winid)
+              active_panel = open_extra_panels[next_index]
+            end
+          end
+        end, {})
       end
-
-      popup:map(mode, Config.options.edit_with_instructions.keymaps.cycle_windows, function()
-        -- #352 is a bug where active_panel is something not in here, maybe an
-        -- old window or something, lost amongst the global state
-        local possible_windows = {
-          input_window,
-          output_window,
-          settings_panel,
-          help_panel,
-          instructions_input,
-          unpack(open_extra_panels),
-        }
-
-        -- So if active_panel isn't something we expect it to be, make it do be.
-        if not inTable(possible_windows, active_panel) then
-          active_panel = instructions_input
-        end
-
-        local active_panel_is_in_extra_panels = inTable(open_extra_panels, active_panel)
-        if active_panel == instructions_input then
-          vim.api.nvim_set_current_win(input_window.winid)
-          active_panel = input_window
-          vim.api.nvim_command("stopinsert")
-        elseif active_panel == input_window and mode ~= "i" then
-          vim.api.nvim_set_current_win(output_window.winid)
-          active_panel = output_window
-          vim.api.nvim_command("stopinsert")
-        elseif active_panel == output_window and mode ~= "i" then
-          if #open_extra_panels == 0 then
-            vim.api.nvim_set_current_win(instructions_input.winid)
-            active_panel = instructions_input
-          else
-            vim.api.nvim_set_current_win(open_extra_panels[1].winid)
-            active_panel = open_extra_panels[1]
-          end
-        elseif active_panel_is_in_extra_panels then
-          -- next index with wrap around and 0 for instructions_input
-          local next_index = (active_panel_is_in_extra_panels + 1) % (#open_extra_panels + 1)
-          if next_index == 0 then
-            vim.api.nvim_set_current_win(instructions_input.winid)
-            active_panel = instructions_input
-          else
-            vim.api.nvim_set_current_win(open_extra_panels[next_index].winid)
-            active_panel = open_extra_panels[next_index]
-          end
-        end
-      end, {})
-      ::continue::
     end
   end
 

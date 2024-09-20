@@ -12,7 +12,7 @@ return function(name, on_submit)
     border = {
       style = "rounded",
       text = {
-        top = " " .. name .. " ",
+        top = { { " " .. name .. " ", Config.options.highlights.input_title } },
         top_align = "center",
       },
     },

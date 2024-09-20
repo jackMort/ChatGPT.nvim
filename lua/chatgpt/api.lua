@@ -1,6 +1,7 @@
 local job = require("plenary.job")
 local Config = require("chatgpt.config")
 local logger = require("chatgpt.common.logger")
+local Utils = require("chatgpt.utils")
 
 local Api = {}
 
@@ -17,12 +18,19 @@ local function tmpMsgFileName(params)
 end
 
 function Api.completions(custom_params, cb)
-  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
+  local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
+  local params = vim.tbl_extend("keep", custom_params, openai_params)
   Api.make_call(Api.COMPLETIONS_URL, params, cb)
 end
 
 function Api.chat_completions(custom_params, cb, should_stop)
-  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_params)
+  local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
+  local params = vim.tbl_extend("keep", custom_params, openai_params)
+  -- the custom params contains <dynamic> if model is not constant but function
+  -- therefore, use collapsed openai params (with function evaluated to get model) if that is the case
+  if params.model == "<dynamic>" then
+    params.model = openai_params.model
+  end
   local stream = params.stream or false
   if stream then
     local raw_chunks = ""
@@ -104,7 +112,8 @@ function Api.chat_completions(custom_params, cb, should_stop)
 end
 
 function Api.edits(custom_params, cb)
-  local params = vim.tbl_extend("keep", custom_params, Config.options.openai_edit_params)
+  local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
+  local params = vim.tbl_extend("keep", custom_params, openai_params)
   if params.model == "text-davinci-edit-001" or params.model == "code-davinci-edit-001" then
     vim.notify("Edit models are deprecated", vim.log.levels.WARN)
     Api.make_call(Api.EDITS_URL, params, cb)
