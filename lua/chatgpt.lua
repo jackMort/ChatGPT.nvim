@@ -38,6 +38,10 @@ M.selectAwesomePrompt = function()
   module.open_chat_with_awesome_prompt()
 end
 
+M.open_chat_with = function(opts)
+  module.open_chat_with(opts)
+end
+
 M.edit_with_instructions = function()
   module.edit_with_instructions()
 end
