@@ -257,10 +257,8 @@ function Chat:addAnswerPartial(text, state)
     })
     self.selectedIndex = self.selectedIndex + 1
 
-    if self.chat_window.bufnr ~= nil then
-      vim.api.nvim_buf_set_lines(self.chat_window.bufnr, -1, -1, false, { "", "" })
-      Signs.set_for_lines(self.chat_window.bufnr, start_line, end_line, "chat")
-    end
+    -- redraw make sure signs correct
+    self:redraw()
 
     self.is_streaming_response = false
   end
@@ -290,7 +288,8 @@ function Chat:addAnswerPartial(text, state)
       vim.api.nvim_buf_set_lines(buffer, -2, -1, false, { currentLine .. line })
 
       local last_line_num = vim.api.nvim_buf_line_count(buffer)
-      Signs.set_for_lines(self.chat_window.bufnr, start_line, last_line_num - 1, "chat")
+      -- busy call Signs.set_for_lines will cause neovim to freeze, and it will be redraw after completion
+      -- Signs.set_for_lines(self.chat_window.bufnr, start_line, last_line_num - 1, "chat")
       if i == length and i > 1 then
         vim.api.nvim_buf_set_lines(buffer, -1, -1, false, { "" })
       end
