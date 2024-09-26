@@ -177,6 +177,7 @@ function M.defaults()
       n = 1,
     },
     use_openai_functions_for_edits = false,
+    ignore_default_actions_path = false,
     actions_paths = {},
     show_quickfixes_cmd = "Trouble quickfix",
     predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",

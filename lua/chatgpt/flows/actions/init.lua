@@ -30,9 +30,12 @@ function M.read_actions()
   local actions = {}
   local paths = {}
 
-  -- add default actions
-  local default_actions_path = debug.getinfo(1, "S").source:sub(2):match("(.*/)") .. "actions.json"
-  table.insert(paths, default_actions_path)
+  if not Config.options.ignore_default_actions_path then
+    -- add default actions
+    local default_actions_path = debug.getinfo(1, "S").source:sub(2):match("(.*/)") .. "actions.json"
+    table.insert(paths, default_actions_path)
+  end
+
   for i = 1, #Config.options.actions_paths do
     paths[#paths + 1] = Config.options.actions_paths[i]
   end
