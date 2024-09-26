@@ -62,7 +62,7 @@ M.open_with = function(opts)
           if item and item.role == "system" then
             M.chat:set_system_message(item.content)
           elseif item and item.role and ROLE_TO_CODE[item.role] then
-            M.chat:add(ROLE_TO_CODE[item.role], item.content);
+            M.chat:add(ROLE_TO_CODE[item.role], item.content)
           end
         end
       end

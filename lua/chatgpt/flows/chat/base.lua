@@ -577,7 +577,7 @@ function Chat:is_buf_visiable()
 end
 
 function Chat:set_lines(start_idx, end_idx, strict_indexing, lines)
-  if not self.is_streaming_response_lock  then
+  if not self.is_streaming_response_lock then
     Utils.modify_buf(self.chat_window.bufnr, function(bufnr)
       vim.api.nvim_buf_set_lines(bufnr, start_idx, end_idx, strict_indexing, lines)
     end)
