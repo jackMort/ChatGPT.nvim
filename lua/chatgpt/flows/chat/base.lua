@@ -71,13 +71,22 @@ function Chat:welcome()
   self:set_cursor({ 1, 0 })
   self:set_system_message(nil, true)
 
+  local system_message_absent = true
   if #self.session.conversation > 0 then
     for idx, item in ipairs(self.session.conversation) do
       if item.type == SYSTEM then
+        system_message_absent = false
         self:set_system_message(item.text, true)
       else
         self:_add(item.type, item.text, item.usage, idx)
       end
+    end
+  end
+
+  if system_message_absent then
+    local default_system_message = Config.options.chat.default_system_message
+    if default_system_message and #default_system_message > 0 then
+      self:set_system_message(default_system_message, true)
     end
   end
 

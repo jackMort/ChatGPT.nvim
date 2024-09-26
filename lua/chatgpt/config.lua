@@ -28,6 +28,7 @@ function M.defaults()
     },
     chat = {
       welcome_message = WELCOME_MESSAGE,
+      default_system_message = "",
       loading_text = "Loading, please wait ...",
       question_sign = "", -- 🙂
       answer_sign = "ﮧ", -- 🤖
