@@ -45,6 +45,17 @@ function PreviewWindow:mount()
       self:unmount()
     end)
   end
+
+  -- close_n
+  keys = Config.options.chat.keymaps.close_n or {}
+  if type(keys) ~= "table" then
+    keys = { keys }
+  end
+  for _, key in ipairs(keys) do
+    self:map("n", key, function()
+      self:unmount()
+    end)
+  end
 end
 
 return PreviewWindow

@@ -16,6 +16,7 @@ function M.defaults()
       diff = false,
       keymaps = {
         close = "<C-c>",
+        close_n = "<Esc>",
         accept = "<C-y>",
         yank = "<C-u>",
         toggle_diff = "<C-d>",
@@ -49,6 +50,7 @@ function M.defaults()
       },
       keymaps = {
         close = "<C-c>",
+        close_n = "<Esc>",
         yank_last = "<C-y>",
         yank_last_code = "<C-k>",
         scroll_up = "<C-u>",

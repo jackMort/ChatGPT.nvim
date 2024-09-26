@@ -851,6 +851,13 @@ function Chat:open()
     end
   end)
 
+  -- close_n
+  if Config.options.chat.keymaps.close_n then
+    self:map(Config.options.chat.keymaps.close_n, function()
+      self:hide()
+    end, nil, { "n" })
+  end
+
   local function inTable(tbl, item)
     for key, value in pairs(tbl) do
       if value == item then
