@@ -5,6 +5,14 @@ WELCOME_MESSAGE = [[
                                       ~ Robert Half
 ]]
 
+function default_quickfix_cmd()
+  if pcall(require("trouble")) then
+    return "Trouble quickfix"
+  else
+    return "cope"
+  end
+end
+
 local M = {}
 function M.defaults()
   local defaults = {
@@ -180,7 +188,7 @@ function M.defaults()
     use_openai_functions_for_edits = false,
     ignore_default_actions_path = false,
     actions_paths = {},
-    show_quickfixes_cmd = "Trouble quickfix",
+    show_quickfixes_cmd = default_quickfix_cmd(),
     predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
     highlights = {
       help_key = "@symbol",
