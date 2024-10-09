@@ -16,6 +16,7 @@ function M.defaults()
       diff = false,
       keymaps = {
         close = "<C-c>",
+        close_n = "<Esc>",
         accept = "<C-y>",
         yank = "<C-u>",
         toggle_diff = "<C-d>",
@@ -27,6 +28,7 @@ function M.defaults()
     },
     chat = {
       welcome_message = WELCOME_MESSAGE,
+      default_system_message = "",
       loading_text = "Loading, please wait ...",
       question_sign = "", -- 🙂
       answer_sign = "ﮧ", -- 🤖
@@ -49,6 +51,7 @@ function M.defaults()
       },
       keymaps = {
         close = "<C-c>",
+        close_n = "<Esc>",
         yank_last = "<C-y>",
         yank_last_code = "<C-k>",
         scroll_up = "<C-u>",
@@ -175,6 +178,7 @@ function M.defaults()
       n = 1,
     },
     use_openai_functions_for_edits = false,
+    ignore_default_actions_path = false,
     actions_paths = {},
     show_quickfixes_cmd = "Trouble quickfix",
     predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
