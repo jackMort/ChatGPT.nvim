@@ -46,6 +46,7 @@ function Chat:init()
   self.system_role_open = false
 
   self.is_streaming_response = false
+  self.is_streaming_response_lock = false
 
   self.prompt_lines = 1
 
@@ -71,13 +72,22 @@ function Chat:welcome()
   self:set_cursor({ 1, 0 })
   self:set_system_message(nil, true)
 
+  local system_message_absent = true
   if #self.session.conversation > 0 then
     for idx, item in ipairs(self.session.conversation) do
       if item.type == SYSTEM then
+        system_message_absent = false
         self:set_system_message(item.text, true)
       else
         self:_add(item.type, item.text, item.usage, idx)
       end
+    end
+  end
+
+  if system_message_absent then
+    local default_system_message = Config.options.chat.default_system_message
+    if default_system_message and #default_system_message > 0 then
+      self:set_system_message(default_system_message, true)
     end
   end
 
@@ -211,6 +221,8 @@ end
 
 function Chat:addAnswerPartial(text, state)
   if state == "ERROR" then
+    -- unlock first and then wirte answer
+    self.is_streaming_response_lock = false
     return self:addAnswer(text, {})
   end
 
@@ -221,6 +233,8 @@ function Chat:addAnswerPartial(text, state)
   end
 
   if state == "END" then
+    -- unlock first and then wirte answer
+    self.is_streaming_response_lock = false
     local usage = {}
     local idx = self.session:add_item({
       type = ANSWER,
@@ -248,10 +262,8 @@ function Chat:addAnswerPartial(text, state)
     })
     self.selectedIndex = self.selectedIndex + 1
 
-    if self.chat_window.bufnr ~= nil then
-      vim.api.nvim_buf_set_lines(self.chat_window.bufnr, -1, -1, false, { "", "" })
-      Signs.set_for_lines(self.chat_window.bufnr, start_line, end_line, "chat")
-    end
+    -- redraw make sure signs correct
+    self:redraw()
 
     self.is_streaming_response = false
   end
@@ -261,12 +273,15 @@ function Chat:addAnswerPartial(text, state)
 
     self:stopSpinner()
     self:set_lines(-2, -1, false, { "" })
-    if self.chat_input.bufnr ~= nil then
-      vim.api.nvim_buf_set_option(self.chat_window.bufnr, "modifiable", true)
-    end
+
+    -- lock chat window buf
+    self.is_streaming_response_lock = true
   end
 
   if state == "START" or state == "CONTINUE" then
+    -- avoid unlocking caused by multi addAnswerPartial parallel
+    self.is_streaming_response_lock = true
+
     local lines = vim.split(text, "\n", {})
     local length = #lines
     local buffer = self.chat_window.bufnr
@@ -278,12 +293,17 @@ function Chat:addAnswerPartial(text, state)
 
     for i, line in ipairs(lines) do
       local currentLine = vim.api.nvim_buf_get_lines(buffer, -2, -1, false)[1]
-      vim.api.nvim_buf_set_lines(buffer, -2, -1, false, { currentLine .. line })
+      Utils.modify_buf(self.chat_window.bufnr, function(bufnr)
+        vim.api.nvim_buf_set_lines(bufnr, -2, -1, false, { currentLine .. line })
+      end)
 
       local last_line_num = vim.api.nvim_buf_line_count(buffer)
-      Signs.set_for_lines(self.chat_window.bufnr, start_line, last_line_num - 1, "chat")
+      -- busy call Signs.set_for_lines will cause neovim to freeze, and it will be redraw after completion
+      -- Signs.set_for_lines(self.chat_window.bufnr, start_line, last_line_num - 1, "chat")
       if i == length and i > 1 then
-        vim.api.nvim_buf_set_lines(buffer, -1, -1, false, { "" })
+        Utils.modify_buf(self.chat_window.bufnr, function(bufnr)
+          vim.api.nvim_buf_set_lines(bufnr, -1, -1, false, { "" })
+        end)
       end
       if self:is_buf_visiable() then
         vim.api.nvim_win_set_cursor(win, { last_line_num, 0 })
@@ -557,10 +577,10 @@ function Chat:is_buf_visiable()
 end
 
 function Chat:set_lines(start_idx, end_idx, strict_indexing, lines)
-  if self:is_buf_exists() then
-    vim.api.nvim_buf_set_option(self.chat_window.bufnr, "modifiable", true)
-    vim.api.nvim_buf_set_lines(self.chat_window.bufnr, start_idx, end_idx, strict_indexing, lines)
-    vim.api.nvim_buf_set_option(self.chat_window.bufnr, "modifiable", false)
+  if not self.is_streaming_response_lock then
+    Utils.modify_buf(self.chat_window.bufnr, function(bufnr)
+      vim.api.nvim_buf_set_lines(bufnr, start_idx, end_idx, strict_indexing, lines)
+    end)
   end
 end
 
@@ -752,6 +772,7 @@ function Chat:open()
     self:set_session(session)
   end)
   self.chat_window = Popup(Config.options.popup_window)
+  vim.api.nvim_buf_set_option(self.chat_window.bufnr, "modifiable", false)
   self.system_role_panel = SystemWindow({
     on_change = function(text)
       self:set_system_message(text)
@@ -779,7 +800,9 @@ function Chat:open()
     end),
     on_submit = function(value)
       -- clear input
-      vim.api.nvim_buf_set_lines(self.chat_input.bufnr, 0, -1, false, { "" })
+      Utils.modify_buf(self.chat_input.bufnr, function(bufnr)
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "" })
+      end)
 
       if self:isBusy() then
         vim.notify("I'm busy, please wait a moment...", vim.log.levels.WARN)
@@ -850,6 +873,13 @@ function Chat:open()
       vim.api.nvim_command("stopinsert")
     end
   end)
+
+  -- close_n
+  if Config.options.chat.keymaps.close_n then
+    self:map(Config.options.chat.keymaps.close_n, function()
+      self:hide()
+    end, nil, { "n" })
+  end
 
   local function inTable(tbl, item)
     for key, value in pairs(tbl) do
@@ -990,7 +1020,9 @@ function Chat:open()
     local lines = vim.api.nvim_buf_get_lines(self.chat_input.bufnr, 0, -1, false)
     local text = table.concat(lines, "\n")
     if #text > 0 then
-      vim.api.nvim_buf_set_lines(self.chat_input.bufnr, 0, -1, false, { "" })
+      Utils.modify_buf(self.chat_input.bufnr, function(bufnr)
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, { "" })
+      end)
       self:add(self.role == ROLE_USER and QUESTION or ANSWER, text)
       if self.role ~= ROLE_USER then
         self.role = ROLE_USER

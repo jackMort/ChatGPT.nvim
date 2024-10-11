@@ -351,6 +351,13 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
     end
   end
 
+  -- close_n
+  if Config.options.edit_with_instructions.keymaps.close_n then
+    instructions_input:map("n", Config.options.edit_with_instructions.keymaps.close_n, function()
+      vim.cmd("q")
+    end, { noremap = true })
+  end
+
   -- toggle settings
   for _, popup in ipairs({ instructions_input, settings_panel, help_panel }) do
     for _, mode in ipairs({ "n", "i" }) do
