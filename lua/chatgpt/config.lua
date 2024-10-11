@@ -6,7 +6,7 @@ WELCOME_MESSAGE = [[
 ]]
 
 function default_quickfix_cmd()
-  if pcall(require("trouble")) then
+  if pcall(require, "trouble") then
     return "Trouble quickfix"
   else
     return "cope"
