@@ -170,4 +170,17 @@ function M.match_indentation(input, output)
   return table.concat(lines)
 end
 
+M.modify_buf = function(bufnr, modify_func)
+  if bufnr and vim.fn.bufexists(bufnr) == 1 then
+    local modifiable = vim.api.nvim_buf_get_option(bufnr, "modifiable")
+    if not modifiable then
+      vim.api.nvim_buf_set_option(bufnr, "modifiable", true)
+    end
+    modify_func(bufnr)
+    if not modifiable then
+      vim.api.nvim_buf_set_option(bufnr, "modifiable", false)
+    end
+  end
+end
+
 return M
