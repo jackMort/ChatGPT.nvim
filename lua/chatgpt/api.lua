@@ -19,6 +19,11 @@ function Api.chat_completions(custom_params, cb, should_stop)
   if params.model == "<dynamic>" then
     params.model = openai_params.model
   end
+  -- max_tokens is unsupported for o1 OpenAI models; older models are backward-compatible with max_tokens,
+  -- but max_completion_tokens works with all models.
+  params.max_completion_tokens = params.max_tokens
+  params.max_tokens = nil
+
   local stream = params.stream or false
   if stream then
     local raw_chunks = ""
