@@ -134,7 +134,7 @@ or if you are using [lazy.nvim](https://github.com/folke/lazy.nvim):
     dependencies = {
       "MunifTanjim/nui.nvim",
       "nvim-lua/plenary.nvim",
-      "folke/trouble.nvim",
+      "folke/trouble.nvim", -- optional
       "nvim-telescope/telescope.nvim"
     }
 }
@@ -181,6 +181,7 @@ A simple configuration of the chat model could look something like this:
   dependencies = {
     "MunifTanjim/nui.nvim",
     "nvim-lua/plenary.nvim",
+      "folke/trouble.nvim", -- optional
     "nvim-telescope/telescope.nvim"
   }
 }
