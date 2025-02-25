@@ -1,3 +1,6 @@
+if not package.loaded["telescope"] then
+  return {}
+end
 local pickers = require("telescope.pickers")
 local conf = require("telescope.config").values
 local actions = require("telescope.actions")
