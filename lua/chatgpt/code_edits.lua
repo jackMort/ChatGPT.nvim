@@ -116,7 +116,7 @@ M.edit_with_instructions = function(output_lines, bufnr, selection, ...)
       show_progress()
 
       local input = table.concat(vim.api.nvim_buf_get_lines(input_window.bufnr, 0, -1, false), "\n")
-      local params = vim.tbl_extend("keep", { input = input, instruction = instruction }, Settings.params)
+      local params = vim.tbl_extend("keep", { input = input, instruction = instruction }, openai_params)
       Api.edits(params, function(response, usage)
         hide_progress()
         local nlcount = Utils.count_newlines_at_end(input)

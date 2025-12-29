@@ -13,6 +13,8 @@ local Signs = require("chatgpt.signs")
 local Spinner = require("chatgpt.spinner")
 local Session = require("chatgpt.flows.chat.session")
 local SystemWindow = require("chatgpt.flows.chat.system_window")
+local Context = require("chatgpt.context")
+local ProjectContext = require("chatgpt.context.project")
 
 QUESTION, ANSWER, SYSTEM = 1, 2, 3
 ROLE_ASSISTANT = "assistant"
@@ -209,6 +211,22 @@ end
 
 function Chat:addQuestion(text)
   self:add(self.role == ROLE_USER and QUESTION or ANSWER, text)
+end
+
+function Chat:addQuestionWithContext(display_text, api_text)
+  local type = self.role == ROLE_USER and QUESTION or ANSWER
+  local idx = self.session:add_item({
+    type = type,
+    text = display_text,
+    api_text = api_text, -- Store expanded version for API
+    usage = {},
+  })
+  self:_add(type, display_text, {}, idx)
+  -- Store api_text in the message for toMessages()
+  if self.messages[self.selectedIndex] then
+    self.messages[self.selectedIndex].api_text = api_text
+  end
+  self:render_role()
 end
 
 function Chat:addSystem(text)
@@ -458,8 +476,22 @@ function Chat:renderLastMessage()
   self:set_lines(startIdx, -1, false, lines)
 
   if msg.type == QUESTION then
-    for index, _ in ipairs(lines) do
-      self:add_highlight("ChatGPTQuestion", msg.start_line + index - 1, 0, -1)
+    -- Check if first line contains context references
+    local first_line = lines[1] or ""
+    local has_context = first_line:match("^@[^%s]+")
+
+    for index, line in ipairs(lines) do
+      -- Style context line differently
+      if index == 1 and has_context then
+        self:add_highlight("ChatGPTContextRef", msg.start_line + index - 1, 0, -1)
+        -- Add context icon as virtual text
+        vim.api.nvim_buf_set_extmark(self.chat_window.bufnr, Config.namespace_id, msg.start_line, 0, {
+          virt_text = { { " ", "ChatGPTContextRef" } },
+          virt_text_pos = "inline",
+        })
+      else
+        self:add_highlight("ChatGPTQuestion", msg.start_line + index - 1, 0, -1)
+      end
     end
 
     pcall(
@@ -525,8 +557,22 @@ end
 
 function Chat:toMessages()
   local messages = {}
-  if self.system_message ~= nil then
-    table.insert(messages, { role = "system", content = self.system_message })
+
+  -- Build system message with optional project summary
+  local system_content = self.system_message or ""
+  if Config.options.context and Config.options.context.project and Config.options.context.project.auto_detect then
+    local project_summary = ProjectContext.generate_summary()
+    if project_summary then
+      if system_content ~= "" then
+        system_content = system_content .. "\n\n[Project: " .. project_summary .. "]"
+      else
+        system_content = "[Project: " .. project_summary .. "]"
+      end
+    end
+  end
+
+  if system_content ~= "" then
+    table.insert(messages, { role = "system", content = system_content })
   end
 
   for _, msg in pairs(self.messages) do
@@ -542,7 +588,8 @@ function Chat:toMessages()
         table.insert(content, createContent(line))
       end
     else
-      content = msg.text
+      -- Use api_text (expanded context) if available, otherwise use display text
+      content = msg.api_text or msg.text
     end
     table.insert(messages, { role = role, content = content })
   end
@@ -621,6 +668,24 @@ function Chat:display_input_suffix(suffix)
       },
       virt_text_pos = "right_align",
     })
+  end
+end
+
+function Chat:update_context_indicator()
+  if not self.chat_input or not self.chat_input.border then
+    return
+  end
+
+  local context_count = Context.count()
+  local base_title = " Prompt "
+
+  if context_count > 0 then
+    base_title = " Prompt [" .. context_count .. "] "
+  end
+
+  -- Update the border title
+  if self.chat_input.border.set_text then
+    self.chat_input.border:set_text("top", base_title, "center")
   end
 end
 
@@ -809,10 +874,31 @@ function Chat:open()
         return
       end
 
-      self:addQuestion(value)
+      -- Inject context into the message if present
+      local display_message = value
+      local api_message = value
+      if Context.has_context() then
+        -- Compact format for display (@file:line)
+        local display_refs = Context.format_references()
+        if display_refs and display_refs ~= "" then
+          display_message = display_refs .. "\n" .. value
+        end
+        -- Expanded format for API (full code content)
+        local context_text = Context.format_for_message()
+        if context_text and context_text ~= "" then
+          api_message = context_text .. "\n\n---\n\n" .. value
+        end
+        -- Clear context after use
+        Context.clear()
+        -- Update input border
+        self:update_context_indicator()
+      end
+
+      -- Store expanded message for API, but display compact version
+      self:addQuestionWithContext(display_message, api_message)
       if self.role == ROLE_USER then
         self:showProgess()
-        local params = vim.tbl_extend("keep", { stream = true, messages = self:toMessages() }, Settings.params)
+        local params = vim.tbl_extend("keep", { stream = true, messages = self:toMessages() }, self.params)
         Api.chat_completions(params, function(answer, state)
           self:addAnswerPartial(answer, state)
         end, self.should_stop)

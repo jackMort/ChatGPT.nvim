@@ -81,6 +81,7 @@ function M.defaults()
         toggle_message_role = "<C-r>",
         toggle_system_role_open = "<C-s>",
         stop_generating = "<C-x>",
+        delete_context_item = "d",
       },
     },
     popup_layout = {
@@ -170,20 +171,24 @@ function M.defaults()
     },
     openai_params = {
       model = "gpt-5-mini",
-      frequency_penalty = 0,
-      presence_penalty = 0,
-      max_tokens = 300,
-      temperature = 0,
-      top_p = 1,
-      n = 1,
     },
     openai_edit_params = {
       model = "gpt-5-mini",
-      frequency_penalty = 0,
-      presence_penalty = 0,
-      temperature = 0,
-      top_p = 1,
-      n = 1,
+    },
+    context = {
+      lsp = {
+        enabled = true,
+        max_lines = 50,
+      },
+      project = {
+        enabled = true,
+        auto_detect = true,
+        context_files = {
+          ".chatgpt.md",
+          ".cursorrules",
+          ".github/copilot-instructions.md",
+        },
+      },
     },
     ignore_default_actions_path = false,
     actions_paths = {},
