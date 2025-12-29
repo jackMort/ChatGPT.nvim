@@ -47,6 +47,9 @@ M.setup = function(options)
   vim.api.nvim_set_hl(0, "ChatGPTSenderUser", { fg = "#89b4fa", bold = true, default = true })
   vim.api.nvim_set_hl(0, "ChatGPTSenderAssistant", { fg = "#a6e3a1", bold = true, default = true })
 
+  vim.api.nvim_set_hl(0, "ChatGPTSessionHeader", { fg = "#6c7086", bold = true, default = true })
+  vim.api.nvim_set_hl(0, "ChatGPTSessionCursor", { fg = "#f9e2af", bold = true, default = true })
+
   vim.cmd("highlight default link ChatGPTSelectedMessage ColorColumn")
 
   config.setup(options)

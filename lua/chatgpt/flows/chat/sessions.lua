@@ -9,22 +9,62 @@ local InputWidget = require("chatgpt.common.input_widget")
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
+-- Get date group for a timestamp
+local function get_date_group(ts)
+  local now = os.time()
+  local today_start = os.time({
+    year = os.date("%Y"),
+    month = os.date("%m"),
+    day = os.date("%d"),
+    hour = 0,
+    min = 0,
+    sec = 0,
+  })
+  local yesterday_start = today_start - 86400
+  local week_start = today_start - (86400 * 7)
+  local month_start = today_start - (86400 * 30)
+
+  if ts >= today_start then
+    return "Today"
+  elseif ts >= yesterday_start then
+    return "Yesterday"
+  elseif ts >= week_start then
+    return "This Week"
+  elseif ts >= month_start then
+    return "This Month"
+  else
+    return "Older"
+  end
+end
+
 M.set_current_line = function()
   M.current_line, _ = unpack(vim.api.nvim_win_get_cursor(M.panel.winid))
   M.render_list()
 end
 
+-- Get the session index for the current cursor line
+M.get_current_session_index = function()
+  return M.line_to_session and M.line_to_session[M.current_line] or nil
+end
+
 M.set_session = function()
-  M.active_line = M.current_line
-  local selected = M.sessions[M.current_line]
+  local session_idx = M.get_current_session_index()
+  if not session_idx then
+    return -- On a header line
+  end
+  M.active_line = session_idx
+  local selected = M.sessions[session_idx]
   local session = Session.new({ filename = selected.filename })
   M.render_list()
   M.set_session_cb(session)
 end
 
 M.rename_session = function()
-  M.active_line = M.current_line
-  local selected = M.sessions[M.current_line]
+  local session_idx = M.get_current_session_index()
+  if not session_idx then
+    return -- On a header line
+  end
+  local selected = M.sessions[session_idx]
   local session = Session.new({ filename = selected.filename })
   local input_widget = InputWidget("New Name:", function(value)
     if value ~= nil and value ~= "" then
@@ -37,12 +77,16 @@ M.rename_session = function()
 end
 
 M.delete_session = function()
-  local selected = M.sessions[M.current_line]
-  if M.active_line ~= M.current_line then
+  local session_idx = M.get_current_session_index()
+  if not session_idx then
+    return -- On a header line
+  end
+  if M.active_line ~= session_idx then
+    local selected = M.sessions[session_idx]
     local session = Session.new({ filename = selected.filename })
     session:delete()
     M.sessions = Session.list_sessions()
-    if M.active_line > M.current_line then
+    if M.active_line > session_idx then
       M.active_line = M.active_line - 1
     end
     M.render_list()
@@ -54,34 +98,72 @@ end
 M.render_list = function()
   vim.api.nvim_buf_clear_namespace(M.panel.bufnr, namespace_id, 0, -1)
 
-  local details = {}
-  for i, session in pairs(M.sessions) do
-    local icon = i == M.active_line and Config.options.chat.sessions_window.active_sign
-      or Config.options.chat.sessions_window.inactive_sign
-    local cls = i == M.active_line and Config.options.highlights.active_session or "Comment"
-    local name = Utils.trimText(session.name, 30)
-    local vt = {
-      { (M.current_line == i and Config.options.chat.sessions_window.current_line_sign or " ") .. icon .. name, cls },
-    }
-    table.insert(details, vt)
+  -- Group sessions by date
+  local groups = {}
+  local group_order = { "Today", "Yesterday", "This Week", "This Month", "Older" }
+  for _, g in ipairs(group_order) do
+    groups[g] = {}
   end
 
-  local line = 1
+  for i, session in ipairs(M.sessions) do
+    local group = get_date_group(session.ts)
+    table.insert(groups[group], { index = i, session = session })
+  end
+
+  -- Build display list with headers
+  local display_lines = {}
+  local line_to_session = {} -- Maps display line to session index
+
+  for _, group_name in ipairs(group_order) do
+    local group_sessions = groups[group_name]
+    if #group_sessions > 0 then
+      -- Add header
+      table.insert(display_lines, { type = "header", text = group_name })
+      -- Add sessions
+      for _, entry in ipairs(group_sessions) do
+        table.insert(display_lines, { type = "session", index = entry.index, session = entry.session })
+        line_to_session[#display_lines] = entry.index
+      end
+    end
+  end
+
+  M.line_to_session = line_to_session
+
+  -- Create buffer lines
   local empty_lines = {}
-  for _ = 1, #details do
+  for _ = 1, #display_lines do
     table.insert(empty_lines, "")
   end
+  vim.api.nvim_buf_set_lines(M.panel.bufnr, 0, -1, false, empty_lines)
 
-  vim.api.nvim_buf_set_lines(M.panel.bufnr, line - 1, line - 1 + #empty_lines, false, empty_lines)
-  for _, d in ipairs(details) do
-    M.vts[line - 1] = vim.api.nvim_buf_set_extmark(
-      M.panel.bufnr,
-      namespace_id,
-      line - 1,
-      0,
-      { virt_text = d, virt_text_pos = "overlay" }
-    )
-    line = line + 1
+  -- Render each line
+  for line_num, item in ipairs(display_lines) do
+    local line_idx = line_num - 1
+
+    if item.type == "header" then
+      -- Render header with separator line
+      local header_text = "── " .. item.text .. " " .. string.rep("─", 20)
+      vim.api.nvim_buf_set_extmark(M.panel.bufnr, namespace_id, line_idx, 0, {
+        virt_text = { { header_text, "ChatGPTSessionHeader" } },
+        virt_text_pos = "overlay",
+      })
+    else
+      -- Render session
+      local i = item.index
+      local session = item.session
+      local is_active = (i == M.active_line)
+      local is_current = (M.line_to_session[line_num] == M.line_to_session[M.current_line])
+
+      local cursor = is_current and Config.options.chat.sessions_window.current_line_sign or "  "
+      local icon = is_active and Config.options.chat.sessions_window.active_sign or Config.options.chat.sessions_window.inactive_sign
+      local cls = is_active and Config.options.highlights.active_session or "Comment"
+      local name = Utils.trimText(session.name, 28)
+
+      vim.api.nvim_buf_set_extmark(M.panel.bufnr, namespace_id, line_idx, 0, {
+        virt_text = { { cursor, "ChatGPTSessionCursor" }, { icon .. name, cls } },
+        virt_text_pos = "overlay",
+      })
+    end
   end
 end
 
