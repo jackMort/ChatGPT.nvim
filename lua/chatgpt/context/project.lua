@@ -1,6 +1,5 @@
 local M = {}
 
-local Context = require("chatgpt.context")
 local Config = require("chatgpt.config")
 
 -- Manifest files to detect project type
@@ -186,31 +185,20 @@ function M.find_context_file()
   return nil
 end
 
--- Add project context
-function M.add_context()
+-- Get project context item
+function M.get_context()
   local context_file = M.find_context_file()
 
   if not context_file then
     vim.notify("No project context file found", vim.log.levels.WARN)
-    return false
+    return nil
   end
 
-  -- Check if already added
-  for _, item in ipairs(Context.get_items()) do
-    if item.type == "project" and item.name == context_file.name then
-      vim.notify("Project context already added: " .. context_file.name, vim.log.levels.INFO)
-      return false
-    end
-  end
-
-  Context.add({
+  return {
     type = "project",
     name = context_file.name,
     content = context_file.content,
-  })
-
-  vim.notify("Added project context: " .. context_file.name)
-  return true
+  }
 end
 
 return M

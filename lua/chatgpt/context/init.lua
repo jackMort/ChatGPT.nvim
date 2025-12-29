@@ -1,89 +1,82 @@
 local M = {}
 
--- Current context items (shared across chat sessions until cleared)
-M.items = {}
+-- Context storage keyed by reference string (e.g., "@file.lua:42")
+M.refs = {}
 
--- Add a context item
--- @param item table { type = "lsp"|"project", name = string, file = string?, line = number?, content = string }
-function M.add(item)
-  table.insert(M.items, item)
+-- Add a context item with its reference key
+function M.add(ref, item)
+  M.refs[ref] = item
 end
 
--- Remove a context item by index
-function M.remove(index)
-  if index > 0 and index <= #M.items then
-    table.remove(M.items, index)
-  end
+-- Get context by reference
+function M.get(ref)
+  return M.refs[ref]
 end
 
--- Clear all context items
+-- Remove a context item by reference
+function M.remove(ref)
+  M.refs[ref] = nil
+end
+
+-- Clear all context
 function M.clear()
-  M.items = {}
+  M.refs = {}
 end
 
--- Get all context items
-function M.get_items()
-  return M.items
+-- Generate reference string for an item
+function M.make_ref(item)
+  if item.type == "lsp" then
+    return string.format("@%s:%d", item.file or item.name, item.line or 0)
+  elseif item.type == "project" then
+    return "@" .. item.name
+  elseif item.type == "file" then
+    return "@" .. (item.file or item.name)
+  end
+  return "@unknown"
 end
 
--- Get context count
-function M.count()
-  return #M.items
+-- Format a single context item for API
+local function format_item(item)
+  local content = item.content or ""
+  if item.type == "lsp" then
+    local location = item.file or "unknown"
+    if item.line then
+      location = location .. ":" .. item.line
+    end
+    return string.format("# %s (%s)\n```\n%s\n```", item.name or "unknown", location, content)
+  elseif item.type == "project" then
+    return string.format("# Project: %s\n%s", item.name or "unknown", content)
+  elseif item.type == "file" then
+    return string.format("# File: %s\n```\n%s\n```", item.file or item.name or "unknown", content)
+  end
+  return content
 end
 
--- Check if there's any context
-function M.has_context()
-  return #M.items > 0
-end
-
--- Format compact references for display (@file:line)
-function M.format_references()
-  if #M.items == 0 then
-    return nil
+-- Find all @references in text and expand them for API
+-- Returns: api_text (expanded), display_text (original)
+function M.expand_refs(text)
+  if not text or text == "" then
+    return text, text
   end
 
-  local refs = {}
-  for _, item in ipairs(M.items) do
-    if item.type == "lsp" then
-      table.insert(refs, string.format("@%s:%d", item.file or item.name, item.line or 0))
-    elseif item.type == "project" then
-      table.insert(refs, "@" .. item.name)
+  local refs_content = {}
+  local seen = {}
+
+  for ref in text:gmatch("@[^%s]+") do
+    if M.refs[ref] and not seen[ref] then
+      seen[ref] = true
+      table.insert(refs_content, format_item(M.refs[ref]))
     end
   end
 
-  if #refs == 0 then
-    return nil
+  if #refs_content == 0 then
+    return text, text
   end
 
-  return table.concat(refs, " ")
-end
+  local context_block = table.concat(refs_content, "\n\n")
+  local api_text = context_block .. "\n\n---\n\n" .. text
 
--- Format context for injection into message
-function M.format_for_message()
-  if #M.items == 0 then
-    return nil
-  end
-
-  local parts = {}
-
-  for _, item in ipairs(M.items) do
-    local content = item.content or ""
-    if item.type == "lsp" then
-      local location = item.file or "unknown"
-      if item.line then
-        location = location .. ":" .. item.line
-      end
-      table.insert(parts, string.format("# %s (%s)\n```\n%s\n```", item.name or "unknown", location, content))
-    elseif item.type == "project" then
-      table.insert(parts, string.format("# Project: %s\n%s", item.name or "unknown", content))
-    end
-  end
-
-  if #parts == 0 then
-    return nil
-  end
-
-  return table.concat(parts, "\n\n")
+  return api_text, text
 end
 
 return M

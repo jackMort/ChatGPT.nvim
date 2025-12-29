@@ -3,8 +3,6 @@ local api = require("chatgpt.api")
 local module = require("chatgpt.module")
 local config = require("chatgpt.config")
 local signs = require("chatgpt.signs")
-local lsp_context = require("chatgpt.context.lsp")
-local project_context = require("chatgpt.context.project")
 
 local M = {}
 
@@ -16,6 +14,9 @@ M.setup = function(options)
 
   vim.api.nvim_set_hl(0, "ChatGPTTotalTokens", { fg = "#ffffff", bg = "#444444", default = true })
   vim.api.nvim_set_hl(0, "ChatGPTTotalTokensBorder", { fg = "#444444", default = true })
+
+  vim.api.nvim_set_hl(0, "ChatGPTTokens", { fg = "#cdd6f4", bg = "#313244", default = true })
+  vim.api.nvim_set_hl(0, "ChatGPTTokensBorder", { fg = "#313244", default = true })
 
   vim.api.nvim_set_hl(0, "ChatGPTMessageAction", { fg = "#ffffff", bg = "#1d4c61", italic = true, default = true })
 
@@ -55,14 +56,5 @@ M.run_action = function(opts)
 end
 
 M.complete_code = module.complete_code
-
--- Context APIs
-M.add_context = function()
-  lsp_context.add_context()
-end
-
-M.add_project_context = function()
-  project_context.add_context()
-end
 
 return M

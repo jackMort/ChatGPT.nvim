@@ -144,6 +144,7 @@ function M.defaults()
       submit = "<C-Enter>",
       submit_n = "<Enter>",
       max_visible_lines = 20,
+      placeholder = "Ask anything... (Ctrl+Enter to send)",
     },
     settings_window = {
       setting_sign = "  ",

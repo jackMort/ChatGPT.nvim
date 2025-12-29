@@ -14,6 +14,7 @@ local Spinner = require("chatgpt.spinner")
 local Session = require("chatgpt.flows.chat.session")
 local SystemWindow = require("chatgpt.flows.chat.system_window")
 local Context = require("chatgpt.context")
+local LspContext = require("chatgpt.context.lsp")
 local ProjectContext = require("chatgpt.context.project")
 
 QUESTION, ANSWER, SYSTEM = 1, 2, 3
@@ -51,6 +52,14 @@ function Chat:init()
   self.is_streaming_response_lock = false
 
   self.prompt_lines = 1
+
+  -- Input history
+  self.input_history = {}
+  self.history_index = 0
+  self.current_input = ""
+
+  -- Token count
+  self.current_tokens = 0
 
   self.display_mode = Config.options.popup_layout.default
   self.params = Config.options.openai_params
@@ -108,16 +117,24 @@ function Chat:render_role()
     vim.api.nvim_buf_del_extmark(self.chat_input.bufnr, Config.namespace_id, self.role_extmark_id)
   end
 
+  local virt_text = {}
+
+  -- Add token count if > 0
+  if self.current_tokens > 0 then
+    table.insert(virt_text, { Config.options.chat.border_left_sign, "ChatGPTTokensBorder" })
+    table.insert(virt_text, { self.current_tokens .. " TOKENS", "ChatGPTTokens" })
+    table.insert(virt_text, { Config.options.chat.border_right_sign, "ChatGPTTokensBorder" })
+    table.insert(virt_text, { " " })
+  end
+
+  -- Add role
+  table.insert(virt_text, { Config.options.chat.border_left_sign, "ChatGPTTotalTokensBorder" })
+  table.insert(virt_text, { string.upper(self.role), "ChatGPTTotalTokens" })
+  table.insert(virt_text, { Config.options.chat.border_right_sign, "ChatGPTTotalTokensBorder" })
+  table.insert(virt_text, { " " })
+
   self.role_extmark_id = vim.api.nvim_buf_set_extmark(self.chat_input.bufnr, Config.namespace_id, 0, 0, {
-    virt_text = {
-      { Config.options.chat.border_left_sign, "ChatGPTTotalTokensBorder" },
-      {
-        string.upper(self.role),
-        "ChatGPTTotalTokens",
-      },
-      { Config.options.chat.border_right_sign, "ChatGPTTotalTokensBorder" },
-      { " " },
-    },
+    virt_text = virt_text,
     virt_text_pos = "right_align",
   })
 end
@@ -671,24 +688,6 @@ function Chat:display_input_suffix(suffix)
   end
 end
 
-function Chat:update_context_indicator()
-  if not self.chat_input or not self.chat_input.border then
-    return
-  end
-
-  local context_count = Context.count()
-  local base_title = " Prompt "
-
-  if context_count > 0 then
-    base_title = " Prompt [" .. context_count .. "] "
-  end
-
-  -- Update the border title
-  if self.chat_input.border.set_text then
-    self.chat_input.border:set_text("top", base_title, "center")
-  end
-end
-
 function Chat:scroll(direction)
   local speed = vim.api.nvim_win_get_height(self.chat_window.winid) / 2
   local input = direction > 0 and [[]] or [[]]
@@ -821,6 +820,9 @@ function Chat:get_layout_params()
 end
 
 function Chat:open()
+  -- Store original buffer for context commands
+  self.original_bufnr = vim.api.nvim_get_current_buf()
+
   local displayed_params = Utils.table_shallow_copy(self.params)
   -- if the param is decided by a function and not constant, write <dynamic> for now
   -- TODO: if the current model should be displayed, the settings_panel would
@@ -858,9 +860,30 @@ function Chat:open()
       self:hide()
     end,
     on_change = vim.schedule_wrap(function(lines)
-      if self.prompt_lines ~= #lines then
-        self.prompt_lines = #lines
+      -- Calculate tokens (~1.3 tokens per word)
+      local text = table.concat(lines, "\n")
+      local word_count = 0
+      for _ in text:gmatch("%S+") do
+        word_count = word_count + 1
+      end
+      self.current_tokens = math.ceil(word_count * 1.3)
+      self:render_role()
+
+      local new_lines = math.max(1, #lines)
+      if self.prompt_lines ~= new_lines then
+        self.prompt_lines = new_lines
         self:redraw()
+        -- After redraw, scroll to show all content from top
+        vim.schedule(function()
+          if self.chat_input and self.chat_input.winid and vim.api.nvim_win_is_valid(self.chat_input.winid) then
+            local cursor = vim.api.nvim_win_get_cursor(self.chat_input.winid)
+            vim.api.nvim_win_call(self.chat_input.winid, function()
+              -- Scroll to top first, then back to cursor
+              vim.cmd("normal! gg0")
+              vim.api.nvim_win_set_cursor(0, cursor)
+            end)
+          end
+        end)
       end
     end),
     on_submit = function(value)
@@ -874,27 +897,18 @@ function Chat:open()
         return
       end
 
-      -- Inject context into the message if present
-      local display_message = value
-      local api_message = value
-      if Context.has_context() then
-        -- Compact format for display (@file:line)
-        local display_refs = Context.format_references()
-        if display_refs and display_refs ~= "" then
-          display_message = display_refs .. "\n" .. value
-        end
-        -- Expanded format for API (full code content)
-        local context_text = Context.format_for_message()
-        if context_text and context_text ~= "" then
-          api_message = context_text .. "\n\n---\n\n" .. value
-        end
-        -- Clear context after use
-        Context.clear()
-        -- Update input border
-        self:update_context_indicator()
+      -- Save to history
+      if value and value ~= "" then
+        table.insert(self.input_history, value)
+        self.history_index = 0
+        self.current_input = ""
       end
 
-      -- Store expanded message for API, but display compact version
+      -- Expand @refs in message for API, keep original for display
+      local api_message, display_message = Context.expand_refs(value)
+      Context.clear()
+
+      -- Store expanded message for API, display shows @refs inline
       self:addQuestionWithContext(display_message, api_message)
       if self.role == ROLE_USER then
         self:showProgess()
@@ -950,6 +964,130 @@ function Chat:open()
   self:map(Config.options.chat.keymaps.stop_generating, function()
     self.stop = true
   end, { self.chat_input })
+
+  -- history: previous (up arrow)
+  self:map("<Up>", function()
+    if #self.input_history == 0 then
+      return
+    end
+    -- Save current input if starting to navigate
+    if self.history_index == 0 then
+      local lines = vim.api.nvim_buf_get_lines(self.chat_input.bufnr, 0, -1, false)
+      self.current_input = table.concat(lines, "\n")
+    end
+    -- Move back in history
+    if self.history_index < #self.input_history then
+      self.history_index = self.history_index + 1
+      local history_entry = self.input_history[#self.input_history - self.history_index + 1]
+      Utils.modify_buf(self.chat_input.bufnr, function(bufnr)
+        vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(history_entry, "\n"))
+      end)
+    end
+  end, { self.chat_input }, { "i", "n" })
+
+  -- history: next (down arrow)
+  self:map("<Down>", function()
+    if self.history_index == 0 then
+      return
+    end
+    -- Move forward in history
+    self.history_index = self.history_index - 1
+    local text
+    if self.history_index == 0 then
+      text = self.current_input
+    else
+      text = self.input_history[#self.input_history - self.history_index + 1]
+    end
+    Utils.modify_buf(self.chat_input.bufnr, function(bufnr)
+      vim.api.nvim_buf_set_lines(bufnr, 0, -1, false, vim.split(text, "\n"))
+    end)
+  end, { self.chat_input }, { "i", "n" })
+
+  -- Helper to insert text at cursor in input buffer
+  local function insert_at_cursor(text)
+    if self.chat_input and self.chat_input.bufnr and vim.api.nvim_buf_is_valid(self.chat_input.bufnr) then
+      vim.schedule(function()
+        if self.chat_input.winid and vim.api.nvim_win_is_valid(self.chat_input.winid) then
+          vim.api.nvim_set_current_win(self.chat_input.winid)
+          vim.cmd("startinsert!")
+          vim.api.nvim_put({ text .. " " }, "c", true, true)
+        end
+      end)
+    end
+  end
+
+  -- @ context autocomplete
+  self:map("@", function()
+    vim.ui.select({
+      { label = "LSP Symbol", value = "lsp" },
+      { label = "Project Context", value = "project" },
+      { label = "File", value = "file" },
+    }, {
+      prompt = "Add Context:",
+      format_item = function(item)
+        return item.label
+      end,
+    }, function(choice)
+      if not choice then
+        return
+      end
+
+      if choice.value == "lsp" then
+        -- Add LSP context from original buffer
+        if self.original_bufnr and vim.api.nvim_buf_is_valid(self.original_bufnr) then
+          vim.api.nvim_set_current_buf(self.original_bufnr)
+          LspContext.get_context(function(item)
+            if item then
+              local ref = Context.make_ref(item)
+              Context.add(ref, item)
+              insert_at_cursor(ref)
+            end
+          end)
+        else
+          vim.notify("No source buffer available for LSP context", vim.log.levels.WARN)
+        end
+      elseif choice.value == "project" then
+        local item = ProjectContext.get_context()
+        if item then
+          local ref = Context.make_ref(item)
+          Context.add(ref, item)
+          insert_at_cursor(ref)
+        end
+      elseif choice.value == "file" then
+        local ok, telescope = pcall(require, "telescope.builtin")
+        if ok then
+          telescope.find_files({
+            attach_mappings = function(prompt_bufnr, map)
+              local actions = require("telescope.actions")
+              local action_state = require("telescope.actions.state")
+              actions.select_default:replace(function()
+                actions.close(prompt_bufnr)
+                local selection = action_state.get_selected_entry()
+                if selection then
+                  local filepath = selection.path or selection[1]
+                  local file_content = vim.fn.readfile(filepath)
+                  if file_content then
+                    local item = {
+                      type = "file",
+                      name = vim.fn.fnamemodify(filepath, ":t"),
+                      file = filepath,
+                      content = table.concat(file_content, "\n"),
+                    }
+                    local ref = Context.make_ref(item)
+                    Context.add(ref, item)
+                    insert_at_cursor(ref)
+                  end
+                end
+              end)
+              return true
+            end,
+          })
+        else
+          vim.notify("Telescope not available for file picker", vim.log.levels.WARN)
+        end
+      end
+    end)
+  end, { self.chat_input }, { "i" })
 
   -- close
   self:map(Config.options.chat.keymaps.close, function()

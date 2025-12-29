@@ -5,6 +5,8 @@ local is_type = require("nui.utils").is_type
 local event = require("nui.utils.autocmd").event
 local Config = require("chatgpt.config")
 
+local placeholder_ns = vim.api.nvim_create_namespace("ChatGPTInputPlaceholder")
+
 -- exiting insert mode places cursor one character backward,
 -- so patch the cursor position to one character forward
 -- when unmounting input.
@@ -40,7 +42,8 @@ function Input:init(popup_options, options)
     }
   end
 
-  popup_options.size.height = 2
+  -- Don't hardcode height - let layout control it
+  popup_options.size.height = popup_options.size.height or 1
 
   Input.super.init(self, popup_options)
 
@@ -97,19 +100,41 @@ function Input:init(popup_options, options)
   if options.on_change then
     props.on_change = function()
       local lines = vim.api.nvim_buf_get_lines(self.bufnr, 0, -1, false)
-      local max_lines = Config.options.popup_input.max_visible_lines -- Set the maximum number of lines here
+      local max_lines = Config.options.popup_input.max_visible_lines
       if max_lines ~= nil and #lines > max_lines then
-        lines = { unpack(lines, 1, max_lines) } -- Only keep the first max_lines lines
+        lines = { unpack(lines, 1, max_lines) }
       end
-      if #lines == 1 then
+      -- Ensure at least 1 line
+      local line_count = math.max(1, #lines)
+
+      -- Clear previous signs
+      vim.fn.sign_unplace("my_group", { buffer = self.bufnr })
+
+      if line_count == 1 then
         vim.fn.sign_place(0, "my_group", "singleprompt_sign", self.bufnr, { lnum = 1, priority = 10 })
       else
-        for i = 1, #lines do
+        for i = 1, line_count do
           vim.fn.sign_place(0, "my_group", "multiprompt_sign", self.bufnr, { lnum = i, priority = 10 })
         end
       end
-      options.on_change(lines)
+      -- Update placeholder visibility
+      self:update_placeholder(lines)
+      -- Pass normalized line count
+      options.on_change(line_count == 0 and { "" } or lines)
     end
+  end
+end
+
+function Input:update_placeholder(lines)
+  vim.api.nvim_buf_clear_namespace(self.bufnr, placeholder_ns, 0, -1)
+  -- Show placeholder if empty or only whitespace
+  local is_empty = #lines == 0 or (#lines == 1 and lines[1]:match("^%s*$"))
+  if is_empty then
+    local placeholder = Config.options.popup_input.placeholder or "Type your message... (Ctrl+Enter to send)"
+    vim.api.nvim_buf_set_extmark(self.bufnr, placeholder_ns, 0, 0, {
+      virt_text = { { placeholder, "Comment" } },
+      virt_text_pos = "overlay",
+    })
   end
 end
 
@@ -119,6 +144,9 @@ function Input:mount()
   Input.super.mount(self)
 
   vim.api.nvim_buf_set_option(0, "ft", "chatgpt-input")
+
+  -- Highlight @references
+  vim.cmd([[syntax match ChatGPTContextRef /@[^ \t]\+/]])
 
   if props.on_change then
     vim.api.nvim_buf_attach(self.bufnr, false, {
@@ -146,6 +174,9 @@ function Input:mount()
 
   vim.api.nvim_command("startinsert!")
   vim.fn.sign_place(0, "my_group", "singleprompt_sign", self.bufnr, { lnum = 1, priority = 10 })
+
+  -- Show placeholder on mount
+  self:update_placeholder({ "" })
 end
 
 local NuiInput = Input

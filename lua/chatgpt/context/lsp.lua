@@ -1,6 +1,5 @@
 local M = {}
 
-local Context = require("chatgpt.context")
 local Config = require("chatgpt.config")
 
 -- Get the word under cursor
@@ -60,15 +59,16 @@ local function extract_definition(location, max_lines)
   }
 end
 
--- Add LSP definition context for symbol under cursor
-function M.add_context(callback)
+-- Get LSP definition context for symbol under cursor
+-- Calls callback with item or nil
+function M.get_context(callback)
   local bufnr = vim.api.nvim_get_current_buf()
   local word = get_word_under_cursor()
 
   if word == "" then
     vim.notify("No symbol under cursor", vim.log.levels.WARN)
     if callback then
-      callback(false)
+      callback(nil)
     end
     return
   end
@@ -78,7 +78,7 @@ function M.add_context(callback)
   if #clients == 0 then
     vim.notify("No LSP client attached to buffer", vim.log.levels.WARN)
     if callback then
-      callback(false)
+      callback(nil)
     end
     return
   end
@@ -89,7 +89,7 @@ function M.add_context(callback)
     if err then
       vim.notify("LSP error: " .. vim.inspect(err), vim.log.levels.ERROR)
       if callback then
-        callback(false)
+        callback(nil)
       end
       return
     end
@@ -97,7 +97,7 @@ function M.add_context(callback)
     if not result or (type(result) == "table" and #result == 0) then
       vim.notify("No definition found for: " .. word, vim.log.levels.WARN)
       if callback then
-        callback(false)
+        callback(nil)
       end
       return
     end
@@ -116,34 +116,21 @@ function M.add_context(callback)
     if not definition or not definition.content then
       vim.notify("Could not read definition for: " .. word, vim.log.levels.WARN)
       if callback then
-        callback(false)
+        callback(nil)
       end
       return
     end
 
-    -- Check if already added (avoid duplicates)
-    for _, item in ipairs(Context.get_items()) do
-      if item.type == "lsp" and item.name == word and item.file == definition.file and item.line == definition.line then
-        vim.notify(string.format("Context already added: %s (%s:%d)", word, definition.file, definition.line), vim.log.levels.INFO)
-        if callback then
-          callback(false)
-        end
-        return
-      end
-    end
-
-    Context.add({
+    local item = {
       type = "lsp",
       name = word,
       file = definition.file,
       line = definition.line,
       content = definition.content,
-    })
-
-    vim.notify(string.format("Context added: %s (%s:%d)", word, definition.file, definition.line), vim.log.levels.INFO)
+    }
 
     if callback then
-      callback(true)
+      callback(item)
     end
   end)
 end
