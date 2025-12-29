@@ -32,6 +32,14 @@ test addition, code optimization, summarization, bug fixing, code explanation,
 Roxygen editing, and code readability analysis. Additionally, you can define
 your own custom actions using a JSON file.
 
+- **Rich Message Rendering**: Enhanced chat display with styled code blocks
+(language headers, copy indicators, foldable), markdown formatting (headers,
+bold, italic, lists, blockquotes, links), diff highlighting, and sender indicators.
+
+- **Inline Context References**: Use `@` to add context from LSP definitions or
+project files directly in your prompts. References are displayed inline and
+expanded when sending to the API.
+
 For a comprehensive understanding of the extension's functionality, you can watch
 a plugin showcase [video](https://www.youtube.com/watch?v=7k0KZsheLP4)
 
@@ -349,6 +357,9 @@ keybindings are available:
 - `<C-i>` [Edit Window] use response as input.
 - `<C-d>` [Edit Window] view the diff between left and right panes and use diff-mode
   commands
+- `y` [Chat] Copy code block at cursor.
+- `za` [Chat] Toggle fold for code block.
+- `@` [Chat] Trigger context autocomplete (LSP definitions, project context).
 
 The settings window (`<C-o>`) displays current configuration (model, temperature,
 max_tokens, session name). To change settings, modify your `setup()` configuration.

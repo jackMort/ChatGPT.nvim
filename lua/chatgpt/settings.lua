@@ -2,7 +2,6 @@ local M = {}
 
 local Popup = require("nui.popup")
 local Config = require("chatgpt.config")
-local Context = require("chatgpt.context")
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
@@ -11,9 +10,6 @@ local params_to_show = { "model" }
 local function write_virtual_text(bufnr, ns, line, chunks)
   return vim.api.nvim_buf_set_extmark(bufnr, ns, line, 0, { virt_text = chunks, virt_text_pos = "overlay" })
 end
-
--- Track context item line mappings for deletion
-M.context_line_map = {}
 
 M.get_settings_panel = function(type, params, session_name)
   local settings_window_opts = vim.tbl_deep_extend("force", {}, Config.options.settings_window, {
@@ -30,17 +26,6 @@ M.get_settings_panel = function(type, params, session_name)
     M.render_content(params, session_name)
   end)
 
-  -- Set up delete keymap for context items
-  M.panel:map("n", Config.options.chat.keymaps.delete_context_item, function()
-    local cursor_line = vim.api.nvim_win_get_cursor(M.panel.winid)[1]
-    local context_index = M.context_line_map[cursor_line]
-    if context_index then
-      Context.remove(context_index)
-      M.render_content(params, session_name)
-      vim.notify("Context item removed")
-    end
-  end, { noremap = true, silent = true })
-
   return M.panel
 end
 
@@ -54,7 +39,6 @@ M.render_content = function(params, session_name)
 
   -- Clear existing extmarks
   vim.api.nvim_buf_clear_namespace(M.panel.bufnr, namespace_id, 0, -1)
-  M.context_line_map = {}
 
   -- Create empty lines for the full window height
   local lines = {}
@@ -85,35 +69,6 @@ M.render_content = function(params, session_name)
       { Config.options.settings_window.setting_sign .. "session: ", "Comment" },
       { session_name, Config.options.highlights.params_value },
     })
-  end
-
-  -- Add context items if any
-  local context_items = Context.get_items()
-  if #context_items > 0 then
-    -- Add separator before context
-    table.insert(content, {
-      { "  ───────────────────────────────", "Comment" },
-    })
-    -- Add context header
-    table.insert(content, {
-      { "  context:", "Comment" },
-    })
-    -- Add each context item
-    for idx, item in ipairs(context_items) do
-      local display_text
-      if item.type == "lsp" then
-        display_text = string.format("@%s:%d", item.file or item.name, item.line or 0)
-      elseif item.type == "project" then
-        display_text = "@" .. item.name
-      else
-        display_text = "@" .. (item.name or "unknown")
-      end
-      table.insert(content, {
-        { "    " .. display_text, "String" },
-      })
-      -- Track which line this context item is on (1-indexed for cursor)
-      M.context_line_map[#content] = idx
-    end
   end
 
   -- Write content at top

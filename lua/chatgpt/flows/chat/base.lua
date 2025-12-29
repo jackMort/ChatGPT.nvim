@@ -468,10 +468,264 @@ function Chat:getSelectedCode()
   return nil
 end
 
+-- Get code block at cursor position in chat window
+function Chat:get_code_at_cursor()
+  if not self.chat_window or not self.chat_window.bufnr then
+    return nil
+  end
+
+  local bufnr = self.chat_window.bufnr
+  local cursor = vim.api.nvim_win_get_cursor(self.chat_window.winid)
+  local cursor_line = cursor[1] - 1 -- 0-indexed
+
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+
+  -- Find code block boundaries around cursor
+  local block_start = nil
+  local block_end = nil
+  local in_block = false
+
+  for i, line in ipairs(lines) do
+    local line_idx = i - 1
+    if line:match("^```") then
+      if not in_block then
+        -- Start of block
+        in_block = true
+        block_start = line_idx
+      else
+        -- End of block
+        block_end = line_idx
+        -- Check if cursor is within this block
+        if cursor_line >= block_start and cursor_line <= block_end then
+          -- Extract code (skip first line with ```)
+          local code_lines = {}
+          for j = block_start + 2, block_end do -- +2 to skip ```lang line (1-indexed)
+            table.insert(code_lines, lines[j])
+          end
+          return table.concat(code_lines, "\n")
+        end
+        in_block = false
+        block_start = nil
+      end
+    end
+  end
+
+  return nil
+end
+
 function Chat:get_last_answer()
   for i = #self.messages, 1, -1 do
     if self.messages[i].type == ANSWER then
       return self.messages[i]
+    end
+  end
+end
+
+-- Apply rich highlighting to message content (code blocks, inline code, @refs, markdown)
+function Chat:highlight_message_content(lines, start_line)
+  local bufnr = self.chat_window.bufnr
+  local in_code_block = false
+  local code_lang = nil
+
+  for i, line in ipairs(lines) do
+    local line_num = start_line + i - 1
+
+    -- Check for code block start/end
+    local block_start = line:match("^```(%w*)")
+
+    if block_start and not in_code_block then
+      in_code_block = true
+      code_lang = block_start ~= "" and block_start or nil
+      -- Hide the ``` line and show language header instead
+      local header_text = {}
+      if code_lang then
+        table.insert(header_text, { " LANGUAGE: " .. string.upper(code_lang) .. " ", "ChatGPTCodeLang" })
+        table.insert(header_text, { " ────────────────── ", "ChatGPTCodeBlockHeader" })
+        table.insert(header_text, { "[y] copy", "Comment" })
+      else
+        table.insert(header_text, { " CODE ", "ChatGPTCodeLang" })
+        table.insert(header_text, { " ────────────────── ", "ChatGPTCodeBlockHeader" })
+        table.insert(header_text, { "[y] copy", "Comment" })
+      end
+      vim.api.nvim_buf_set_extmark(bufnr, Config.namespace_id, line_num, 0, {
+        virt_text = header_text,
+        virt_text_pos = "overlay",
+        hl_mode = "combine",
+        virt_lines_above = true,
+        virt_lines = { { { "", "" } } },
+      })
+      vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTCodeBlock", line_num, 0, -1)
+    elseif in_code_block and line == "```" then
+      in_code_block = false
+      code_lang = nil
+      -- Hide the closing ``` with a subtle separator
+      vim.api.nvim_buf_set_extmark(bufnr, Config.namespace_id, line_num, 0, {
+        virt_text = { { "───", "ChatGPTCodeBlockHeader" } },
+        virt_text_pos = "overlay",
+        end_col = 3,
+        conceal = "",
+      })
+      vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTCodeBlock", line_num, 0, -1)
+    elseif in_code_block then
+      -- Check for diff highlighting inside diff blocks
+      if code_lang == "diff" then
+        if line:match("^%+") then
+          vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTDiffAdd", line_num, 0, -1)
+        elseif line:match("^%-") then
+          vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTDiffDel", line_num, 0, -1)
+        else
+          vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTCodeBlock", line_num, 0, -1)
+        end
+      else
+        vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTCodeBlock", line_num, 0, -1)
+      end
+    else
+      -- Headers (# ## ###)
+      if line:match("^#+%s") then
+        vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTHeader", line_num, 0, -1)
+      -- Horizontal rule (--- or ***)
+      elseif line:match("^%-%-%-+%s*$") or line:match("^%*%*%*+%s*$") then
+        vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTHRule", line_num, 0, -1)
+      -- Blockquote (> text)
+      elseif line:match("^>") then
+        vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTBlockquote", line_num, 0, -1)
+      else
+        -- Bullet list markers (- or *)
+        local bullet = line:match("^(%s*[%-%*]%s)")
+        if bullet then
+          vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTListMarker", line_num, 0, #bullet)
+        end
+
+        -- Numbered list markers (1. 2. etc)
+        local num_marker = line:match("^(%s*%d+%.%s)")
+        if num_marker then
+          vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTListMarker", line_num, 0, #num_marker)
+        end
+
+        -- @references
+        for ref in line:gmatch("@[^%s]+") do
+          local s, e = line:find(ref, 1, true)
+          if s then
+            vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTContextRef", line_num, s - 1, e)
+          end
+        end
+
+        -- Inline `code`
+        local col = 1
+        while true do
+          local s, e = line:find("`[^`]+`", col)
+          if not s then break end
+          vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTInlineCode", line_num, s - 1, e)
+          col = e + 1
+        end
+
+        -- **bold**
+        col = 1
+        while true do
+          local s, e = line:find("%*%*[^%*]+%*%*", col)
+          if not s then break end
+          vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTBold", line_num, s - 1, e)
+          col = e + 1
+        end
+
+        -- *italic* or _italic_
+        col = 1
+        while true do
+          local s, e = line:find("%*[^%*]+%*", col)
+          if not s then break end
+          -- Skip if it's actually bold (**)
+          if line:sub(s, s + 1) ~= "**" and (s == 1 or line:sub(s - 1, s - 1) ~= "*") then
+            vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTItalic", line_num, s - 1, e)
+          end
+          col = e + 1
+        end
+
+        -- URLs (http:// or https://)
+        col = 1
+        while true do
+          local s, e = line:find("https?://[^%s%)%]]+", col)
+          if not s then break end
+          vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTLink", line_num, s - 1, e)
+          col = e + 1
+        end
+
+        -- Task lists - [x] done, - [ ] pending
+        local task_done = line:match("^(%s*%-%s*%[x%])")
+        if task_done then
+          vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTTaskDone", line_num, 0, #task_done)
+        end
+        local task_pending = line:match("^(%s*%-%s*%[%s*%])")
+        if task_pending then
+          vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTTaskPending", line_num, 0, #task_pending)
+        end
+
+        -- ~~strikethrough~~
+        col = 1
+        while true do
+          local s, e = line:find("~~[^~]+~~", col)
+          if not s then break end
+          vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTStrikethrough", line_num, s - 1, e)
+          col = e + 1
+        end
+
+        -- Markdown links [text](url)
+        col = 1
+        while true do
+          local s, e = line:find("%[[^%]]+%]%([^%)]+%)", col)
+          if not s then break end
+          -- Find the split between text and url
+          local text_end = line:find("%]%(", s)
+          if text_end then
+            vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTLinkText", line_num, s - 1, text_end)
+            vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTLinkUrl", line_num, text_end, e)
+          end
+          col = e + 1
+        end
+      end
+    end
+  end
+end
+
+-- Add visual divider after answer messages
+function Chat:add_message_divider(line_num)
+  local bufnr = self.chat_window.bufnr
+  local divider = string.rep("─", 60)
+  vim.api.nvim_buf_set_extmark(bufnr, Config.namespace_id, line_num, 0, {
+    virt_lines = { { { divider, "ChatGPTDivider" } } },
+    virt_lines_above = false,
+  })
+end
+
+-- Create folds for code blocks in the message
+function Chat:create_code_folds(lines, start_line)
+  if not self.chat_window or not self.chat_window.winid then
+    return
+  end
+
+  local in_block = false
+  local block_start = nil
+
+  for i, line in ipairs(lines) do
+    local line_num = start_line + i -- 1-indexed for fold commands
+
+    if line:match("^```") then
+      if not in_block then
+        in_block = true
+        block_start = line_num
+      else
+        -- End of block - create fold if block has content
+        if line_num > block_start + 1 then
+          pcall(function()
+            vim.api.nvim_win_call(self.chat_window.winid, function()
+              vim.cmd(block_start .. "," .. line_num .. "fold")
+              -- Open the fold by default
+              vim.cmd(block_start .. "foldopen")
+            end)
+          end)
+        end
+        in_block = false
+        block_start = nil
+      end
     end
   end
 end
@@ -493,23 +747,19 @@ function Chat:renderLastMessage()
   self:set_lines(startIdx, -1, false, lines)
 
   if msg.type == QUESTION then
-    -- Check if first line contains context references
-    local first_line = lines[1] or ""
-    local has_context = first_line:match("^@[^%s]+")
+    -- Add sender indicator
+    vim.api.nvim_buf_set_extmark(self.chat_window.bufnr, Config.namespace_id, msg.start_line, 0, {
+      virt_text = { { "You ", "ChatGPTSenderUser" } },
+      virt_text_pos = "inline",
+    })
 
-    for index, line in ipairs(lines) do
-      -- Style context line differently
-      if index == 1 and has_context then
-        self:add_highlight("ChatGPTContextRef", msg.start_line + index - 1, 0, -1)
-        -- Add context icon as virtual text
-        vim.api.nvim_buf_set_extmark(self.chat_window.bufnr, Config.namespace_id, msg.start_line, 0, {
-          virt_text = { { " ", "ChatGPTContextRef" } },
-          virt_text_pos = "inline",
-        })
-      else
-        self:add_highlight("ChatGPTQuestion", msg.start_line + index - 1, 0, -1)
-      end
+    -- Apply base question styling
+    for index, _ in ipairs(lines) do
+      self:add_highlight("ChatGPTQuestion", msg.start_line + index - 1, 0, -1)
     end
+
+    -- Apply rich highlighting (overrides base for specific patterns)
+    self:highlight_message_content(lines, msg.start_line)
 
     pcall(
       vim.fn.sign_place,
@@ -520,6 +770,18 @@ function Chat:renderLastMessage()
       { lnum = msg.start_line + 1 }
     )
   else
+    -- Add sender indicator
+    vim.api.nvim_buf_set_extmark(self.chat_window.bufnr, Config.namespace_id, msg.start_line, 0, {
+      virt_text = { { "Assistant ", "ChatGPTSenderAssistant" } },
+      virt_text_pos = "inline",
+    })
+
+    -- Apply rich highlighting for answer (code blocks, inline code, @refs)
+    self:highlight_message_content(lines, msg.start_line)
+
+    -- Create folds for code blocks (open by default, user can close with zc)
+    self:create_code_folds(lines, msg.start_line)
+
     local total_tokens = msg.usage.total_tokens
     if total_tokens ~= nil then
       self.messages[self.selectedIndex].extmark_id =
@@ -538,6 +800,9 @@ function Chat:renderLastMessage()
     end
 
     Signs.set_for_lines(self.chat_window.bufnr, msg.start_line, msg.end_line, "chat")
+
+    -- Add divider after answer
+    self:add_message_divider(msg.end_line)
   end
 
   if self.selectedIndex > 2 then
@@ -953,6 +1218,22 @@ function Chat:open()
   -- prev message
   self:map(Config.options.chat.keymaps.prev_message, function()
     self:prev()
+  end, { self.chat_window }, { "n" })
+
+  -- yank code under cursor
+  self:map(Config.options.chat.keymaps.yank_code, function()
+    local code = self:get_code_at_cursor()
+    if code then
+      vim.fn.setreg(Config.options.yank_register, code)
+      vim.notify("Code copied!", vim.log.levels.INFO)
+    else
+      vim.notify("No code block at cursor", vim.log.levels.WARN)
+    end
+  end, { self.chat_window }, { "n" })
+
+  -- toggle fold
+  self:map(Config.options.chat.keymaps.toggle_fold, function()
+    pcall(vim.cmd, "normal! za")
   end, { self.chat_window }, { "n" })
 
   -- scroll up

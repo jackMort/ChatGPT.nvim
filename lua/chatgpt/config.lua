@@ -81,7 +81,8 @@ function M.defaults()
         toggle_message_role = "<C-r>",
         toggle_system_role_open = "<C-s>",
         stop_generating = "<C-x>",
-        delete_context_item = "d",
+        yank_code = "y",
+        toggle_fold = "za",
       },
     },
     popup_layout = {
@@ -107,6 +108,8 @@ function M.defaults()
         wrap = true,
         linebreak = true,
         foldcolumn = "1",
+        foldmethod = "manual",
+        foldenable = true,
         winhighlight = "Normal:Normal,FloatBorder:FloatBorder",
       },
       buf_options = {
