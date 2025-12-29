@@ -155,7 +155,8 @@ M.render_list = function()
       local is_current = (M.line_to_session[line_num] == M.line_to_session[M.current_line])
 
       local cursor = is_current and Config.options.chat.sessions_window.current_line_sign or "  "
-      local icon = is_active and Config.options.chat.sessions_window.active_sign or Config.options.chat.sessions_window.inactive_sign
+      local icon = is_active and Config.options.chat.sessions_window.active_sign
+        or Config.options.chat.sessions_window.inactive_sign
       local cls = is_active and Config.options.highlights.active_session or "Comment"
       local name = Utils.trimText(session.name, 28)
 

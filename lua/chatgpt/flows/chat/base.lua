@@ -540,11 +540,17 @@ function Chat:highlight_message_content(lines, start_line)
       local header_text = {}
       if code_lang then
         table.insert(header_text, { " LANGUAGE: " .. string.upper(code_lang) .. " ", "ChatGPTCodeLang" })
-        table.insert(header_text, { " ────────────────── ", "ChatGPTCodeBlockHeader" })
+        table.insert(
+          header_text,
+          { " ────────────────── ", "ChatGPTCodeBlockHeader" }
+        )
         table.insert(header_text, { "[y] copy", "Comment" })
       else
         table.insert(header_text, { " CODE ", "ChatGPTCodeLang" })
-        table.insert(header_text, { " ────────────────── ", "ChatGPTCodeBlockHeader" })
+        table.insert(
+          header_text,
+          { " ────────────────── ", "ChatGPTCodeBlockHeader" }
+        )
         table.insert(header_text, { "[y] copy", "Comment" })
       end
       vim.api.nvim_buf_set_extmark(bufnr, Config.namespace_id, line_num, 0, {
@@ -614,7 +620,9 @@ function Chat:highlight_message_content(lines, start_line)
         local col = 1
         while true do
           local s, e = line:find("`[^`]+`", col)
-          if not s then break end
+          if not s then
+            break
+          end
           vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTInlineCode", line_num, s - 1, e)
           col = e + 1
         end
@@ -623,7 +631,9 @@ function Chat:highlight_message_content(lines, start_line)
         col = 1
         while true do
           local s, e = line:find("%*%*[^%*]+%*%*", col)
-          if not s then break end
+          if not s then
+            break
+          end
           vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTBold", line_num, s - 1, e)
           col = e + 1
         end
@@ -632,7 +642,9 @@ function Chat:highlight_message_content(lines, start_line)
         col = 1
         while true do
           local s, e = line:find("%*[^%*]+%*", col)
-          if not s then break end
+          if not s then
+            break
+          end
           -- Skip if it's actually bold (**)
           if line:sub(s, s + 1) ~= "**" and (s == 1 or line:sub(s - 1, s - 1) ~= "*") then
             vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTItalic", line_num, s - 1, e)
@@ -644,7 +656,9 @@ function Chat:highlight_message_content(lines, start_line)
         col = 1
         while true do
           local s, e = line:find("https?://[^%s%)%]]+", col)
-          if not s then break end
+          if not s then
+            break
+          end
           vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTLink", line_num, s - 1, e)
           col = e + 1
         end
@@ -663,7 +677,9 @@ function Chat:highlight_message_content(lines, start_line)
         col = 1
         while true do
           local s, e = line:find("~~[^~]+~~", col)
-          if not s then break end
+          if not s then
+            break
+          end
           vim.api.nvim_buf_add_highlight(bufnr, Config.namespace_id, "ChatGPTStrikethrough", line_num, s - 1, e)
           col = e + 1
         end
@@ -672,7 +688,9 @@ function Chat:highlight_message_content(lines, start_line)
         col = 1
         while true do
           local s, e = line:find("%[[^%]]+%]%([^%)]+%)", col)
-          if not s then break end
+          if not s then
+            break
+          end
           -- Find the split between text and url
           local text_end = line:find("%]%(", s)
           if text_end then

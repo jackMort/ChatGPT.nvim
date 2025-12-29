@@ -140,10 +140,10 @@ function M.generate_summary()
       local content = read_file(root .. "/Cargo.toml")
       if content then
         -- Simple pattern matching for common crates
-        if content:match('%[dependencies%][^%[]*tokio') then
+        if content:match("%[dependencies%][^%[]*tokio") then
           table.insert(details, "Tokio")
         end
-        if content:match('%[dependencies%][^%[]*actix') then
+        if content:match("%[dependencies%][^%[]*actix") then
           table.insert(details, "Actix")
         end
       end
