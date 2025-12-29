@@ -766,7 +766,7 @@ function Chat:open()
       displayed_params[key] = "<dynamic>"
     end
   end
-  self.settings_panel = Settings.get_settings_panel("chat_completions", displayed_params)
+  self.settings_panel = Settings.get_settings_panel("chat_completions", displayed_params, self.session.name)
   self.help_panel = Help.get_help_panel("chat")
   self.sessions_panel = Sessions.get_panel(function(session)
     self:set_session(session)
@@ -1055,6 +1055,20 @@ function Chat:open()
   self.layout:mount()
   self:welcome()
 
+  -- Setup resize handling
+  local resize_group = vim.api.nvim_create_augroup("ChatGPTResize", { clear = true })
+  local function on_resize()
+    if self.layout and self.layout.winid then
+      self:redraw(true)
+    end
+  end
+  vim.api.nvim_create_autocmd("VimResized", { group = resize_group, callback = on_resize })
+  -- WinResized available in Neovim 0.9+
+  if vim.fn.has("nvim-0.9") == 1 then
+    vim.api.nvim_create_autocmd("WinResized", { group = resize_group, callback = on_resize })
+  end
+  self.resize_group = resize_group
+
   local event = require("nui.utils.autocmd").event
   self.chat_input:on(event.QuitPre, function()
     self.active = false
@@ -1076,10 +1090,27 @@ function Chat:redraw(noinit)
 end
 
 function Chat:hide()
+  -- Cleanup resize autocmd
+  if self.resize_group then
+    vim.api.nvim_create_augroup("ChatGPTResize", { clear = true })
+  end
   self.layout:hide()
 end
 
 function Chat:show()
+  -- Re-register resize handling
+  local resize_group = vim.api.nvim_create_augroup("ChatGPTResize", { clear = true })
+  local function on_resize()
+    if self.layout and self.layout.winid then
+      self:redraw(true)
+    end
+  end
+  vim.api.nvim_create_autocmd("VimResized", { group = resize_group, callback = on_resize })
+  if vim.fn.has("nvim-0.9") == 1 then
+    vim.api.nvim_create_autocmd("WinResized", { group = resize_group, callback = on_resize })
+  end
+  self.resize_group = resize_group
+
   self:redraw(true)
   self.layout:show()
 end

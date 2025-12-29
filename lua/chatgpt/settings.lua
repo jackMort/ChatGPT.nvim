@@ -1,165 +1,81 @@
 local M = {}
-M.vts = {}
 
 local Popup = require("nui.popup")
 local Config = require("chatgpt.config")
 
 local namespace_id = vim.api.nvim_create_namespace("ChatGPTNS")
 
-local float_validator = function(min, max)
-  return function(value)
-    return tonumber(value)
-  end
+local params_to_show = { "model", "temperature", "max_tokens" }
+
+local function write_virtual_text(bufnr, ns, line, chunks)
+  return vim.api.nvim_buf_set_extmark(bufnr, ns, line, 0, { virt_text = chunks, virt_text_pos = "overlay" })
 end
 
-local integer_validator = function(min, max)
-  return function(value)
-    return tonumber(value)
-  end
-end
+M.get_settings_panel = function(type, params, session_name)
+  local settings_window_opts = vim.tbl_deep_extend("force", {}, Config.options.settings_window, {
+    border = {
+      text = {
+        top = " Settings (read-only) ",
+      },
+    },
+  })
+  M.panel = Popup(settings_window_opts)
 
-local model_validator = function(value)
-  return value
-end
+  local content = {}
 
-local params_order = { "model", "frequency_penalty", "presence_penalty", "max_tokens", "temperature", "top_p" }
-local params_validators = {
-  model = model_validator,
-  frequency_penalty = float_validator(-2, 2),
-  presence_penalty = float_validator(-2, 2),
-  max_tokens = integer_validator(0, 4096),
-  temperature = float_validator(0, 1),
-  top_p = float_validator(0, 1),
-}
-
-local function write_virtual_text(bufnr, ns, line, chunks, mode)
-  mode = mode or "extmark"
-  if mode == "extmark" then
-    return vim.api.nvim_buf_set_extmark(bufnr, ns, line, 0, { virt_text = chunks, virt_text_pos = "overlay" })
-  elseif mode == "vt" then
-    pcall(vim.api.nvim_buf_set_virtual_text, bufnr, ns, line, chunks, {})
-  end
-end
-
-M.read_config = function()
-  local home = os.getenv("HOME") or os.getenv("USERPROFILE")
-  local file = io.open(home .. "/" .. ".chatgpt-" .. M.type .. "-params.json", "rb")
-  if not file then
-    return nil
-  end
-
-  local jsonString = file:read("*a")
-  file:close()
-
-  return vim.json.decode(jsonString)
-end
-
-M.write_config = function(config)
-  local home = os.getenv("HOME") or os.getenv("USERPROFILE")
-  local file, err = io.open(home .. "/" .. ".chatgpt-" .. M.type .. "-params.json", "w")
-  if file ~= nil then
-    local json_string = vim.json.encode(config)
-    file:write(json_string)
-    file:close()
-  else
-    vim.notify("Cannot save settings: " .. err, vim.log.levels.ERROR)
-  end
-end
-
-M.get_settings_panel = function(type, default_params)
-  M.type = type
-  local custom_params = M.read_config()
-  M.params = vim.tbl_deep_extend("force", {}, default_params, custom_params or {})
-
-  M.panel = Popup(Config.options.settings_window)
-
-  -- write details as virtual text
-  local details = {}
-  for _, key in pairs(params_order) do
-    if M.params[key] ~= nil then
-      local vt = {
-        { Config.options.settings_window.setting_sign .. key .. ": ", "ErrorMsg" },
-        { M.params[key] .. "", Config.options.highlights.params_value },
-      }
-      table.insert(details, vt)
+  -- Add params
+  for _, key in ipairs(params_to_show) do
+    if params[key] ~= nil then
+      table.insert(content, {
+        { Config.options.settings_window.setting_sign .. key .. ": ", "Comment" },
+        { tostring(params[key]), Config.options.highlights.params_value },
+      })
     end
   end
 
-  local line = 1
-  local empty_lines = {}
-  for _ = 1, #details do
-    table.insert(empty_lines, "")
+  -- Add session name if provided
+  if session_name then
+    table.insert(content, {
+      { Config.options.settings_window.setting_sign .. "session: ", "Comment" },
+      { session_name, Config.options.highlights.params_value },
+    })
   end
 
-  vim.api.nvim_buf_set_lines(M.panel.bufnr, line - 1, line - 1 + #empty_lines, false, empty_lines)
-  for _, d in ipairs(details) do
-    M.vts[line - 1] = write_virtual_text(M.panel.bufnr, namespace_id, line - 1, d)
-    line = line + 1
-  end
+  -- Render after mount to get window dimensions
+  M.panel:on("BufWinEnter", function()
+    local win_height = vim.api.nvim_win_get_height(M.panel.winid)
+    local total_lines = win_height
 
-  M.panel:map("n", "<Enter>", function()
-    local row, _ = unpack(vim.api.nvim_win_get_cursor(M.panel.winid))
-
-    local existing_order = {}
-    for _, key in ipairs(params_order) do
-      if M.params[key] ~= nil then
-        table.insert(existing_order, key)
-      end
+    -- Create empty lines for the full window height
+    local lines = {}
+    for _ = 1, total_lines do
+      table.insert(lines, "")
     end
 
-    local key = existing_order[row]
-    local value = M.params[key]
-    M.open_edit_property_input(key, value, row, function(new_value)
-      M.params[key] = params_validators[key](new_value)
-      local vt = {
+    -- Temporarily make buffer modifiable
+    vim.api.nvim_buf_set_option(M.panel.bufnr, "modifiable", true)
+    vim.api.nvim_buf_set_lines(M.panel.bufnr, 0, -1, false, lines)
+    vim.api.nvim_buf_set_option(M.panel.bufnr, "modifiable", false)
 
-        { Config.options.settings_window.setting_sign .. key .. ": ", "ErrorMsg" },
-        { M.params[key] .. "", "Identifier" },
-      }
-      vim.api.nvim_buf_del_extmark(M.panel.bufnr, namespace_id, M.vts[row - 1])
-      M.vts[row - 1] = vim.api.nvim_buf_set_extmark(
-        M.panel.bufnr,
-        namespace_id,
-        row - 1,
-        0,
-        { virt_text = vt, virt_text_pos = "overlay" }
-      )
-      M.write_config(M.params)
-    end)
-  end, {})
+    -- Write content at top
+    for i, detail in ipairs(content) do
+      write_virtual_text(M.panel.bufnr, namespace_id, i - 1, detail)
+    end
+
+    -- Write helper text at bottom
+    local separator_line = total_lines - 2
+    local help_line = total_lines - 1
+
+    write_virtual_text(M.panel.bufnr, namespace_id, separator_line, {
+      { "  ───────────────────────────────", "Comment" },
+    })
+    write_virtual_text(M.panel.bufnr, namespace_id, help_line, {
+      { "  Configure in ", "Comment" },
+      { "require('chatgpt').setup()", "String" },
+    })
+  end)
 
   return M.panel
-end
-
-M.open_edit_property_input = function(key, value, row, cb)
-  local Input = require("nui.input")
-
-  local input = Input({
-    relative = {
-      type = "win",
-      winid = M.panel.winid,
-    },
-    position = {
-      row = row - 1,
-      col = 0,
-    },
-    size = {
-      width = 38,
-    },
-    border = {
-      style = "none",
-    },
-    win_options = {
-      winhighlight = "Normal:Normal,FloatBorder:Normal",
-    },
-  }, {
-    prompt = Config.options.popup_input.prompt .. key .. ": ",
-    default_value = "" .. value,
-    on_submit = cb,
-  })
-
-  -- mount/open the component
-  input:mount()
 end
 
 return M

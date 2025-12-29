@@ -163,12 +163,12 @@ A simple configuration of the chat model could look something like this:
         -- Example:
         -- model = function()
         --     if some_condition() then
-        --         return "gpt-4-1106-preview"
+        --         return "gpt-5"
         --     else
-        --         return "gpt-3.5-turbo"
+        --         return "gpt-5-mini"
         --     end
         -- end,
-        model = "gpt-4-1106-preview",
+        model = "gpt-5-mini",
         frequency_penalty = 0,
         presence_penalty = 0,
         max_tokens = 4095,
@@ -228,7 +228,7 @@ Plugin exposes following commands:
 
 ### `ChatGPT`
 
-`ChatGPT` command which opens interactive window using the `gpt-3.5-turbo`
+`ChatGPT` command which opens interactive window using the `gpt-5-mini`
 model.
 (also known as `ChatGPT`)
 
@@ -236,7 +236,7 @@ model.
 
 `ChatGPTActAs` command which opens a prompt selection from
 [Awesome ChatGPT Prompts](https://github.com/f/awesome-chatgpt-prompts)
-to be used with the `gpt-3.5-turbo` model.
+to be used with the `gpt-5-mini` model.
 
 ![preview image](https://github.com/jackMort/ChatGPT.nvim/blob/media/preview-3.png?raw=true)
 
@@ -287,7 +287,7 @@ list. Available actions are:
   10. `roxygen_edit`
   11. `code_readability_analysis` -- see [demo](https://youtu.be/zlU3YGGv2zY)
 
-All the above actions are using `gpt-3.5-turbo` model.
+All the above actions are using `gpt-5-mini` model.
 
 It is possible to define custom actions with a JSON file. See [`actions.json`](./lua/chatgpt/flows/actions/actions.json) for an example. The path of custom actions can be set in the config (see `actions_paths` field in the config example above).
 
@@ -301,7 +301,7 @@ An example of custom action may look like this: (`#` marks comments)
       "template": "A template using possible variable: {{filetype}} (neovim filetype), {{input}} (the selected text) an {{argument}} (provided on the command line), {{filepath}} (the relative path to the file)",
       "strategy": "replace", # or "display" or "append" or "edit"
       "params": { # parameters according to the official OpenAI API
-        "model": "gpt-3.5-turbo", # or any other model supported by `"type"` in the OpenAI API, use the playground for reference
+        "model": "gpt-5-mini", # or any other model supported by `"type"` in the OpenAI API, use the playground for reference
         "stop": [
           "```" # a string used to stop the model
         ]
@@ -333,7 +333,7 @@ keybindings are available:
 
 - `<C-Enter>` [Both] to submit.
 - `<C-y>` [Both] to copy/yank last answer.
-- `<C-o>` [Both] Toggle settings window.
+- `<C-o>` [Both] Toggle settings window (read-only).
 - `<C-h>` [Both] Toggle help window.
 - `<Tab>` [Both] Cycle over windows.
 - `<C-f>` [Chat] Cycle over modes (center, stick to right).
@@ -350,8 +350,8 @@ keybindings are available:
 - `<C-d>` [Edit Window] view the diff between left and right panes and use diff-mode
   commands
 
-When the setting window is opened (with `<C-o>`), settings can be modified by
-pressing `Enter` on the related config. Settings are saved across sections
+The settings window (`<C-o>`) displays current configuration (model, temperature,
+max_tokens, session name). To change settings, modify your `setup()` configuration.
 
 ### Whichkey plugin mappings
 
