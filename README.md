@@ -243,8 +243,7 @@ to be used with the `gpt-3.5-turbo` model.
 ### `ChatGPTEditWithInstructions`
 
 `ChatGPTEditWithInstructions` command which opens interactive window to edit
-selected text or whole window using the `code-davinci-edit-001` model (GPT 3.5
-fine-tuned for coding).
+selected text or whole window using the `gpt-5-mini` model (configurable).
 
 You can map it using the Lua API, e.g. using `which-key.nvim`:
 

@@ -4,17 +4,6 @@ local Api = require("chatgpt.api")
 local Utils = require("chatgpt.utils")
 local Config = require("chatgpt.config")
 
--- curl https://api.openai.com/v1/edits \
---   -H "Content-Type: application/json" \
---   -H "Authorization: Bearer $OPENAI_API_KEY" \
---   -d '{
---   "model": "text-davinci-edit-001",
---   "input": "```r\ngenerate_random_points = function( base_lon, base_lat=38, max_distance = 10000, n_points=10, sample_method='hardcore',\n                                  random_seed = floor( base_lon * base_lat * 10000)) {\n\n  # for random point in the area -1...1, want to find latitude and longitude that matches these random points\n  # base_lat + random *\n\n set.seed(random_seed)\n\n lat_factor = max_distance / m_per_lat()\n lon_factor = max_distance / m_per_lon( base_lat )\n\n if (sample_method=='hardcore') {\n  beta <- n_points * 2; R = n_points / 2000\n  win <- disc(1) # Unit square for simulation\n  X1 <- rHardcore(beta, R, W = win) # Exact sampling -- beware it may run forever for some par.!\n } else {\n   # use random sampler\n }\n\nX1 %>%\n  as_tibble() %>%\n  mutate(\n         target_lon = base_lon + (x * lon_factor),\n         target_lat = base_lat + (y * lat_factor),\n         dist = distance_from( base_lon, base_lat, target_lon, target_lat)\n  ) %>%\n  filter( dist < max_distance) %>%\n  mutate(random=runif(n())) %>%\n  arrange(random) %>%\n  select(-random)\n\n}\n```\n",
---   "instruction": "Insert a roxygen skeleton to document this R function:",
---   "temperature": 0.7,
---   "top_p": 1
--- }'
-
 local EditAction = classes.class(BaseAction)
 
 local STRATEGY_REPLACE = "replace"
@@ -42,7 +31,10 @@ function EditAction:render_template()
 end
 
 function EditAction:get_params()
-  return vim.tbl_extend("force", Config.options.openai_edit_params, self.params, { input = self:render_template() })
+  return vim.tbl_extend("force", Config.options.openai_edit_params, self.params, {
+    input = self:render_template(),
+    instruction = self.params.instruction or "Apply the requested changes",
+  })
 end
 
 function EditAction:run()

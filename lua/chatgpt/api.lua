@@ -97,16 +97,30 @@ function Api.chat_completions(custom_params, cb, should_stop)
   end
 end
 
-function Api.edits(custom_params, cb)
-  local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
-  local params = vim.tbl_extend("keep", custom_params, openai_params)
-  if params.model == "text-davinci-edit-001" or params.model == "code-davinci-edit-001" then
-    vim.notify("Edit models are deprecated", vim.log.levels.WARN)
-    Api.make_call(Api.EDITS_URL, params, cb)
-    return
-  end
+local EDIT_SYSTEM_PROMPT = [[You are a code editing assistant. Apply the requested changes to the provided code.
 
-  Api.make_call(Api.CHAT_COMPLETIONS_URL, params, cb)
+Rules:
+- Output ONLY the modified code, nothing else
+- Do NOT wrap the code in markdown code blocks or backticks
+- Preserve the original indentation and code style
+- Only change what is necessary to fulfill the request
+- Keep all unrelated code exactly as it was]]
+
+function Api.edits(custom_params, cb)
+  local messages = {
+    { role = "system", content = EDIT_SYSTEM_PROMPT },
+    { role = "user", content = custom_params.input or "" },
+    { role = "user", content = custom_params.instruction or "Apply the requested changes" },
+  }
+
+  local params = {
+    model = custom_params.model or Config.options.openai_edit_params.model,
+    messages = messages,
+    temperature = custom_params.temperature,
+    top_p = custom_params.top_p,
+  }
+
+  Api.chat_completions(params, cb)
 end
 
 function Api.make_call(url, params, cb)
@@ -307,7 +321,6 @@ function Api.setup()
     Api.OPENAI_API_HOST = host
     Api.COMPLETIONS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/completions")
     Api.CHAT_COMPLETIONS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/chat/completions")
-    Api.EDITS_URL = ensureUrlProtocol(Api.OPENAI_API_HOST .. "/v1/edits")
   end, "api.openai.com")
 
   loadRequiredConfig("OPENAI_API_KEY", "OPENAI_API_KEY", "api_key_cmd", function(key)
