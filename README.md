@@ -367,7 +367,7 @@ keybindings are available:
 - `e` Edit selected message
 - `r` Rename session (in sessions panel)
 - `za` Toggle fold for code block
-- `@` Trigger context autocomplete (LSP, project, file)
+- `@` Trigger context autocomplete (LSP, project, file, git diff)
 
 **Edit Window specific:**
 - `<C-y>` Accept changes

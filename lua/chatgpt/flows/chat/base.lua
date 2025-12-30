@@ -1449,6 +1449,7 @@ function Chat:open()
       { label = "LSP Symbol", value = "lsp" },
       { label = "Project Context", value = "project" },
       { label = "File", value = "file" },
+      { label = "Git Diff", value = "diff" },
     }, {
       prompt = "Add Context:",
       format_item = function(item)
@@ -1511,6 +1512,20 @@ function Chat:open()
           })
         else
           vim.notify("Telescope not available for file picker", vim.log.levels.WARN)
+        end
+      elseif choice.value == "diff" then
+        local diff = vim.fn.system("git diff")
+        if diff and diff ~= "" and not diff:match("^fatal:") then
+          local item = {
+            type = "diff",
+            name = "git diff",
+            content = diff,
+          }
+          local ref = Context.make_ref(item)
+          Context.add(ref, item)
+          insert_at_cursor(ref)
+        else
+          vim.notify("No unstaged changes", vim.log.levels.INFO)
         end
       end
     end)

@@ -17,7 +17,7 @@ local hint_definitions = {
   },
   chat_input = {
     { key = "⏎", label = "send" },
-    { key = "@", label = "context" },
+    { key = "@", label = "context/diff" },
     { key = "Tab", label = "switch" },
     { key = "↑/↓", label = "history" },
     { key = "gh", label = "help" },
