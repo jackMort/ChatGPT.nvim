@@ -104,11 +104,14 @@ function Chat:welcome()
     end
   end
 
-  if #self.session.conversation == 0 or (#self.session.conversation == 1 and self.system_message ~= nil) then
-    local lines = Utils.split_string_by_line(Config.options.chat.welcome_message)
-    self:set_lines(0, 0, false, lines)
-    for line_num = 0, #lines do
-      self:add_highlight("ChatGPTWelcome", line_num, 0, -1)
+  -- Show welcome message only in non-compact mode
+  if not self:is_compact() then
+    if #self.session.conversation == 0 or (#self.session.conversation == 1 and self.system_message ~= nil) then
+      local lines = Utils.split_string_by_line(Config.options.chat.welcome_message)
+      self:set_lines(0, 0, false, lines)
+      for line_num = 0, #lines do
+        self:add_highlight("ChatGPTWelcome", line_num, 0, -1)
+      end
     end
   end
   self:render_role()
@@ -186,6 +189,10 @@ function Chat:isBusy()
   return self.spinner:is_running() or self.is_streaming_response
 end
 
+function Chat:is_compact()
+  return self.display_mode == "right"
+end
+
 function Chat:add(type, text, usage)
   local idx = self.session:add_item({
     type = type,
@@ -204,7 +211,8 @@ function Chat:_add(type, text, usage, idx)
   local start_line = 0
   if self.selectedIndex > 0 then
     local prev = self.messages[self.selectedIndex]
-    start_line = prev.end_line + (prev.type == ANSWER and 2 or 1)
+    local spacing = self:is_compact() and 1 or (prev.type == ANSWER and 2 or 1)
+    start_line = prev.end_line + spacing
   end
 
   local lines = {}
@@ -266,7 +274,8 @@ function Chat:addAnswerPartial(text, state)
   local start_line = 0
   if self.selectedIndex > 0 then
     local prev = self.messages[self.selectedIndex]
-    start_line = prev.end_line + (prev.type == ANSWER and 2 or 1)
+    local spacing = self:is_compact() and 1 or (prev.type == ANSWER and 2 or 1)
+    start_line = prev.end_line + spacing
   end
 
   if state == "END" then
@@ -1203,9 +1212,9 @@ function Chat:get_layout_params()
     }, { dir = "col", grow = 1 })
   end
 
-  -- Build final layout with hints at full width bottom
+  -- Build final layout with hints at full width bottom (hidden in compact mode)
   local box
-  if self.hints_panel then
+  if self.hints_panel and not self:is_compact() then
     box = Layout.Box({
       main_content,
       Layout.Box(self.hints_panel, { size = 1 }),
