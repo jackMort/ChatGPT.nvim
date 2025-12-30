@@ -73,6 +73,48 @@ function BaseAction:get_selected_text_with_line_numbers()
   return table.concat(lines_with_numbers, "\n")
 end
 
+function BaseAction:get_diagnostic()
+  local bufnr = self:get_bufnr()
+  local cursor = vim.api.nvim_win_get_cursor(0)
+  local row = cursor[1] - 1
+
+  local diagnostics = vim.diagnostic.get(bufnr, { lnum = row })
+  if #diagnostics == 0 then
+    return ""
+  end
+
+  local diag = diagnostics[1]
+  local severity = vim.diagnostic.severity[diag.severity] or "UNKNOWN"
+  return string.format("[%s] %s (line %d)", severity, diag.message, diag.lnum + 1)
+end
+
+function BaseAction:get_diagnostics()
+  local bufnr = self:get_bufnr()
+  local _, start_row, _, end_row, _ = self:get_visual_selection()
+
+  local diagnostics = vim.diagnostic.get(bufnr)
+  local filtered = {}
+
+  for _, diag in ipairs(diagnostics) do
+    local line = diag.lnum + 1
+    if line >= start_row and line <= end_row then
+      table.insert(filtered, diag)
+    end
+  end
+
+  if #filtered == 0 then
+    return ""
+  end
+
+  local result = {}
+  for _, diag in ipairs(filtered) do
+    local severity = vim.diagnostic.severity[diag.severity] or "UNKNOWN"
+    table.insert(result, string.format("Line %d [%s]: %s", diag.lnum + 1, severity, diag.message))
+  end
+
+  return table.concat(result, "\n")
+end
+
 function BaseAction:mark_selection_with_signs()
   local bufnr = self:get_bufnr()
   local _, start_row, _, end_row, _ = self:get_visual_selection()

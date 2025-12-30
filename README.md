@@ -294,6 +294,9 @@ list. Available actions are:
   9. `explain_code`
   10. `roxygen_edit`
   11. `code_readability_analysis` -- see [demo](https://youtu.be/zlU3YGGv2zY)
+  12. `fix_diagnostic` -- fix error under cursor
+  13. `explain_diagnostic` -- explain error under cursor
+  14. `fix_diagnostics` -- fix all errors in selection
 
 All the above actions are using `gpt-5-mini` model.
 
@@ -306,7 +309,7 @@ An example of custom action may look like this: (`#` marks comments)
   "action_name": {
     "type": "chat", # or "completion" or "edit"
     "opts": {
-      "template": "A template using possible variable: {{filetype}} (neovim filetype), {{input}} (the selected text) an {{argument}} (provided on the command line), {{filepath}} (the relative path to the file)",
+      "template": "A template using possible variables",
       "strategy": "replace", # or "display" or "append" or "edit"
       "params": { # parameters according to the official OpenAI API
         "model": "gpt-5-mini", # or any other model supported by `"type"` in the OpenAI API, use the playground for reference
@@ -325,6 +328,14 @@ An example of custom action may look like this: (`#` marks comments)
   }
 }
 ```
+
+Available template variables:
+- `{{input}}` - the selected text
+- `{{filetype}}` - neovim filetype
+- `{{filepath}}` - relative path to the file
+- `{{argument}}` - provided on the command line
+- `{{diagnostic}}` - LSP diagnostic under cursor (format: `[SEVERITY] message (line N)`)
+- `{{diagnostics}}` - all LSP diagnostics in selection (format: `Line N [SEVERITY]: message`)
 
 The `edit` strategy consists in showing the output side by side with the input and
 available for further editing requests.

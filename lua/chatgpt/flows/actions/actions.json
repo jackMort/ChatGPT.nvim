@@ -2,13 +2,10 @@
   "complete_code": {
     "type": "chat",
     "opts": {
-      "template": "Complete the following code written in {{lang}} by pasting the existing code and continuing it.\n\nExisting code:\n```{{filetype}}\n{{input}}\n```\n\n```{{filetype}}\n",
+      "template": "Complete the following {{filetype}} code by continuing it. Respond with the COMPLETE code (existing + new). No markdown fences, no explanations.\n\n{{input}}",
       "strategy": "replace",
       "params": {
-        "model": "gpt-5-mini",
-        "stop": [
-          "```"
-        ]
+        "model": "gpt-5-mini"
       }
     }
   },
@@ -53,48 +50,37 @@
       "template": "Extract the main keywords from the following text.\n\n{{input}}",
       "strategy": "replace",
       "params": {
-        "model": "gpt-5-mini",
-        "temperature": 0.5,
-        "frequency_penalty": 0.8
+        "model": "gpt-5-mini"
       }
     }
   },
   "docstring": {
     "type": "chat",
     "opts": {
-      "template": "# An elaborate, high quality docstring for the above function:\n# Writing a good docstring\n\nThis is an example of writing a really good docstring that follows a best practice for the given language. Attention is paid to detailing things like\n* parameter and return types (if applicable)\n* any errors that might be raised or returned, depending on the language\n\nI received the following code:\n\n```{{filetype}}\n{{input}}\n```\n\nThe code with a really good docstring added is below:\n\n```{{filetype}}",
+      "template": "Add a high quality docstring to the following {{filetype}} code. Include parameter types, return types, and any errors that might be raised.\n\nCode:\n{{input}}\n\nRespond with ONLY the complete code including the docstring. No markdown fences, no explanations.",
       "strategy": "edit",
       "params": {
-        "model": "gpt-5-mini",
-        "stop": [
-          "```"
-        ]
+        "model": "gpt-5-mini"
       }
     }
   },
   "add_tests": {
     "type": "chat",
     "opts": {
-      "template": "Implement tests for the following code.\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nTests:\n```{{filetype}}",
+      "template": "Implement tests for the following {{filetype}} code.\n\nCode:\n{{input}}\n\nRespond with ONLY the test code. No markdown fences, no explanations.",
       "strategy": "append",
       "params": {
-        "model": "gpt-5-mini",
-        "stop": [
-          "```"
-        ]
+        "model": "gpt-5-mini"
       }
     }
   },
   "optimize_code": {
     "type": "chat",
     "opts": {
-      "template": "Optimize the following code.\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nOptimized version:\n```{{filetype}}",
+      "template": "Optimize the following {{filetype}} code for better performance and readability.\n\nCode:\n{{input}}\n\nRespond with ONLY the optimized code. No markdown fences, no explanations.",
       "strategy": "edit",
       "params": {
-        "model": "gpt-5-mini",
-        "stop": [
-          "```"
-        ]
+        "model": "gpt-5-mini"
       }
     }
   },
@@ -111,13 +97,10 @@
   "fix_bugs": {
     "type": "chat",
     "opts": {
-      "template": "Fix bugs in the below code\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nFixed code:\n```{{filetype}}",
+      "template": "Fix bugs in the following {{filetype}} code.\n\nCode:\n{{input}}\n\nRespond with ONLY the fixed code. No markdown fences, no explanations.",
       "strategy": "edit",
       "params": {
-        "model": "gpt-5-mini",
-        "stop": [
-          "```"
-        ]
+        "model": "gpt-5-mini"
       }
     }
   },
@@ -125,13 +108,10 @@
     "type": "chat",
     "opts": {
       "title": " Explain Code",
-      "template": "Explain the following code:\n\nCode:\n```{{filetype}}\n{{input}}\n```\n\nUse markdown format.\nHere's what the above code is doing:\n```",
+      "template": "Explain the following {{filetype}} code. Use markdown format with clear sections.\n\nCode:\n{{input}}",
       "strategy": "display",
       "params": {
-        "model": "gpt-5-mini",
-        "stop": [
-          "```"
-        ]
+        "model": "gpt-5-mini"
       }
     }
   },
@@ -185,6 +165,37 @@
             "content": "<OK>"
           }
         ]
+      }
+    }
+  },
+  "fix_diagnostic": {
+    "type": "chat",
+    "opts": {
+      "template": "Fix the following error in the {{filetype}} code.\n\nError:\n{{diagnostic}}\n\nCode:\n{{input}}\n\nRespond with ONLY the fixed code. No markdown fences, no explanations.",
+      "strategy": "edit",
+      "params": {
+        "model": "gpt-5-mini"
+      }
+    }
+  },
+  "explain_diagnostic": {
+    "type": "chat",
+    "opts": {
+      "title": " Explain Error",
+      "template": "Explain the following error and how to fix it. Use markdown format.\n\nError:\n{{diagnostic}}\n\nCode:\n{{input}}",
+      "strategy": "display",
+      "params": {
+        "model": "gpt-5-mini"
+      }
+    }
+  },
+  "fix_diagnostics": {
+    "type": "chat",
+    "opts": {
+      "template": "Fix all the following errors in the {{filetype}} code.\n\nErrors:\n{{diagnostics}}\n\nCode:\n{{input}}\n\nRespond with ONLY the fixed code. No markdown fences, no explanations.",
+      "strategy": "edit",
+      "params": {
+        "model": "gpt-5-mini"
       }
     }
   }

@@ -46,6 +46,8 @@ function ChatAction:render_template()
     filetype = self:get_filetype(),
     filepath = self:get_filepath(),
     input = input,
+    diagnostic = self:get_diagnostic(),
+    diagnostics = self:get_diagnostics(),
   }
   data = vim.tbl_extend("force", {}, data, self.variables)
   local result = self.template
