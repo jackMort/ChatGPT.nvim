@@ -339,29 +339,42 @@ The `display` strategy shows the output in a float window.
 When using `ChatGPT` and `ChatGPTEditWithInstructions`, the following
 keybindings are available:
 
-- `<C-Enter>` [Both] to submit.
-- `<C-y>` [Both] to copy/yank last answer.
-- `<C-o>` [Both] Toggle settings window (read-only).
-- `<C-h>` [Both] Toggle help window.
-- `<Tab>` [Both] Cycle over windows.
-- `<C-f>` [Chat] Cycle over modes (center, stick to right).
-- `<C-c>` [Both] to close chat window.
-- `<C-p>` [Chat] Toggle sessions list.
-- `<C-u>` [Chat] scroll up chat window.
-- `<C-d>` [Chat] scroll down chat window.
-- `<C-k>` [Chat] to copy/yank code from last answer.
-- `<C-n>` [Chat] Start new session.
-- `<C-r>` [Chat] draft message (create message without submitting it to server)
-- `<C-r>` [Chat] switch role (switch between user and assistant role to define a workflow)
-- `<C-s>` [Both] Toggle system message window.
-- `<C-i>` [Edit Window] use response as input.
-- `<C-d>` [Edit Window] view the diff between left and right panes and use diff-mode
-  commands
-- `y` [Chat] Copy code block at cursor.
-- `za` [Chat] Toggle fold for code block.
-- `@` [Chat] Trigger context autocomplete (LSP definitions, project context).
+**Submitting and Closing:**
+- `<C-Enter>` / `<Enter>` Submit prompt
+- `q` Close chat window
+- `<C-c>` Stop generating response
 
-The settings window (`<C-o>`) displays current configuration (model, temperature,
+**Navigation:**
+- `]m` / `[m` Navigate to next/previous message
+- `]c` / `[c` Navigate to next/previous code block
+- `<C-u>` / `<C-d>` Scroll chat window up/down
+- `<Tab>` Cycle between windows
+
+**Toggles (g prefix):**
+- `gs` Toggle settings panel (read-only)
+- `gh` Toggle help panel
+- `gp` Toggle sessions panel
+- `gr` Toggle system role window
+- `gm` Toggle message role (user/assistant)
+- `gl` Cycle layout modes (center/right)
+- `gn` Start new session
+- `gd` Draft message (add without sending)
+
+**Actions:**
+- `y` Copy code block at cursor
+- `Y` Copy entire last answer
+- `d` Delete selected message
+- `e` Edit selected message
+- `r` Rename session (in sessions panel)
+- `za` Toggle fold for code block
+- `@` Trigger context autocomplete (LSP, project, file)
+
+**Edit Window specific:**
+- `<C-y>` Accept changes
+- `<C-d>` Toggle diff view
+- `<C-i>` Use response as input
+
+The settings window (`gs`) displays current configuration (model, temperature,
 max_tokens, session name). To change settings, modify your `setup()` configuration.
 
 ### Whichkey plugin mappings

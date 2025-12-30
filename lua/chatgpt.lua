@@ -50,6 +50,11 @@ M.setup = function(options)
   vim.api.nvim_set_hl(0, "ChatGPTSessionHeader", { fg = "#6c7086", bold = true, default = true })
   vim.api.nvim_set_hl(0, "ChatGPTSessionCursor", { fg = "#f9e2af", bold = true, default = true })
 
+  vim.api.nvim_set_hl(0, "ChatGPTHintsBar", { link = "Normal", default = true })
+  vim.api.nvim_set_hl(0, "ChatGPTHintsKey", { fg = "#f9e2af", bold = true, default = true })
+  vim.api.nvim_set_hl(0, "ChatGPTHintsText", { fg = "#6c7086", default = true })
+  vim.api.nvim_set_hl(0, "ChatGPTHintsSep", { fg = "#45475a", default = true })
+
   vim.cmd("highlight default link ChatGPTSelectedMessage ColorColumn")
 
   config.setup(options)

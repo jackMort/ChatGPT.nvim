@@ -16,6 +16,7 @@ local SystemWindow = require("chatgpt.flows.chat.system_window")
 local Context = require("chatgpt.context")
 local LspContext = require("chatgpt.context.lsp")
 local ProjectContext = require("chatgpt.context.project")
+local Hints = require("chatgpt.flows.chat.hints")
 
 QUESTION, ANSWER, SYSTEM = 1, 2, 3
 ROLE_ASSISTANT = "assistant"
@@ -43,6 +44,7 @@ function Chat:init()
   self.settings_panel = nil
   self.help_panel = nil
   self.system_role_panel = nil
+  self.hints_panel = nil
 
   -- UI OPEN INDICATORS
   self.settings_open = false
@@ -301,10 +303,12 @@ function Chat:addAnswerPartial(text, state)
     self:redraw()
 
     self.is_streaming_response = false
+    self:update_hints()
   end
 
   if state == "START" then
     self.is_streaming_response = true
+    self:update_hints()
 
     self:stopSpinner()
     self:set_lines(-2, -1, false, { "" })
@@ -519,6 +523,80 @@ function Chat:get_last_answer()
       return self.messages[i]
     end
   end
+end
+
+-- Find all code block positions in the buffer
+function Chat:get_code_block_positions()
+  if not self.chat_window or not self.chat_window.bufnr then
+    return {}
+  end
+
+  local bufnr = self.chat_window.bufnr
+  local lines = vim.api.nvim_buf_get_lines(bufnr, 0, -1, false)
+  local positions = {}
+  local in_block = false
+  local block_start = nil
+
+  for i, line in ipairs(lines) do
+    if line:match("^```") then
+      if not in_block then
+        in_block = true
+        block_start = i - 1 -- 0-indexed
+      else
+        -- End of block
+        table.insert(positions, { start_line = block_start, end_line = i - 1 })
+        in_block = false
+        block_start = nil
+      end
+    end
+  end
+
+  return positions
+end
+
+-- Navigate to next code block
+function Chat:next_code_block()
+  local positions = self:get_code_block_positions()
+  if #positions == 0 then
+    vim.notify("No code blocks found", vim.log.levels.INFO)
+    return
+  end
+
+  local cursor = vim.api.nvim_win_get_cursor(self.chat_window.winid)
+  local current_line = cursor[1] - 1 -- 0-indexed
+
+  for _, pos in ipairs(positions) do
+    if pos.start_line > current_line then
+      vim.api.nvim_win_set_cursor(self.chat_window.winid, { pos.start_line + 1, 0 })
+      return
+    end
+  end
+
+  -- Wrap to first code block
+  vim.api.nvim_win_set_cursor(self.chat_window.winid, { positions[1].start_line + 1, 0 })
+end
+
+-- Navigate to previous code block
+function Chat:prev_code_block()
+  local positions = self:get_code_block_positions()
+  if #positions == 0 then
+    vim.notify("No code blocks found", vim.log.levels.INFO)
+    return
+  end
+
+  local cursor = vim.api.nvim_win_get_cursor(self.chat_window.winid)
+  local current_line = cursor[1] - 1 -- 0-indexed
+
+  for i = #positions, 1, -1 do
+    local pos = positions[i]
+    if pos.start_line < current_line then
+      vim.api.nvim_win_set_cursor(self.chat_window.winid, { pos.start_line + 1, 0 })
+      return
+    end
+  end
+
+  -- Wrap to last code block
+  vim.api.nvim_win_set_cursor(self.chat_window.winid, { positions[#positions].start_line + 1, 0 })
 end
 
 -- Apply rich highlighting to message content (code blocks, inline code, @refs, markdown)
@@ -1020,6 +1098,32 @@ function Chat:set_active_panel(panel)
   else
     self:hide_message_selection()
   end
+
+  -- Update hints based on active panel
+  self:update_hints()
+end
+
+function Chat:update_hints()
+  if not self.hints_panel then
+    return
+  end
+
+  local context = "default"
+  if self.active_panel == self.chat_window then
+    context = "chat_window"
+  elseif self.active_panel == self.chat_input then
+    context = self.is_streaming_response and "chat_input_streaming" or "chat_input"
+  elseif self.active_panel == self.sessions_panel then
+    context = "sessions_panel"
+  elseif self.active_panel == self.settings_panel then
+    context = "settings_panel"
+  elseif self.active_panel == self.help_panel then
+    context = "help_panel"
+  elseif self.active_panel == self.system_role_panel then
+    context = "system_role_panel"
+  end
+
+  Hints.update(context)
 end
 
 function Chat:get_layout_params()
@@ -1068,17 +1172,14 @@ function Chat:get_layout_params()
     }, { dir = self.display_mode == "center" and "row" or "col", grow = 1 })
   end
 
-  local box = Layout.Box({
-    left_layout,
-    Layout.Box(self.chat_input, { size = (self.chat_input.border._.style == "none" and 0 or 2) + self.prompt_lines }),
-  }, { dir = "col" })
+  local input_size = (self.chat_input.border._.style == "none" and 0 or 2) + self.prompt_lines
 
+  local main_content
   if #self.open_extra_panels > 0 then
     local extra_boxes = function()
       local box_size = (100 / #self.open_extra_panels) .. "%"
       local boxes = {}
       for i, panel in ipairs(self.open_extra_panels) do
-        -- for the last panel, make it grow to fill the remaining space
         if i == #self.open_extra_panels then
           table.insert(boxes, Layout.Box(panel, { grow = 1 }))
         else
@@ -1087,16 +1188,30 @@ function Chat:get_layout_params()
       end
       return Layout.Box(boxes, { dir = "col", size = 40 })
     end
-    box = Layout.Box({
-      Layout.Box({
-        left_layout,
-        Layout.Box(
-          self.chat_input,
-          { size = (self.chat_input.border._.style == "none" and 0 or 2) + self.prompt_lines }
-        ),
-      }, { dir = "col", grow = 1 }),
+    local left_column = Layout.Box({
+      left_layout,
+      Layout.Box(self.chat_input, { size = input_size }),
+    }, { dir = "col", grow = 1 })
+    main_content = Layout.Box({
+      left_column,
       extra_boxes(),
-    }, { dir = "row" })
+    }, { dir = "row", grow = 1 })
+  else
+    main_content = Layout.Box({
+      left_layout,
+      Layout.Box(self.chat_input, { size = input_size }),
+    }, { dir = "col", grow = 1 })
+  end
+
+  -- Build final layout with hints at full width bottom
+  local box
+  if self.hints_panel then
+    box = Layout.Box({
+      main_content,
+      Layout.Box(self.hints_panel, { size = 1 }),
+    }, { dir = "col" })
+  else
+    box = main_content
   end
 
   return config, box
@@ -1128,6 +1243,9 @@ function Chat:open()
       self:set_system_message(text)
     end,
   })
+  if Config.options.chat.show_hints then
+    self.hints_panel = Hints.get_panel()
+  end
   self.stop = false
   self.should_stop = function()
     if self.stop then
@@ -1236,6 +1354,16 @@ function Chat:open()
   -- prev message
   self:map(Config.options.chat.keymaps.prev_message, function()
     self:prev()
+  end, { self.chat_window }, { "n" })
+
+  -- next code block
+  self:map(Config.options.chat.keymaps.next_code_block, function()
+    self:next_code_block()
+  end, { self.chat_window }, { "n" })
+
+  -- prev code block
+  self:map(Config.options.chat.keymaps.prev_code_block, function()
+    self:prev_code_block()
   end, { self.chat_window }, { "n" })
 
   -- yank code under cursor
@@ -1433,7 +1561,7 @@ function Chat:open()
     else
       self:set_active_panel(self.chat_input)
     end
-  end)
+  end, nil, { "n" })
 
   -- toggle help
   self:map(Config.options.chat.keymaps.toggle_help, function()
@@ -1455,7 +1583,7 @@ function Chat:open()
     else
       self:set_active_panel(self.chat_input)
     end
-  end)
+  end, nil, { "n" })
 
   -- toggle sessions
   self:map(Config.options.chat.keymaps.toggle_sessions, function()
@@ -1466,13 +1594,13 @@ function Chat:open()
       table.insert(self.open_extra_panels, self.sessions_panel)
     end
     self:redraw()
-  end)
+  end, nil, { "n" })
 
   -- new session
   self:map(Config.options.chat.keymaps.new_session, function()
     self:new_session()
     Sessions:refresh()
-  end, { self.settings_panel, self.chat_input, self.help_panel })
+  end, { self.settings_panel, self.chat_input, self.help_panel }, { "n" })
 
   -- cycle panes
   self:map(Config.options.chat.keymaps.cycle_windows, function()
@@ -1510,7 +1638,7 @@ function Chat:open()
   self:map(Config.options.chat.keymaps.cycle_modes, function()
     self.display_mode = self.display_mode == "right" and "center" or "right"
     self:redraw()
-  end)
+  end, nil, { "n" })
 
   -- toggle system
   self:map(Config.options.chat.keymaps.toggle_system_role_open, function()
@@ -1525,13 +1653,13 @@ function Chat:open()
     if self.system_role_open then
       self:set_active_panel(self.system_role_panel)
     end
-  end)
+  end, nil, { "n" })
 
   -- toggle role
   self:map(Config.options.chat.keymaps.toggle_message_role, function()
     self.role = self.role == ROLE_USER and ROLE_ASSISTANT or ROLE_USER
     self:render_role()
-  end)
+  end, nil, { "n" })
 
   -- draft message
   self:map(Config.options.chat.keymaps.draft_message, function()
@@ -1554,7 +1682,7 @@ function Chat:open()
     else
       vim.notify("Cannot add empty message.", vim.log.levels.WARN)
     end
-  end)
+  end, nil, { "n" })
 
   -- delete message
   self:map(Config.options.chat.keymaps.delete_message, function()
@@ -1577,6 +1705,12 @@ function Chat:open()
   -- initialize
   self.layout:mount()
   self:welcome()
+
+  -- Initialize hints with default context (input panel)
+  if self.hints_panel then
+    self.active_panel = self.chat_input
+    self:update_hints()
+  end
 
   -- Setup resize handling
   local resize_group = vim.api.nvim_create_augroup("ChatGPTResize", { clear = true })
