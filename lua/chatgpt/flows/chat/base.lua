@@ -1547,7 +1547,7 @@ function Chat:open()
     if vim.fn.mode() == "i" then
       vim.api.nvim_command("stopinsert")
     end
-  end)
+  end, nil, { "n" })
 
   -- close_n
   if Config.options.chat.keymaps.close_n then
