@@ -1540,14 +1540,10 @@ function Chat:open()
     end)
   end, { self.chat_input }, { "i" })
 
-  -- close
+  -- close (normal mode only - allow typing 'q' in insert mode)
   self:map(Config.options.chat.keymaps.close, function()
     self:hide()
-    -- If current in insert mode, switch to insert mode
-    if vim.fn.mode() == "i" then
-      vim.api.nvim_command("stopinsert")
-    end
-  end)
+  end, nil, { "n" })
 
   -- close_n
   if Config.options.chat.keymaps.close_n then
