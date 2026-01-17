@@ -200,6 +200,7 @@ function M.defaults()
     actions_paths = {},
     show_quickfixes_cmd = default_quickfix_cmd(),
     predefined_chat_gpt_prompts = "https://raw.githubusercontent.com/f/awesome-chatgpt-prompts/main/prompts.csv",
+    local_chat_gpt_prompts_path = nil,
     highlights = {
       help_key = "@symbol",
       help_description = "@comment",

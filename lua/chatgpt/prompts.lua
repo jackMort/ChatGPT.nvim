@@ -64,6 +64,31 @@ local finder = function(opts)
   local job_completed = false
   local results = {}
   local num_results = 0
+  local job_count = 0
+
+  local function process_job_results(j, process_result, process_complete)
+    local response = table.concat(j:result(), "\n")
+    local lines = {}
+    for line in string.gmatch(response, "[^\n]+") do
+      local act, _prompt = string.match(line, '"(.*)","(.*)"')
+      if act ~= "act" and act ~= nil then
+        _prompt = string.gsub(_prompt, '""', '"')
+        table.insert(lines, { act = act, prompt = _prompt })
+      end
+    end
+
+    for _, line in ipairs(lines) do
+      local v = entry_maker(line)
+      num_results = num_results + 1
+      results[num_results] = v
+      process_result(v)
+    end
+    job_count = job_count - 1
+    if job_count == 0 then
+      process_complete()
+      job_completed = true
+    end
+  end
 
   return setmetatable({
     close = function()
@@ -80,40 +105,44 @@ local finder = function(opts)
         end
         process_complete()
       end
+      job_count = job_count + 1
 
       if not job_started then
         job_started = true
+        if opts.path ~= nil then
+          job_count = job_count + 1
+          job
+            :new({
+              command = "cat",
+              args = { opts.path },
+              on_exit = vim.schedule_wrap(function(j, exit_code)
+                if exit_code ~= 0 then
+                  vim.notify("An Error Occurred, cannot read prompts file at " .. opts.path, vim.log.levels.ERROR)
+                  job_count = job_count - 1
+                  if job_count == 0 then
+                    process_complete()
+                  end
+                  return
+                end
+                process_job_results(j, process_result, process_complete)
+              end),
+            })
+            :start()
+        end
         job
           :new({
             command = "curl",
-            args = {
-              opts.url,
-            },
+            args = { opts.url },
             on_exit = vim.schedule_wrap(function(j, exit_code)
               if exit_code ~= 0 then
                 vim.notify("An Error Occurred, cannot fetch list of prompts ...", vim.log.levels.ERROR)
-                process_complete()
-              end
-
-              local response = table.concat(j:result(), "\n")
-              local lines = {}
-              for line in string.gmatch(response, "[^\n]+") do
-                local act, _prompt = string.match(line, '"(.*)","(.*)"')
-                if act ~= "act" and act ~= nil then
-                  _prompt = string.gsub(_prompt, '""', '"')
-                  table.insert(lines, { act = act, prompt = _prompt })
+                job_count = job_count - 1
+                if job_count == 0 then
+                  process_complete()
                 end
+                return
               end
-
-              for _, line in ipairs(lines) do
-                local v = entry_maker(line)
-                num_results = num_results + 1
-                results[num_results] = v
-                process_result(v)
-              end
-
-              process_complete()
-              job_completed = true
+              process_job_results(j, process_result, process_complete)
             end),
           })
           :start()
@@ -136,7 +165,10 @@ function M.selectAwesomePrompt(opts)
       prompt_prefix = Config.options.popup_input.prompt,
       selection_caret = Config.options.chat.answer_sign .. " ",
       prompt_title = "Prompt",
-      finder = finder({ url = Config.options.predefined_chat_gpt_prompts }),
+      finder = finder({
+        url = Config.options.predefined_chat_gpt_prompts,
+        path = Config.options.local_chat_gpt_prompts_path,
+      }),
       sorter = conf.generic_sorter(opts),
       previewer = display_content_wrapped.new({}),
       attach_mappings = function(prompt_bufnr)
