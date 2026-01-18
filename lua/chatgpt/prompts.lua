@@ -82,12 +82,26 @@ local finder = function(opts)
       end
 
       if not job_started then
+
+        local load_file_command = ""
+        local expanded_url = vim.fn.expand(opts.url)
+        local file_or_web_url = ""
+        local starts_with_slash = string.match(expanded_url, "^/") ~= nil
+        if starts_with_slash then
+          load_file_command = "cat"
+          file_or_web_url = expanded_url
+        else
+          load_file_command = "curl"
+          file_or_web_url = opts.url
+        end
+
         job_started = true
+
         job
           :new({
-            command = "curl",
+            command = load_file_command,
             args = {
-              opts.url,
+              file_or_web_url,
             },
             on_exit = vim.schedule_wrap(function(j, exit_code)
               if exit_code ~= 0 then
