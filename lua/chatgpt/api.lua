@@ -5,6 +5,18 @@ local Utils = require("chatgpt.utils")
 
 local Api = {}
 
+local function tmpMsgFileName(params)
+  local temp_file = os.tmpname()
+    local f = io.open(temp_file, "w+")
+  if f == nil then
+    vim.notify("Cannot open temporary message file: " .. temp_file, vim.log.levels.ERROR)
+    return
+  end
+  f:write(vim.fn.json_encode(params))
+  f:close()
+  return temp_file
+end
+
 function Api.completions(custom_params, cb)
   local openai_params = Utils.collapsed_openai_params(Config.options.openai_params)
   local params = vim.tbl_extend("keep", custom_params, openai_params)
@@ -26,6 +38,8 @@ function Api.chat_completions(custom_params, cb, should_stop)
 
     cb = vim.schedule_wrap(cb)
 
+    local TMP_MSG_FILENAME = tmpMsgFileName(params)
+
     local extra_curl_params = Config.options.extra_curl_params
     local args = {
       "--silent",
@@ -37,7 +51,7 @@ function Api.chat_completions(custom_params, cb, should_stop)
       "-H",
       Api.AUTHORIZATION_HEADER,
       "-d",
-      vim.json.encode(params),
+      "@" .. TMP_MSG_FILENAME,
     }
 
     if extra_curl_params ~= nil then
@@ -124,15 +138,7 @@ function Api.edits(custom_params, cb)
 end
 
 function Api.make_call(url, params, cb)
-  TMP_MSG_FILENAME = os.tmpname()
-  local f = io.open(TMP_MSG_FILENAME, "w+")
-  if f == nil then
-    vim.notify("Cannot open temporary message file: " .. TMP_MSG_FILENAME, vim.log.levels.ERROR)
-    return
-  end
-  f:write(vim.fn.json_encode(params))
-  f:close()
-
+  local TMP_MSG_FILENAME = tmpMsgFileName(params)
   local args = {
     url,
     "-H",
@@ -155,14 +161,14 @@ function Api.make_call(url, params, cb)
       command = "curl",
       args = args,
       on_exit = vim.schedule_wrap(function(response, exit_code)
-        Api.handle_response(response, exit_code, cb)
+         Api.handle_response(response, exit_code, cb, TMP_MSG_FILENAME)
       end),
     })
     :start()
 end
 
-Api.handle_response = vim.schedule_wrap(function(response, exit_code, cb)
-  os.remove(TMP_MSG_FILENAME)
+Api.handle_response = vim.schedule_wrap(function(response, exit_code, cb, tmpFile)
+  os.remove(tmpFile)
   if exit_code ~= 0 then
     vim.notify("An Error Occurred ...", vim.log.levels.ERROR)
     cb("ERROR: API Error")
