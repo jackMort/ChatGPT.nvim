@@ -52,6 +52,7 @@ function ChatAction:render_template()
   data = vim.tbl_extend("force", {}, data, self.variables)
   local result = self.template
   for key, value in pairs(data) do
+    value = value:gsub("%%", "%%%%")
     result = result:gsub("{{" .. key .. "}}", value)
   end
   return result
