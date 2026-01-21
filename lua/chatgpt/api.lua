@@ -169,32 +169,37 @@ Api.handle_response = vim.schedule_wrap(function(response, exit_code, cb)
   end
 
   local result = table.concat(response:result(), "\n")
-  local json = vim.fn.json_decode(result)
-  if json == nil then
+
+  if result == "" then
     cb("No Response.")
-  elseif json.error then
-    cb("// API ERROR: " .. json.error.message)
   else
-    local message = json.choices[1].message
-    if message ~= nil then
-      local message_response
-      local first_message = json.choices[1].message
-      if first_message.function_call then
-        message_response = vim.fn.json_decode(first_message.function_call.arguments)
-      else
-        message_response = first_message.content
-      end
-      if (type(message_response) == "string" and message_response ~= "") or type(message_response) == "table" then
-        cb(message_response, json.usage)
-      else
-        cb("...")
-      end
+    local json = vim.fn.json_decode(result)
+    if json == nil then
+      cb("No Response.")
+    elseif json.error then
+      cb("// API ERROR: " .. json.error.message)
     else
-      local response_text = json.choices[1].text
-      if type(response_text) == "string" and response_text ~= "" then
-        cb(response_text, json.usage)
+      local message = json.choices[1].message
+      if message ~= nil then
+        local message_response
+        local first_message = json.choices[1].message
+        if first_message.function_call then
+          message_response = vim.fn.json_decode(first_message.function_call.arguments)
+        else
+          message_response = first_message.content
+        end
+        if (type(message_response) == "string" and message_response ~= "") or type(message_response) == "table" then
+          cb(message_response, json.usage)
+        else
+          cb("...")
+        end
       else
-        cb("...")
+        local response_text = json.choices[1].text
+        if type(response_text) == "string" and response_text ~= "" then
+          cb(response_text, json.usage)
+        else
+          cb("...")
+        end
       end
     end
   end
