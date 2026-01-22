@@ -83,7 +83,7 @@ function Chat:welcome()
   self.selectedIndex = 0
   self:set_lines(0, -1, false, {})
   self:set_cursor({ 1, 0 })
-  self:set_system_message(nil, true)
+  self:set_system_message(Config.options.chat.default_system_prompt, true)
 
   local system_message_absent = true
   if #self.session.conversation > 0 then
@@ -168,8 +168,9 @@ function Chat:new_session()
   self.session = Session:new()
   self.session:save()
 
-  self.system_message = nil
-  self.system_role_panel:set_text({})
+  self.system_message = Config.options.chat.default_system_prompt
+  self:set_system_message(self.system_message, true)
+  self.session:save()
   self:welcome()
 end
 
